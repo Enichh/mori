@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
+
+const GA_ID = "G-C6KT3V4GW5";
 
 export const metadata: Metadata = {
   title: {
@@ -55,24 +58,6 @@ export default function RootLayout({
           name="google-site-verification"
           content="z610VJnXqK14_YxsE__qgJwPHOUxSJIcDhjFmO9MHis"
         />
-
-        {/* Google Analytics */}
-        <script async src="https://pl29360734.profitablecpmratenetwork.com/1d/8c/65/1d8c6541dcf8fe08a691fdd72627a917.js" />
-        <script
-          async
-          src="https://www.googletagmanager.com/gtag/js?id=G-C6KT3V4GW5"
-        />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', 'G-C6KT3V4GW5');
-            `,
-          }}
-        />
-
         <link
           rel="preconnect"
           href="https://www.vidking.net"
@@ -115,7 +100,7 @@ export default function RootLayout({
         />
         <link
           rel="preconnect"
-          href="https://embedmaster.com"
+          href="https://vidsrc.mov"
           crossOrigin="anonymous"
         />
         <link
@@ -130,10 +115,15 @@ export default function RootLayout({
       <body className="font-body bg-background text-foreground min-h-screen">
         <script
           async
+          src="https://pl29360734.profitablecpmratenetwork.com/1d/8c/65/1d8c6541dcf8fe08a691fdd72627a917.js"
+        />
+        <script
+          async
           src="https://pl29360736.profitablecpmratenetwork.com/b4/a0/18/b4a018fd53e73b05da8c99c85735b46f.js"
         />
         {children}
       </body>
+      <GoogleAnalytics gaId={GA_ID} />
     </html>
   );
 }
