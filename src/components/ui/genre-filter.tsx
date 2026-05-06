@@ -1,4 +1,8 @@
-import Link from "next/link";
+"use client";
+
+import * as React from "react";
+import { useRouter } from "next/navigation";
+import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface GenreFilterProps {
@@ -14,41 +18,83 @@ export function GenreFilter({
   baseHref,
   currentSort,
 }: GenreFilterProps) {
-  const buildHref = (genreId?: string) => {
+  const router = useRouter();
+  const [open, setOpen] = React.useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+
+  // Close on outside click
+  React.useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const activeLabel = activeGenre
+    ? genres.find((g) => String(g.id) === activeGenre)?.name || "Unknown"
+    : "All Genres";
+
+  const navigate = (genreId?: string) => {
     const params = new URLSearchParams();
     if (genreId) params.set("genre", genreId);
-    if (currentSort && currentSort !== "popularity.desc") params.set("sort", currentSort);
+    if (currentSort && currentSort !== "popularity.desc")
+      params.set("sort", currentSort);
     const qs = params.toString();
-    return `${baseHref}${qs ? `?${qs}` : ""}`;
+    router.push(`${baseHref}${qs ? `?${qs}` : ""}`);
+    setOpen(false);
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-2 py-4">
-      <Link
-        href={buildHref()}
+    <div ref={ref} className="relative inline-block">
+      <button
+        onClick={() => setOpen(!open)}
         className={cn(
-          "px-3 py-1.5 text-xs font-medium rounded-sm border transition-colors",
-          !activeGenre
-            ? "bg-primary text-primary-foreground border-primary"
-            : "border-border text-muted-foreground hover:text-foreground hover:border-muted-foreground",
+          "inline-flex items-center gap-2 px-3 py-1.5 text-xs font-body font-medium transition-all duration-200",
+          "bg-muted border border-border text-muted-foreground hover:text-foreground hover:border-primary/50",
+          open && "border-primary text-foreground",
         )}
       >
-        All
-      </Link>
-      {genres.slice(0, 20).map((genre) => (
-        <Link
-          key={genre.id}
-          href={buildHref(String(genre.id))}
+        {activeLabel}
+        <ChevronDown
           className={cn(
-            "px-3 py-1.5 text-xs font-medium rounded-sm border transition-colors",
-            activeGenre === String(genre.id)
-              ? "bg-primary text-primary-foreground border-primary"
-              : "border-border text-muted-foreground hover:text-foreground hover:border-muted-foreground",
+            "h-3 w-3 transition-transform duration-200",
+            open && "rotate-180",
           )}
-        >
-          {genre.name}
-        </Link>
-      ))}
+        />
+      </button>
+
+      {open && (
+        <div className="absolute top-full mt-1 left-0 z-50 w-48 max-h-64 overflow-y-auto bg-card border border-border shadow-lg animate-fade-in">
+          <button
+            onClick={() => navigate()}
+            className={cn(
+              "w-full text-left px-3 py-2 text-xs font-body hover:bg-muted transition-colors",
+              !activeGenre
+                ? "text-primary bg-primary/5"
+                : "text-muted-foreground",
+            )}
+          >
+            All Genres
+          </button>
+          {genres.map((genre) => (
+            <button
+              key={genre.id}
+              onClick={() => navigate(String(genre.id))}
+              className={cn(
+                "w-full text-left px-3 py-2 text-xs font-body hover:bg-muted transition-colors",
+                activeGenre === String(genre.id)
+                  ? "text-primary bg-primary/5"
+                  : "text-muted-foreground",
+              )}
+            >
+              {genre.name}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

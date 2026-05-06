@@ -15,10 +15,10 @@ function buildTwoEmbedUrl(config: VidkingPlayerConfig): string {
   const { tmdbId, mediaType, season, episode } = config;
 
   if (mediaType === "tv" && season !== undefined && episode !== undefined) {
-    return `https://www.2embed.cc/embed/tmdb/tv?id=${tmdbId}&s=${season}&e=${episode}`;
+    return `https://www.2embed.cc/embedtv/${tmdbId}&s=${season}&e=${episode}`;
   }
 
-  return `https://www.2embed.cc/embed/tmdb/movie?id=${tmdbId}`;
+  return `https://www.2embed.cc/embed/${tmdbId}`;
 }
 
 export function TwoEmbedPlayer({
@@ -28,7 +28,6 @@ export function TwoEmbedPlayer({
   className,
 }: TwoEmbedPlayerProps) {
   const [loaded, setLoaded] = React.useState(false);
-
   const embedUrl = buildTwoEmbedUrl(config);
 
   return (
@@ -42,11 +41,9 @@ export function TwoEmbedPlayer({
         setLoaded(true);
         onLoad?.();
       }}
-      onError={() => {
-        onError?.(
-          "Failed to load 2Embed player. Please try another server.",
-        );
-      }}
+      onError={() =>
+        onError?.("Failed to load 2Embed player. Please try another server.")
+      }
     />
   );
 }

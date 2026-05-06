@@ -2,7 +2,13 @@
 
 import * as React from "react";
 import ReactDOM from "react-dom";
-import { Play, AlertTriangle, Loader2, ShieldAlert } from "lucide-react";
+import {
+  Play,
+  AlertTriangle,
+  Loader2,
+  ShieldAlert,
+  ChevronDown,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { VidkingPlayer } from "@/components/player/vidking-player";
 import { SuperEmbedPlayer } from "@/components/player/superembed-player";
@@ -11,7 +17,7 @@ import { MoStreamPlayer } from "@/components/player/mostream-player";
 import { TwoEmbedPlayer } from "@/components/player/twoembed-player";
 import { StreamVaultPlayer } from "@/components/player/streamvault-player";
 import { EzVidApiPlayer } from "@/components/player/ezvidapi-player";
-import { EmbedMasterPlayer } from "@/components/player/embedmaster-player";
+import { VidSrcPlayer } from "@/components/player/vidsrc-player";
 import { EpisodeNavigator } from "@/components/player/episode-navigator";
 import type { VidkingPlayerConfig, EpisodeNavData } from "@/types";
 
@@ -24,7 +30,7 @@ type PlayerServer =
   | "twoembed"
   | "streamvault"
   | "ezvidapi"
-  | "embedmaster";
+  | "vidsrc";
 
 const SERVERS: { id: PlayerServer; label: string; tags?: string[] }[] = [
   { id: "superembed", label: "SuperEmbed" },
@@ -35,10 +41,9 @@ const SERVERS: { id: PlayerServer; label: string; tags?: string[] }[] = [
   { id: "superembed-vip", label: "SuperEmbed VIP" },
   { id: "streamvault", label: "StreamVault" },
   { id: "ezvidapi", label: "vid.api" },
-  { id: "embedmaster", label: "EmbedMaster" },
+  { id: "vidsrc", label: "VidSrc" },
 ];
 
-/** Order in which auto-failover cycles through servers. VIP excluded — manual only. */
 const AUTO_FAILOVER_ORDER: PlayerServer[] = [
   "superembed",
   "twoembed",
@@ -47,7 +52,7 @@ const AUTO_FAILOVER_ORDER: PlayerServer[] = [
   "vidking",
   "streamvault",
   "ezvidapi",
-  "embedmaster",
+  "vidsrc",
 ];
 
 interface VideoPlayerProps {
@@ -71,17 +76,17 @@ export function VideoPlayer({
   const [error, setError] = React.useState<string | null>(null);
   const [warmed, setWarmed] = React.useState(false);
 
-  // ── Auto-failover state machine ──────────────────────────────────────
   const [autoFailover, setAutoFailover] = React.useState(true);
   const [failedServers, setFailedServers] = React.useState<Set<string>>(
     new Set(),
   );
   const [tryingServer, setTryingServer] = React.useState<string | null>(null);
+  const [serverDropdownOpen, setServerDropdownOpen] = React.useState(false);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
   const failoverTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
 
-  // Refs keep the async callbacks (timer, iframe events) un-stale
   const autoFailoverRef = React.useRef(autoFailover);
   autoFailoverRef.current = autoFailover;
   const serverRef = React.useRef(server);
@@ -89,7 +94,20 @@ export function VideoPlayer({
   const failedServersRef = React.useRef(failedServers);
   failedServersRef.current = failedServers;
 
-  // ── Preconnect to all provider origins ───────────────────────────────
+  // Close dropdown on outside click
+  React.useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)
+      ) {
+        setServerDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
   React.useEffect(() => {
     const origins = [
       "https://www.vidking.net",
@@ -106,7 +124,6 @@ export function VideoPlayer({
     }
   }, []);
 
-  // ── Pre-warm hidden iframe ───────────────────────────────────────────
   React.useEffect(() => {
     const warmUrl =
       server === "vidking"
@@ -132,8 +149,6 @@ export function VideoPlayer({
     };
   }, [config.tmdbId, server]);
 
-  // ── Core handlers ────────────────────────────────────────────────────
-
   const handleActivate = () => {
     setActivated(true);
     if (!warmed) setLoading(true);
@@ -147,8 +162,6 @@ export function VideoPlayer({
 
   const handleError = (message: string) => {
     setLoading(false);
-
-    // Build the up-to-date failed set (uses ref to avoid stale closure)
     const updatedFailed = new Set(failedServersRef.current).add(
       serverRef.current,
     );
@@ -171,7 +184,6 @@ export function VideoPlayer({
     }
   };
 
-  // Keep a ref to handleError so the timeout effect never captures a stale version
   const handleErrorRef = React.useRef(handleError);
   handleErrorRef.current = handleError;
 
@@ -185,30 +197,26 @@ export function VideoPlayer({
 
   const handleServerClick = (s: PlayerServer) => {
     setTryingServer(null);
-    setFailedServers(new Set()); // reset on manual pick
+    setFailedServers(new Set());
+    setServerDropdownOpen(false);
     switchServer(s);
   };
 
-  // ── Timeout watchdog (12 s) ──────────────────────────────────────────
   React.useEffect(() => {
     if (!activated || !loading) return;
-
     failoverTimerRef.current = setTimeout(() => {
       handleErrorRef.current(`Timeout waiting for ${serverRef.current}`);
     }, 12000);
-
     return () => {
       if (failoverTimerRef.current) clearTimeout(failoverTimerRef.current);
     };
   }, [server, activated, loading]);
 
-  // ── Render ───────────────────────────────────────────────────────────
+  const currentServer = SERVERS.find((s) => s.id === server);
 
   return (
     <div className={cn("w-full", className)}>
-      {/* Player container */}
       <div className="relative w-full aspect-video bg-black border border-border overflow-hidden">
-        {/* ---- CLICK-TO-PLAY POSTER ---- */}
         {!activated && (
           <button
             onClick={handleActivate}
@@ -247,7 +255,6 @@ export function VideoPlayer({
                 ? "Pre-loaded · Click to play instantly"
                 : `Click to load · ${SERVERS.length} servers available`}
             </p>
-
             <p className="absolute bottom-2 text-[9px] text-white/15 font-mono tracking-wider flex items-center gap-1">
               <ShieldAlert className="w-2.5 h-2.5" />
               Third-party servers may contain advertisements
@@ -255,7 +262,6 @@ export function VideoPlayer({
           </button>
         )}
 
-        {/* ---- LOADING STATE ---- */}
         {activated && loading && !warmed && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black z-10">
             <Loader2 className="w-10 h-10 text-primary animate-spin" />
@@ -266,7 +272,6 @@ export function VideoPlayer({
           </div>
         )}
 
-        {/* ---- ERROR STATE ---- */}
         {activated && error && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black z-10">
             <AlertTriangle className="h-10 w-10 text-destructive" />
@@ -288,7 +293,6 @@ export function VideoPlayer({
           </div>
         )}
 
-        {/* ---- ACTIVE PLAYERS ---- */}
         {activated && server === "vidking" && (
           <VidkingPlayer
             config={config}
@@ -347,8 +351,8 @@ export function VideoPlayer({
             onError={handleError}
           />
         )}
-        {activated && server === "embedmaster" && (
-          <EmbedMasterPlayer
+        {activated && server === "vidsrc" && (
+          <VidSrcPlayer
             config={config}
             onLoad={handleLoad}
             onError={handleError}
@@ -356,7 +360,6 @@ export function VideoPlayer({
         )}
       </div>
 
-      {/* ---- Episode Navigator (TV shows only) ---- */}
       {activated && episodeNav && (
         <div className="mt-3">
           <EpisodeNavigator
@@ -371,36 +374,62 @@ export function VideoPlayer({
         </div>
       )}
 
-      {/* ---- Server Selector ---- */}
       {activated && (
         <>
-          <div className="flex items-center justify-center gap-1 mt-3 flex-wrap">
-            <span className="text-[10px] text-muted-foreground mr-1 font-mono tracking-wider">
-              SERVER:
-            </span>
-            {SERVERS.map((s) => (
+          <div className="flex items-center justify-center gap-2 mt-3 flex-wrap">
+            {/* Server dropdown */}
+            <div ref={dropdownRef} className="relative inline-block">
               <button
-                key={s.id}
-                onClick={() => handleServerClick(s.id)}
+                onClick={() => setServerDropdownOpen(!serverDropdownOpen)}
                 className={cn(
-                  "px-3 py-1.5 text-xs font-body font-medium transition-all duration-200",
-                  server === s.id
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground hover:text-foreground hover:bg-card-hover border border-border",
+                  "inline-flex items-center gap-2 px-3 py-1.5 text-xs font-body font-medium transition-all duration-200",
+                  "bg-muted border border-border text-muted-foreground hover:text-foreground hover:border-primary/50",
+                  serverDropdownOpen && "border-primary text-foreground",
                 )}
               >
-                {s.label}
-                {s.tags?.map((tag) => (
-                  <span
-                    key={tag}
-                    className="ml-1 text-[9px] opacity-60 font-mono"
-                  >
+                Server: {currentServer?.label || "Unknown"}
+                {currentServer?.tags?.map((tag) => (
+                  <span key={tag} className="text-[9px] opacity-60 font-mono">
                     {tag}
                   </span>
                 ))}
+                <ChevronDown
+                  className={cn(
+                    "h-3 w-3 transition-transform duration-200",
+                    serverDropdownOpen && "rotate-180",
+                  )}
+                />
               </button>
-            ))}
-            <label className="flex items-center gap-1 text-[10px] text-muted-foreground cursor-pointer ml-2">
+
+              {serverDropdownOpen && (
+                <div className="absolute top-full mt-1 left-0 z-50 w-48 max-h-64 overflow-y-auto bg-card border border-border shadow-lg animate-fade-in">
+                  {SERVERS.map((s) => (
+                    <button
+                      key={s.id}
+                      onClick={() => handleServerClick(s.id)}
+                      className={cn(
+                        "w-full text-left px-3 py-2 text-xs font-body hover:bg-muted transition-colors flex items-center gap-2",
+                        server === s.id
+                          ? "text-primary bg-primary/5"
+                          : "text-muted-foreground",
+                      )}
+                    >
+                      {s.label}
+                      {s.tags?.map((tag) => (
+                        <span
+                          key={tag}
+                          className="text-[9px] opacity-60 font-mono"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <label className="flex items-center gap-1 text-[10px] text-muted-foreground cursor-pointer">
               <input
                 type="checkbox"
                 checked={autoFailover}
@@ -411,7 +440,6 @@ export function VideoPlayer({
             </label>
           </div>
 
-          {/* Auto-failover progress */}
           {autoFailover && tryingServer && (
             <div className="flex items-center justify-center gap-2 mt-2 text-[10px] text-muted-foreground font-mono">
               <Loader2 className="w-3 h-3 animate-spin" />
@@ -429,7 +457,6 @@ export function VideoPlayer({
             </div>
           )}
 
-          {/* Third-party ad warning */}
           <div className="flex items-center justify-center gap-1.5 mt-2 text-[10px] text-muted-foreground/50 font-mono">
             <ShieldAlert className="w-3 h-3" />
             <span>

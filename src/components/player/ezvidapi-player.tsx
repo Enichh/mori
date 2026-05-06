@@ -14,15 +14,11 @@ interface EzVidApiPlayerProps {
 function buildEzVidApiUrl(config: VidkingPlayerConfig): string {
   const { tmdbId, mediaType, season, episode } = config;
 
-  const params = new URLSearchParams();
-  params.set("tmdb", String(tmdbId));
-
   if (mediaType === "tv" && season !== undefined && episode !== undefined) {
-    params.set("s", String(season));
-    params.set("e", String(episode));
+    return `https://ezvidapi.com/embed/tv/${tmdbId}/${season}/${episode}`;
   }
 
-  return `https://ezvidapi.com/embed?${params.toString()}`;
+  return `https://ezvidapi.com/embed/movie/${tmdbId}`;
 }
 
 export function EzVidApiPlayer({
@@ -32,7 +28,6 @@ export function EzVidApiPlayer({
   className,
 }: EzVidApiPlayerProps) {
   const [loaded, setLoaded] = React.useState(false);
-
   const embedUrl = buildEzVidApiUrl(config);
 
   return (
@@ -46,11 +41,9 @@ export function EzVidApiPlayer({
         setLoaded(true);
         onLoad?.();
       }}
-      onError={() => {
-        onError?.(
-          "Failed to load vid.api player. Please try another server.",
-        );
-      }}
+      onError={() =>
+        onError?.("Failed to load vid.api player. Please try another server.")
+      }
     />
   );
 }

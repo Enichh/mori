@@ -22,7 +22,7 @@ function buildMoStreamUrl(config: VidkingPlayerConfig): string {
     params.set("e", String(episode));
   }
 
-  return `https://mostream.us/embed.php?${params.toString()}`;
+  return `https://mostream.us/embed?${params.toString()}`;
 }
 
 export function MoStreamPlayer({
@@ -32,7 +32,6 @@ export function MoStreamPlayer({
   className,
 }: MoStreamPlayerProps) {
   const [loaded, setLoaded] = React.useState(false);
-
   const embedUrl = buildMoStreamUrl(config);
 
   return (
@@ -46,11 +45,9 @@ export function MoStreamPlayer({
         setLoaded(true);
         onLoad?.();
       }}
-      onError={() => {
-        onError?.(
-          "Failed to load MoStream player. Please try another server.",
-        );
-      }}
+      onError={() =>
+        onError?.("Failed to load MoStream player. Please try another server.")
+      }
     />
   );
 }
