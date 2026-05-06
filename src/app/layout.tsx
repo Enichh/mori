@@ -55,6 +55,23 @@ export default function RootLayout({
           name="google-site-verification"
           content="z610VJnXqK14_YxsE__qgJwPHOUxSJIcDhjFmO9MHis"
         />
+
+        {/* Google Analytics */}
+        <script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-C6KT3V4GW5"
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-C6KT3V4GW5');
+            `,
+          }}
+        />
+
         <link
           rel="preconnect"
           href="https://www.vidking.net"
