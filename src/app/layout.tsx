@@ -57,6 +57,7 @@ export default function RootLayout({
         />
 
         {/* Google Analytics */}
+        <script async src="https://pl29360734.profitablecpmratenetwork.com/1d/8c/65/1d8c6541dcf8fe08a691fdd72627a917.js" />
         <script
           async
           src="https://www.googletagmanager.com/gtag/js?id=G-C6KT3V4GW5"
