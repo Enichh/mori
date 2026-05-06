@@ -51,6 +51,10 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" data-scroll-behavior="smooth">
       <head>
+        <meta
+          name="google-site-verification"
+          content="z610VJnXqK14_YxsE__qgJwPHOUxSJIcDhjFmO9MHis"
+        />
         <link
           rel="preconnect"
           href="https://www.vidking.net"
