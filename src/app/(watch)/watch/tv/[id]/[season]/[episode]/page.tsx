@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { TmdbService } from "@/services/tmdb";
-import { VideoPlayerWrapper } from "@/app/watch/movie/[id]/video-player-wrapper";
+import { VideoPlayerWrapper } from "@/app/(watch)/watch/movie/[id]/video-player-wrapper";
 import { getStillUrl } from "@/lib/tmdb-image";
 import { Star, ChevronLeft, ChevronRight } from "lucide-react";
 
