@@ -8,7 +8,6 @@ export function Footer() {
     <footer className="border-t border-border bg-background md:pb-0">
       <div className="max-w-[1440px] mx-auto px-4 py-8 md:py-10">
         <div className="grid grid-cols-2 md:grid-cols-3 gap-8 md:gap-10">
-          {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="inline-block mb-2">
               <span className="font-heading text-xl md:text-2xl text-primary tracking-tight">
@@ -20,7 +19,6 @@ export function Footer() {
             </p>
           </div>
 
-          {/* Links */}
           <div>
             <h4 className="font-heading text-xs md:text-sm text-foreground mb-3 uppercase tracking-wider">
               Browse
@@ -39,12 +37,29 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Attribution */}
           <div>
             <h4 className="font-heading text-xs md:text-sm text-foreground mb-3 uppercase tracking-wider">
-              Attribution
+              Legal
             </h4>
-            <p className="text-[11px] md:text-xs text-muted-foreground font-body leading-relaxed">
+            <ul className="space-y-1.5">
+              <li>
+                <Link
+                  href="/dmca"
+                  className="text-xs md:text-sm text-muted-foreground hover:text-primary transition-colors font-body"
+                >
+                  DMCA
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/privacy"
+                  className="text-xs md:text-sm text-muted-foreground hover:text-primary transition-colors font-body"
+                >
+                  Privacy Policy
+                </Link>
+              </li>
+            </ul>
+            <p className="text-[11px] md:text-xs text-muted-foreground font-body leading-relaxed mt-4">
               This product uses the TMDB API but is not endorsed or certified by
               TMDB.
             </p>

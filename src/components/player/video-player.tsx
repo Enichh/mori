@@ -45,14 +45,14 @@ const SERVERS: { id: PlayerServer; label: string; tags?: string[] }[] = [
 ];
 
 const AUTO_FAILOVER_ORDER: PlayerServer[] = [
-  "superembed",
+  "vidsrc",
   "twoembed",
   "embedapi",
   "mostream",
   "vidking",
   "streamvault",
   "ezvidapi",
-  "vidsrc",
+  "superembed",
 ];
 
 interface VideoPlayerProps {
@@ -70,7 +70,7 @@ export function VideoPlayer({
   className,
   episodeNav,
 }: VideoPlayerProps) {
-  const [server, setServer] = React.useState<PlayerServer>("superembed");
+  const [server, setServer] = React.useState<PlayerServer>("vidsrc");
   const [activated, setActivated] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
