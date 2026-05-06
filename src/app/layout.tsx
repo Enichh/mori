@@ -115,7 +115,7 @@ export default function RootLayout({
       <body className="font-body bg-background text-foreground min-h-screen">
         <script
           async
-          src="https://pl29360734.profitablecpmratenetwork.com/1d/8c/65/1d8c6541dcf8fe08a691fdd72627a917.js"
+          src="https://planetsrecipe.com/1d/8c/65/1d8c6541dcf8fe08a691fdd72627a917.js"
         />
         <script
           async
