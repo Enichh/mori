@@ -257,7 +257,7 @@ export function VideoPlayer({
             </p>
             <p className="absolute bottom-2 text-[9px] text-white/15 font-mono tracking-wider flex items-center gap-1">
               <ShieldAlert className="w-2.5 h-2.5" />
-              Third-party servers may contain advertisements
+              Ads may appear — we recommend uBlock Origin (ublockorigin.com)
             </p>
           </button>
         )}
@@ -460,7 +460,7 @@ export function VideoPlayer({
           <div className="flex items-center justify-center gap-1.5 mt-2 text-[10px] text-muted-foreground/50 font-mono">
             <ShieldAlert className="w-3 h-3" />
             <span>
-              Third-party servers may contain advertisements. Mori does not host
+              Ads may appear — we recommend uBlock Origin (ublockorigin.com). Mori does not host
               any content.
             </span>
           </div>
