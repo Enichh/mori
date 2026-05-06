@@ -39,7 +39,6 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" data-scroll-behavior="smooth">
       <head>
-        {/* Preconnect to player origins */}
         <link
           rel="preconnect"
           href="https://www.vidking.net"
@@ -93,15 +92,9 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://www.vidking.net" />
         <link rel="dns-prefetch" href="https://multiembed.mov" />
         <link rel="dns-prefetch" href="https://image.tmdb.org" />
-
-        {/* AdTerra Popunder */}
-        <script
-          async
-          src="https://pl29360734.profitablecpmratenetwork.com/1d/8c/65/1d8c6541dcf8fe08a691fdd72627a917.js"
-        />
       </head>
       <body className="font-body bg-background text-foreground min-h-screen">
-        {/* AdTerra Social Bar — loads early in body */}
+        {/* AdTerra Social Bar */}
         <script
           async
           src="https://pl29360736.profitablecpmratenetwork.com/b4/a0/18/b4a018fd53e73b05da8c99c85735b46f.js"

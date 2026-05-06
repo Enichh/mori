@@ -3,30 +3,26 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { House, Film, Tv, Swords, Search, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { mobileNavItems } from "@/config/navigation";
 
-const iconMap: Record<string, LucideIcon> = {
-  House,
-  Film,
-  Tv,
-  Swords,
-  Search,
-};
+const items = [
+  { label: "Home", href: "/" },
+  { label: "Movies", href: "/movies" },
+  { label: "TV", href: "/tv" },
+  { label: "Anime", href: "/anime" },
+  { label: "Search", href: "/search" },
+] as const;
 
 export function MobileNav() {
   const pathname = usePathname();
 
-  // Hide on desktop
   return (
     <nav
-      className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-lg border-t border-border"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-lg border-t border-border safe-area-bottom"
       aria-label="Mobile navigation"
     >
-      <div className="flex items-center justify-around h-16">
-        {mobileNavItems.map((item) => {
-          const Icon = item.icon ? iconMap[item.icon] : null;
+      <div className="flex items-center justify-around h-13 pb-1">
+        {items.map((item) => {
           const isActive =
             item.href === "/"
               ? pathname === "/"
@@ -37,25 +33,19 @@ export function MobileNav() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 min-w-0 flex-1 py-1",
+                "relative flex items-center justify-center min-w-0 flex-1 py-3",
                 "transition-colors duration-200",
                 isActive
                   ? "text-primary"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
-              {Icon && (
-                <Icon
-                  className={cn(
-                    "h-5 w-5",
-                    isActive && "drop-shadow-[0_0_8px_rgba(197,255,74,0.5)]",
-                  )}
-                  strokeWidth={isActive ? 2.5 : 2}
-                />
-              )}
-              <span className="text-[10px] font-body font-medium leading-none">
+              <span className="text-xs font-body font-medium tracking-wider uppercase">
                 {item.label}
               </span>
+              {isActive && (
+                <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
+              )}
             </Link>
           );
         })}
