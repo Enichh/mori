@@ -1,0 +1,444 @@
+"use client";
+
+import * as React from "react";
+import ReactDOM from "react-dom";
+import { Play, AlertTriangle, Loader2, ShieldAlert } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { VidkingPlayer } from "@/components/player/vidking-player";
+import { SuperEmbedPlayer } from "@/components/player/superembed-player";
+import { EmbedAPIPlayer } from "@/components/player/embedapi-player";
+import { MoStreamPlayer } from "@/components/player/mostream-player";
+import { TwoEmbedPlayer } from "@/components/player/twoembed-player";
+import { StreamVaultPlayer } from "@/components/player/streamvault-player";
+import { EzVidApiPlayer } from "@/components/player/ezvidapi-player";
+import { EmbedMasterPlayer } from "@/components/player/embedmaster-player";
+import { EpisodeNavigator } from "@/components/player/episode-navigator";
+import type { VidkingPlayerConfig, EpisodeNavData } from "@/types";
+
+type PlayerServer =
+  | "vidking"
+  | "superembed"
+  | "superembed-vip"
+  | "embedapi"
+  | "mostream"
+  | "twoembed"
+  | "streamvault"
+  | "ezvidapi"
+  | "embedmaster";
+
+const SERVERS: { id: PlayerServer; label: string; tags?: string[] }[] = [
+  { id: "superembed", label: "SuperEmbed" },
+  { id: "embedapi", label: "EmbedAPI" },
+  { id: "vidking", label: "Vidking" },
+  { id: "twoembed", label: "2Embed" },
+  { id: "mostream", label: "MoStream", tags: ["Asian"] },
+  { id: "superembed-vip", label: "SuperEmbed VIP" },
+  { id: "streamvault", label: "StreamVault" },
+  { id: "ezvidapi", label: "vid.api" },
+  { id: "embedmaster", label: "EmbedMaster" },
+];
+
+/** Order in which auto-failover cycles through servers. VIP excluded — manual only. */
+const AUTO_FAILOVER_ORDER: PlayerServer[] = [
+  "superembed",
+  "twoembed",
+  "embedapi",
+  "mostream",
+  "vidking",
+  "streamvault",
+  "ezvidapi",
+  "embedmaster",
+];
+
+interface VideoPlayerProps {
+  config: VidkingPlayerConfig;
+  posterUrl?: string;
+  title?: string;
+  className?: string;
+  episodeNav?: EpisodeNavData;
+}
+
+export function VideoPlayer({
+  config,
+  posterUrl,
+  title,
+  className,
+  episodeNav,
+}: VideoPlayerProps) {
+  const [server, setServer] = React.useState<PlayerServer>("superembed");
+  const [activated, setActivated] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [warmed, setWarmed] = React.useState(false);
+
+  // ── Auto-failover state machine ──────────────────────────────────────
+  const [autoFailover, setAutoFailover] = React.useState(true);
+  const [failedServers, setFailedServers] = React.useState<Set<string>>(
+    new Set(),
+  );
+  const [tryingServer, setTryingServer] = React.useState<string | null>(null);
+  const failoverTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+
+  // Refs keep the async callbacks (timer, iframe events) un-stale
+  const autoFailoverRef = React.useRef(autoFailover);
+  autoFailoverRef.current = autoFailover;
+  const serverRef = React.useRef(server);
+  serverRef.current = server;
+  const failedServersRef = React.useRef(failedServers);
+  failedServersRef.current = failedServers;
+
+  // ── Preconnect to all provider origins ───────────────────────────────
+  React.useEffect(() => {
+    const origins = [
+      "https://www.vidking.net",
+      "https://multiembed.mov",
+      "https://player.embed-api.stream",
+      "https://www.2embed.cc",
+      "https://mostream.us",
+      "https://streamvaultsrc.click",
+      "https://ezvidapi.com",
+      "https://embedmaster.com",
+    ];
+    for (const origin of origins) {
+      ReactDOM.preconnect(origin, { crossOrigin: "anonymous" });
+    }
+  }, []);
+
+  // ── Pre-warm hidden iframe ───────────────────────────────────────────
+  React.useEffect(() => {
+    const warmUrl =
+      server === "vidking"
+        ? `https://www.vidking.net/embed/movie/${config.tmdbId}?color=C5FF4A`
+        : `https://multiembed.mov/directstream.php?video_id=${config.tmdbId}&tmdb=1`;
+
+    const warmFrame = document.createElement("iframe");
+    warmFrame.src = warmUrl;
+    warmFrame.style.cssText =
+      "position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;";
+    warmFrame.title = "preload";
+    warmFrame.setAttribute("sandbox", "allow-scripts allow-same-origin");
+    document.body.appendChild(warmFrame);
+
+    const timer = setTimeout(() => {
+      setWarmed(true);
+      document.body.removeChild(warmFrame);
+    }, 8000);
+
+    return () => {
+      clearTimeout(timer);
+      if (warmFrame.parentNode) document.body.removeChild(warmFrame);
+    };
+  }, [config.tmdbId, server]);
+
+  // ── Core handlers ────────────────────────────────────────────────────
+
+  const handleActivate = () => {
+    setActivated(true);
+    if (!warmed) setLoading(true);
+  };
+
+  const handleLoad = () => {
+    if (failoverTimerRef.current) clearTimeout(failoverTimerRef.current);
+    setLoading(false);
+    setTryingServer(null);
+  };
+
+  const handleError = (message: string) => {
+    setLoading(false);
+
+    // Build the up-to-date failed set (uses ref to avoid stale closure)
+    const updatedFailed = new Set(failedServersRef.current).add(
+      serverRef.current,
+    );
+    setFailedServers(updatedFailed);
+
+    if (autoFailoverRef.current) {
+      const nextServer = AUTO_FAILOVER_ORDER.find((s) => !updatedFailed.has(s));
+      if (nextServer) {
+        setTryingServer(nextServer);
+        switchServer(nextServer);
+      } else {
+        setAutoFailover(false);
+        setTryingServer(null);
+        setError(
+          "No servers have this title available. Try again later or pick a server manually.",
+        );
+      }
+    } else {
+      setError(message);
+    }
+  };
+
+  // Keep a ref to handleError so the timeout effect never captures a stale version
+  const handleErrorRef = React.useRef(handleError);
+  handleErrorRef.current = handleError;
+
+  const switchServer = (s: PlayerServer) => {
+    setServer(s);
+    setWarmed(false);
+    setLoading(true);
+    setError(null);
+    if (failoverTimerRef.current) clearTimeout(failoverTimerRef.current);
+  };
+
+  const handleServerClick = (s: PlayerServer) => {
+    setTryingServer(null);
+    setFailedServers(new Set()); // reset on manual pick
+    switchServer(s);
+  };
+
+  // ── Timeout watchdog (12 s) ──────────────────────────────────────────
+  React.useEffect(() => {
+    if (!activated || !loading) return;
+
+    failoverTimerRef.current = setTimeout(() => {
+      handleErrorRef.current(`Timeout waiting for ${serverRef.current}`);
+    }, 12000);
+
+    return () => {
+      if (failoverTimerRef.current) clearTimeout(failoverTimerRef.current);
+    };
+  }, [server, activated, loading]);
+
+  // ── Render ───────────────────────────────────────────────────────────
+
+  return (
+    <div className={cn("w-full", className)}>
+      {/* Player container */}
+      <div className="relative w-full aspect-video bg-black border border-border overflow-hidden">
+        {/* ---- CLICK-TO-PLAY POSTER ---- */}
+        {!activated && (
+          <button
+            onClick={handleActivate}
+            className="absolute inset-0 z-20 flex flex-col items-center justify-center group cursor-pointer"
+            aria-label="Play video"
+          >
+            {posterUrl ? (
+              <img
+                src={posterUrl}
+                alt={title || "Play"}
+                className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-70 transition-opacity duration-300"
+                loading="eager"
+              />
+            ) : (
+              <div className="absolute inset-0 bg-gradient-to-br from-card via-background to-card" />
+            )}
+            <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors duration-300" />
+            <div className="absolute inset-0 pointer-events-none bg-[repeating-linear-gradient(0deg,rgba(255,255,255,0.015)_0px,rgba(255,255,255,0.015)_1px,transparent_1px,transparent_3px)]" />
+            <div className="relative z-10 flex flex-col items-center gap-4">
+              <div className="w-20 h-20 md:w-24 md:h-24 rounded-full border-2 border-primary flex items-center justify-center bg-primary/10 group-hover:bg-primary/20 group-hover:scale-110 transition-all duration-300 shadow-lg shadow-primary/20">
+                <Play
+                  className="w-10 h-10 md:w-12 md:h-12 text-primary ml-1"
+                  fill="currentColor"
+                />
+              </div>
+              <span className="text-sm md:text-base text-white/80 font-body tracking-wider uppercase group-hover:text-white transition-colors">
+                {warmed
+                  ? "Ready — Watch Now"
+                  : title
+                    ? `Watch ${title}`
+                    : "Watch Now"}
+              </span>
+            </div>
+            <p className="absolute bottom-6 text-[10px] text-white/30 font-mono tracking-wider">
+              {warmed
+                ? "Pre-loaded · Click to play instantly"
+                : `Click to load · ${SERVERS.length} servers available`}
+            </p>
+
+            <p className="absolute bottom-2 text-[9px] text-white/15 font-mono tracking-wider flex items-center gap-1">
+              <ShieldAlert className="w-2.5 h-2.5" />
+              Third-party servers may contain advertisements
+            </p>
+          </button>
+        )}
+
+        {/* ---- LOADING STATE ---- */}
+        {activated && loading && !warmed && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black z-10">
+            <Loader2 className="w-10 h-10 text-primary animate-spin" />
+            <p className="text-sm text-muted-foreground font-mono">
+              Connecting to{" "}
+              {SERVERS.find((s) => s.id === serverRef.current)?.label}...
+            </p>
+          </div>
+        )}
+
+        {/* ---- ERROR STATE ---- */}
+        {activated && error && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black z-10">
+            <AlertTriangle className="h-10 w-10 text-destructive" />
+            <p className="text-sm text-muted-foreground font-body text-center px-4">
+              {error}
+            </p>
+            <button
+              onClick={() => {
+                setError(null);
+                setLoading(true);
+                setFailedServers(new Set());
+                setTryingServer(null);
+                setAutoFailover(true);
+              }}
+              className="px-4 py-2 text-sm font-body text-primary border border-primary hover:bg-primary/10 transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
+        {/* ---- ACTIVE PLAYERS ---- */}
+        {activated && server === "vidking" && (
+          <VidkingPlayer
+            config={config}
+            onLoad={handleLoad}
+            onError={handleError}
+          />
+        )}
+        {activated && server === "superembed" && (
+          <SuperEmbedPlayer
+            config={config}
+            useVip={false}
+            onLoad={handleLoad}
+            onError={handleError}
+          />
+        )}
+        {activated && server === "superembed-vip" && (
+          <SuperEmbedPlayer
+            config={config}
+            useVip={true}
+            onLoad={handleLoad}
+            onError={handleError}
+          />
+        )}
+        {activated && server === "embedapi" && (
+          <EmbedAPIPlayer
+            config={config}
+            onLoad={handleLoad}
+            onError={handleError}
+          />
+        )}
+        {activated && server === "mostream" && (
+          <MoStreamPlayer
+            config={config}
+            onLoad={handleLoad}
+            onError={handleError}
+          />
+        )}
+        {activated && server === "twoembed" && (
+          <TwoEmbedPlayer
+            config={config}
+            onLoad={handleLoad}
+            onError={handleError}
+          />
+        )}
+        {activated && server === "streamvault" && (
+          <StreamVaultPlayer
+            config={config}
+            onLoad={handleLoad}
+            onError={handleError}
+          />
+        )}
+        {activated && server === "ezvidapi" && (
+          <EzVidApiPlayer
+            config={config}
+            onLoad={handleLoad}
+            onError={handleError}
+          />
+        )}
+        {activated && server === "embedmaster" && (
+          <EmbedMasterPlayer
+            config={config}
+            onLoad={handleLoad}
+            onError={handleError}
+          />
+        )}
+      </div>
+
+      {/* ---- Episode Navigator (TV shows only) ---- */}
+      {activated && episodeNav && (
+        <div className="mt-3">
+          <EpisodeNavigator
+            currentSeason={episodeNav.currentSeason}
+            currentEpisode={episodeNav.currentEpisode}
+            totalSeasons={episodeNav.totalSeasons}
+            episodesPerSeason={episodeNav.episodesPerSeason}
+            onNavigate={(s, e) => {
+              episodeNav.onNavigate?.(s, e);
+            }}
+          />
+        </div>
+      )}
+
+      {/* ---- Server Selector ---- */}
+      {activated && (
+        <>
+          <div className="flex items-center justify-center gap-1 mt-3 flex-wrap">
+            <span className="text-[10px] text-muted-foreground mr-1 font-mono tracking-wider">
+              SERVER:
+            </span>
+            {SERVERS.map((s) => (
+              <button
+                key={s.id}
+                onClick={() => handleServerClick(s.id)}
+                className={cn(
+                  "px-3 py-1.5 text-xs font-body font-medium transition-all duration-200",
+                  server === s.id
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:text-foreground hover:bg-card-hover border border-border",
+                )}
+              >
+                {s.label}
+                {s.tags?.map((tag) => (
+                  <span
+                    key={tag}
+                    className="ml-1 text-[9px] opacity-60 font-mono"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </button>
+            ))}
+            <label className="flex items-center gap-1 text-[10px] text-muted-foreground cursor-pointer ml-2">
+              <input
+                type="checkbox"
+                checked={autoFailover}
+                onChange={(e) => setAutoFailover(e.target.checked)}
+                className="accent-primary"
+              />
+              Auto-detect
+            </label>
+          </div>
+
+          {/* Auto-failover progress */}
+          {autoFailover && tryingServer && (
+            <div className="flex items-center justify-center gap-2 mt-2 text-[10px] text-muted-foreground font-mono">
+              <Loader2 className="w-3 h-3 animate-spin" />
+              <span>
+                Auto-searching: tried {failedServers.size} of{" "}
+                {AUTO_FAILOVER_ORDER.length} servers, now trying {tryingServer}
+                ...
+              </span>
+              <button
+                onClick={() => setAutoFailover(false)}
+                className="text-primary hover:underline ml-2"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+
+          {/* Third-party ad warning */}
+          <div className="flex items-center justify-center gap-1.5 mt-2 text-[10px] text-muted-foreground/50 font-mono">
+            <ShieldAlert className="w-3 h-3" />
+            <span>
+              Third-party servers may contain advertisements. Mori does not host
+              any content.
+            </span>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
