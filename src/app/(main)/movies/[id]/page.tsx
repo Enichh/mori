@@ -3,8 +3,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { TmdbService } from "@/services/tmdb";
 import { MediaGrid } from "@/components/media/media-grid";
+import { MovieJsonLd } from "@/components/seo/movie-jsonld";
 import { Star, Clock, Calendar, Play, ChevronLeft } from "lucide-react";
 import { getPosterUrl, getBackdropUrl, getProfileUrl } from "@/lib/tmdb-image";
+
+const BASE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL || "https://morimovie.netlify.app";
 
 export const revalidate = 86400;
 
@@ -19,12 +23,53 @@ export async function generateMetadata({
   const tmdb = TmdbService.getInstance();
   try {
     const movie = await tmdb.movies.getDetails(parseInt(id, 10));
+    const year = movie.releaseDate
+      ? new Date(movie.releaseDate).getFullYear()
+      : "";
+    const genres = movie.genres?.map((g) => g.name).join(", ") || "";
+    const cast =
+      movie.credits?.cast
+        ?.slice(0, 3)
+        .map((c) => c.name)
+        .join(", ") || "";
+
+    const title = `Watch ${movie.title}${year ? ` (${year})` : ""} Online Free HD | Mori`;
+    const description =
+      movie.overview?.slice(0, 155) ||
+      `Stream ${movie.title} online free in HD. ${genres ? `${genres}. ` : ""}${cast ? `Starring ${cast}. ` : ""}Watch now on Mori.`;
+
     return {
-      title: `${movie.title} | Mori`,
-      description: movie.overview?.slice(0, 160) || "",
+      title,
+      description,
+      keywords: [
+        movie.title,
+        "watch online free",
+        "streaming",
+        "HD",
+        ...(movie.genres?.map((g) => g.name) || []),
+        "free movies",
+        "Mori",
+      ],
+      alternates: { canonical: `${BASE_URL}/movies/${movie.id}` },
       openGraph: {
-        title: movie.title,
-        description: movie.overview?.slice(0, 160) || "",
+        title,
+        description,
+        type: "video.movie",
+        images: movie.posterPath
+          ? [
+              {
+                url: `https://image.tmdb.org/t/p/w500${movie.posterPath}`,
+                width: 500,
+                height: 750,
+                alt: movie.title,
+              },
+            ]
+          : [],
+      },
+      twitter: {
+        card: "summary_large_image",
+        title,
+        description,
         images: movie.posterPath
           ? [`https://image.tmdb.org/t/p/w500${movie.posterPath}`]
           : [],
@@ -76,6 +121,12 @@ export default async function MovieDetailPage({
 
   return (
     <div>
+      <MovieJsonLd
+        media={movie}
+        mediaType="movie"
+        url={`${BASE_URL}/movies/${movieId}`}
+      />
+
       <section className="relative w-full min-h-[50vh] md:min-h-[65vh] flex items-end pb-10 md:pb-16 overflow-hidden">
         {backdropUrl && (
           <>
