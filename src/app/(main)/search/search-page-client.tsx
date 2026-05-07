@@ -8,6 +8,7 @@ import { Pagination } from "@/components/ui/pagination";
 import type { Movie, TVShow } from "@/types";
 import { LoaderCircle, Film, Tv, Swords, Grid3X3 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { TMDB_BASE_URL } from "@/lib/constants";
 
 // Snake_case → camelCase mappers for raw TMDB API results
 function mapResult(r: any): any {
@@ -37,6 +38,24 @@ function mapResult(r: any): any {
     similar: { page: 1, results: [], totalPages: 1, totalResults: 0 },
     videos: { results: [] },
   };
+}
+
+// Direct TMDB API call (no proxy — saves Netlify Function invocations)
+async function tmdbFetch(
+  endpoint: string,
+  query: string,
+  page: number,
+): Promise<any> {
+  const url = new URL(`${TMDB_BASE_URL}/${endpoint}`);
+  url.searchParams.set("api_key", process.env.NEXT_PUBLIC_TMDB_API_KEY!);
+  url.searchParams.set("query", query);
+  url.searchParams.set("page", String(page));
+
+  const res = await fetch(url.toString(), {
+    headers: { Accept: "application/json" },
+  });
+  if (!res.ok) throw new Error("Search failed");
+  return res.json();
 }
 
 const TYPE_FILTERS = [
@@ -83,35 +102,90 @@ export function SearchPageClient({
 
       try {
         if (type === "anime") {
-          const params = new URLSearchParams({
-            page: String(searchPage),
-            sort_by: "popularity.desc",
-            with_genres: "16",
-            with_original_language: "ja",
-            include_adult: "false",
-          });
-          const res = await fetch(`/api/tmdb/discover/tv?${params}`);
-          if (!res.ok) throw new Error("Search failed");
-          const data = await res.json();
-          const filtered = (data.results || [])
-            .filter((r: any) =>
-              (r.name || r.title || "")
-                .toLowerCase()
-                .includes(searchQuery.toLowerCase()),
-            )
-            .map(mapResult);
-          setResults(filtered);
-          setTotalPages(data.total_pages || 1);
-          setTotalResults(data.total_results || 0);
-          setPage(searchPage);
+          try {
+            const gqlQuery = `
+              query ($q: String, $page: Int) {
+                Page(page: $page, perPage: 18) {
+                  pageInfo { total perPage currentPage lastPage hasNextPage }
+                  media(search: $q, type: ANIME, sort: SEARCH_MATCH) {
+                    id
+                    title { romaji english native }
+                    coverImage { large }
+                    format
+                    status
+                    episodes
+                    averageScore
+                    popularity
+                    genres
+                    season
+                    seasonYear
+                  }
+                }
+              }
+            `;
+            const res = await fetch("https://graphql.anilist.co", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+              body: JSON.stringify({
+                query: gqlQuery,
+                variables: { q: searchQuery.trim(), page: searchPage },
+              }),
+            });
+            if (!res.ok) throw new Error("Search failed");
+            const json = await res.json();
+            if (json.errors)
+              throw new Error(json.errors[0]?.message ?? "AniList error");
+
+            const pageData = json.data.Page;
+            setResults(
+              pageData.media.map((m: any) => ({
+                id: m.id,
+                title:
+                  m.title?.english ?? m.title?.romaji ?? m.title?.native ?? "",
+                name: m.title?.english ?? m.title?.romaji ?? "",
+                mediaType: "anime" as const,
+                posterPath: m.coverImage?.large ?? "",
+                backdropPath: null,
+                overview: "",
+                voteAverage: m.averageScore ? m.averageScore / 10 : 0,
+                voteCount: m.popularity ?? 0,
+                genreIds: [],
+                releaseDate: m.seasonYear ? `${m.seasonYear}-01-01` : "",
+                firstAirDate: m.seasonYear ? `${m.seasonYear}-01-01` : "",
+                originalLanguage: "ja",
+                popularity: m.popularity ?? 0,
+                adult: false,
+                runtime: null,
+                numberOfSeasons: 1,
+                numberOfEpisodes: m.episodes ?? 0,
+                status: m.status ?? "NOT_YET_RELEASED",
+                tagline: null,
+                credits: { cast: [], crew: [] },
+                similar: {
+                  page: 1,
+                  results: [],
+                  totalPages: 1,
+                  totalResults: 0,
+                },
+                videos: { results: [] },
+              })),
+            );
+            setTotalPages(pageData.pageInfo.lastPage || 1);
+            setTotalResults(pageData.pageInfo.total || 0);
+            setPage(searchPage);
+          } catch (err) {
+            setError(err instanceof Error ? err.message : "Search failed");
+            setResults([]);
+          }
         } else if (type === "all") {
-          const params = new URLSearchParams({
-            query: searchQuery.trim(),
-            page: String(searchPage),
-          });
-          const res = await fetch(`/api/tmdb/search/multi?${params}`);
-          if (!res.ok) throw new Error("Search failed");
-          const data = await res.json();
+          const data = await tmdbFetch(
+            "search/multi",
+            searchQuery.trim(),
+            searchPage,
+          );
           const filtered = (data.results || [])
             .filter((r: any) => r.media_type !== "person")
             .map(mapResult);
@@ -120,25 +194,21 @@ export function SearchPageClient({
           setTotalResults(data.total_results || 0);
           setPage(searchPage);
         } else if (type === "movie") {
-          const params = new URLSearchParams({
-            query: searchQuery.trim(),
-            page: String(searchPage),
-          });
-          const res = await fetch(`/api/tmdb/search/movie?${params}`);
-          if (!res.ok) throw new Error("Search failed");
-          const data = await res.json();
+          const data = await tmdbFetch(
+            "search/movie",
+            searchQuery.trim(),
+            searchPage,
+          );
           setResults((data.results || []).map(mapResult));
           setTotalPages(data.total_pages || 1);
           setTotalResults(data.total_results || 0);
           setPage(searchPage);
         } else {
-          const params = new URLSearchParams({
-            query: searchQuery.trim(),
-            page: String(searchPage),
-          });
-          const res = await fetch(`/api/tmdb/search/tv?${params}`);
-          if (!res.ok) throw new Error("Search failed");
-          const data = await res.json();
+          const data = await tmdbFetch(
+            "search/tv",
+            searchQuery.trim(),
+            searchPage,
+          );
           setResults((data.results || []).map(mapResult));
           setTotalPages(data.total_pages || 1);
           setTotalResults(data.total_results || 0);
