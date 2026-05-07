@@ -27,7 +27,7 @@ const mediaTypeLabels: Record<MediaType, string> = {
   anime: "Anime",
 };
 
-const detailPath: Record<MediaType, string> = {
+const detailPath: Record<string, string> = {
   movie: "/movies",
   tv: "/tv",
   anime: "/anime",
@@ -39,6 +39,8 @@ export function MediaCard({
   priority = false,
   className,
 }: MediaCardProps) {
+  // Prefer each item's own mediaType (from search results), fall back to grid prop
+  const resolvedType: string = (media as any).mediaType || mediaType || "movie";
   const posterUrl = getPosterUrl(media.posterPath, "w500");
   const title =
     "title" in media
@@ -52,11 +54,11 @@ export function MediaCard({
       : "firstAirDate" in media && (media as any).firstAirDate
         ? new Date((media as any).firstAirDate).getFullYear()
         : null;
-  const TypeIcon = mediaTypeIcons[mediaType];
+  const TypeIcon = mediaTypeIcons[resolvedType as MediaType] || Film;
 
   return (
     <Link
-      href={`${detailPath[mediaType]}/${media.id}`}
+      href={`${detailPath[resolvedType] || "/movies"}/${media.id}`}
       className={cn("group block", className)}
     >
       <div className="relative overflow-hidden bg-muted aspect-[2/3]">

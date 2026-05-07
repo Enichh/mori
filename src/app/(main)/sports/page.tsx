@@ -4,7 +4,7 @@ import { SportHero } from "@/components/sports/sport-hero";
 import { SportFilter } from "@/components/sports/sport-filter";
 import type { SportEvent } from "@/types";
 
-export const revalidate = 3600; // 30 min
+export const revalidate = 7200; // 2 hours
 
 export const metadata: Metadata = {
   title: "Live Sports | Mori",

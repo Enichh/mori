@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { SearchInput } from "@/components/search/search-input";
 import { MediaGrid } from "@/components/media/media-grid";
 import { Pagination } from "@/components/ui/pagination";
@@ -10,13 +10,13 @@ import { LoaderCircle, Film, Tv, Swords, Grid3X3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TMDB_BASE_URL } from "@/lib/constants";
 
-// Snake_case → camelCase mappers for raw TMDB API results
-function mapResult(r: any): any {
+// Snake_case to camelCase mappers for raw TMDB API results
+function mapResult(r: any, fallbackType?: string): any {
   return {
     id: r.id,
     title: r.title || r.name,
     name: r.name,
-    mediaType: r.media_type || "movie",
+    mediaType: r.media_type || fallbackType || "movie",
     posterPath: r.poster_path,
     backdropPath: r.backdrop_path,
     overview: r.overview,
@@ -65,16 +65,12 @@ const TYPE_FILTERS = [
   { value: "anime", label: "Anime", icon: Swords },
 ];
 
-interface SearchPageClientProps {
-  initialQuery: string;
-  initialType: string;
-}
-
-export function SearchPageClient({
-  initialQuery,
-  initialType,
-}: SearchPageClientProps) {
+export function SearchPageClient() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialQuery = searchParams.get("q") || "";
+  const initialType = searchParams.get("type") || "all";
+
   const [query, setQuery] = useState(initialQuery);
   const [activeType, setActiveType] = useState(initialType);
   const [results, setResults] = useState<(Movie | TVShow)[]>([]);
@@ -188,7 +184,7 @@ export function SearchPageClient({
           );
           const filtered = (data.results || [])
             .filter((r: any) => r.media_type !== "person")
-            .map(mapResult);
+            .map((r: any) => mapResult(r));
           setResults(filtered);
           setTotalPages(data.total_pages || 1);
           setTotalResults(data.total_results || 0);
@@ -199,7 +195,9 @@ export function SearchPageClient({
             searchQuery.trim(),
             searchPage,
           );
-          setResults((data.results || []).map(mapResult));
+          setResults(
+            (data.results || []).map((r: any) => mapResult(r, "movie")),
+          );
           setTotalPages(data.total_pages || 1);
           setTotalResults(data.total_results || 0);
           setPage(searchPage);
@@ -209,7 +207,7 @@ export function SearchPageClient({
             searchQuery.trim(),
             searchPage,
           );
-          setResults((data.results || []).map(mapResult));
+          setResults((data.results || []).map((r: any) => mapResult(r, "tv")));
           setTotalPages(data.total_pages || 1);
           setTotalResults(data.total_results || 0);
           setPage(searchPage);

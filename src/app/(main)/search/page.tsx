@@ -1,19 +1,13 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { SearchPageClient } from "./search-page-client";
-import { InlineAd } from "@/components/ads/inline-ad";
 
 export const metadata: Metadata = {
   title: "Search",
   description: "Search for movies, TV shows, and anime to stream.",
 };
 
-interface SearchPageProps {
-  searchParams: Promise<{ q?: string; type?: string }>;
-}
-
-export default async function SearchPage({ searchParams }: SearchPageProps) {
-  const { q = "", type = "all" } = await searchParams;
-
+export default function SearchPage() {
   return (
     <div className="container-cine py-8 min-h-[60vh]">
       <div className="mb-8">
@@ -25,7 +19,15 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         </p>
       </div>
 
-      <SearchPageClient initialQuery={q} initialType={type} />
+      <Suspense
+        fallback={
+          <div className="py-20 text-center text-muted-foreground">
+            Loading search...
+          </div>
+        }
+      >
+        <SearchPageClient />
+      </Suspense>
     </div>
   );
 }
