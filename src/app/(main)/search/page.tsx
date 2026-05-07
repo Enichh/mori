@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SearchPageClient } from "./search-page-client";
+import { InlineAd } from "@/components/ads/inline-ad";
 
 export const metadata: Metadata = {
   title: "Search",

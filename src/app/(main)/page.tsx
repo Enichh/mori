@@ -1,10 +1,11 @@
 import { TmdbService } from "@/services/tmdb";
+import { AnilistService } from "@/services/anilist";
 import { MediaHero } from "@/components/media/media-hero";
 import { MediaGrid } from "@/components/media/media-grid";
 import { WatchHistory } from "@/components/media/watch-history";
 import type { Movie, TVShow } from "@/types";
 
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 export default async function HomePage() {
   const tmdb = TmdbService.getInstance();
@@ -17,10 +18,11 @@ export default async function HomePage() {
   const errors: string[] = [];
 
   try {
+    const anilist = AnilistService.getInstance();
     const [movieData, tvData, animeData, pinoyData] = await Promise.allSettled([
       tmdb.movies.getTrending("day"),
       tmdb.tv.getTrending("week"),
-      tmdb.anime.getTrending(),
+      anilist.anime.getTrending(),
       tmdb.regional.getFilipinoMovies(),
     ]);
 
@@ -38,7 +40,32 @@ export default async function HomePage() {
     }
 
     if (animeData.status === "fulfilled") {
-      popularAnime = animeData.value.results.slice(0, 12);
+      popularAnime = animeData.value.results.slice(0, 12).map((a) => ({
+        id: a.id,
+        mediaType: "anime" as const,
+        title: a.title,
+        name: a.title,
+        originalName: a.nativeTitle,
+        overview: a.description,
+        posterPath: a.coverImage,
+        backdropPath: a.bannerImage,
+        voteAverage: a.averageScore ? a.averageScore / 10 : 0,
+        voteCount: a.popularity,
+        genreIds: [],
+        popularity: a.popularity,
+        originalLanguage: "ja",
+        adult: false,
+        firstAirDate: a.seasonYear ? `${a.seasonYear}-01-01` : "",
+        lastAirDate: "",
+        numberOfSeasons: 1,
+        numberOfEpisodes: a.episodes ?? 0,
+        status: a.status,
+        seasons: [],
+        credits: { cast: [], crew: [] },
+        similar: { page: 1, results: [], totalPages: 1, totalResults: 0 },
+        videos: { results: [] },
+        nextEpisodeToAir: null,
+      })) as any;
     } else {
       errors.push(`Anime: ${animeData.reason}`);
     }
@@ -108,7 +135,7 @@ export default async function HomePage() {
       <WatchHistory maxItems={8} />
 
       {/* ---- Content Grids ---- */}
-      <div className="container-cine space-y-12 py-10">
+      <div className="container-cine space-y-10 sm:space-y-12 py-8 sm:py-10">
         {trendingMovies.length > 0 && (
           <MediaGrid
             title="Trending Movies"
@@ -118,6 +145,7 @@ export default async function HomePage() {
           />
         )}
 
+        {/* Inline ad between movie and TV sections — shows on all screen sizes */}
         {trendingTV.length > 0 && (
           <MediaGrid
             title="Trending TV Shows"
@@ -127,6 +155,7 @@ export default async function HomePage() {
           />
         )}
 
+        {/* Inline ad between TV and anime sections — desktop only to avoid stacking */}
         {popularAnime.length > 0 && (
           <MediaGrid
             title="Popular Anime"

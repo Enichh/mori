@@ -67,6 +67,7 @@ function mapMovieDetail(d: TMDBMovieDetail): Movie {
     revenue: d.revenue,
     status: d.status,
     tagline: d.tagline,
+    imdbId: d.imdb_id ?? null,
     credits: mapCredits(d.credits),
     similar: mapSimilarMovies(d.similar),
     videos: mapVideos(d.videos),
@@ -149,6 +150,11 @@ export interface IMovieService {
   getSimilar(id: number, page?: number): Promise<SimilarResponse>;
   getVideos(id: number): Promise<VideoResult>;
   getByGenre(genreId: number, page?: number): Promise<TMDBMovieResponse>;
+  discover(params: {
+    sort_by?: string;
+    with_genres?: number;
+    page?: number;
+  }): Promise<TMDBMovieResponse>;
 }
 
 // ---------------------------------------------------------------------------
@@ -210,7 +216,7 @@ export class MovieService implements IMovieService {
   async getDetails(id: number): Promise<Movie> {
     const res = await this.client.get<TMDBMovieDetail>(`/movie/${id}`, {
       api_key: this.apiKey,
-      append_to_response: "credits,similar,videos",
+      append_to_response: "credits,similar,videos,external_ids",
     });
     if (!res.success || !res.data) {
       throw new Error(res.error ?? "Failed to fetch movie details");
@@ -274,6 +280,18 @@ export class MovieService implements IMovieService {
       with_genres: genreId,
       sort_by: "popularity.desc",
       page,
+    });
+  }
+
+  async discover(params: {
+    sort_by?: string;
+    with_genres?: number;
+    page?: number;
+  }): Promise<TMDBMovieResponse> {
+    return this.getPaginated("/discover/movie", {
+      sort_by: params.sort_by ?? "popularity.desc",
+      with_genres: params.with_genres,
+      page: params.page ?? 1,
     });
   }
 }

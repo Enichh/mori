@@ -1,24 +1,71 @@
+# ---------------------------------------------------------------------------
+# Mori — Netlify configuration
+# ---------------------------------------------------------------------------
+# Best-practice setup for Next.js 15 ISR on Netlify:
+#  - @netlify/plugin-nextjs handles ISR, image CDN, routing
+#  - stale-while-revalidate lets the CDN serve cached pages while
+#    a background function regenerates them — ZERO bandwidth cost
+#    for most visitors.
+# ---------------------------------------------------------------------------
+
 [build]
   command = "npm run build"
   publish = ".next"
 
 [build.environment]
+  # Not needed on Netlify (unoptimized images bypass sharp),
+  # but kept for local parity.
   NEXT_SHARP_PATH = "node_modules/sharp"
+
+# ---- Netlify Next.js plugin (ISR, image CDN, routing) -------------------
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# ---- Static assets: immutable long-term cache ----------------------------
 
 [[headers]]
   for = "/_next/static/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
+# ---- ISR pages: CDN serves stale, background revalidates ----------------
+# Best practice for Netlify ISR:
+#   max-age=0 → never serve fresh without checking
+#   must-revalidate → always check origin after max-age
+#   stale-while-revalidate=86400 → serve stale up to 1 day while revalidating
+# Netlify-CDN-Cache-Control gives the CDN extra hints.
+
 [[headers]]
   for = "/*"
   [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate, stale-while-revalidate=604800"
+    Netlify-CDN-Cache-Control = "public, durable, max-age=0, stale-while-revalidate=604800"
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
     X-XSS-Protection = "1; mode=block"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.vidking.net https://multiembed.mov https://pl29360734 https://pl29360735.profitablecpmratenetwork.com https://pl29360736.profitablecpmratenetwork.com; frame-src https://www.vidking.net https://multiembed.mov https://streamingnow.mov https://www.2embed.cc https://mostream.us https://streamvaultsrc.click https://ezvidapi.com https://player.embed-api.stream https://vidsrc.mov; img-src 'self' data: https://image.tmdb.org; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com https://api.themoviedb.org https://www.vidking.net https://multiembed.mov https://www.2embed.cc https://mostream.us https://streamvaultsrc.click https://ezvidapi.com https://player.embed-api.stream https://vidsrc.mov https://pl29360734 https://pl29360735.profitablecpmratenetwork.com https://pl29360736.profitablecpmratenetwork.com; media-src 'self' https://www.vidking.net https://multiembed.mov https://streamingnow.mov https://www.2embed.cc https://mostream.us https://streamvaultsrc.click https://ezvidapi.com https://player.embed-api.stream https://vidsrc.mov;"
+
+# ---- Content-Security-Policy --------------------------------------------
+# Split into a separate header block so the CDN can compress it.
+# Sports API domains are included for frame-src, connect-src, and img-src.
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Security-Policy = """
+      default-src 'self'; \
+      script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.vidking.net https://multiembed.mov https://pl29360734 https://pl29360735.profitablecpmratenetwork.com https://pl29360736.profitablecpmratenetwork.com;
+      frame-src https://www.vidking.net https://multiembed.mov https://streamingnow.mov https://www.2embed.cc https://mostream.us https://streamvaultsrc.click https://ezvidapi.com https://player.embed-api.stream https://vidsrc.mov https://cdnlivetv.tv; \
+      img-src 'self' data: https://image.tmdb.org https://api.cdnlivetv.tv https://flagcdn.com; \
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; \
+      font-src 'self' https://fonts.gstatic.com; \
+      connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com https://api.themoviedb.org https://www.vidking.net https://multiembed.mov https://www.2embed.cc https://mostream.us https://streamvaultsrc.click https://ezvidapi.com https://player.embed-api.stream https://vidsrc.mov https://pl29360734 https://pl29360735.profitablecpmratenetwork.com https://pl29360736.profitablecpmratenetwork.com https://api.cdnlivetv.ru https://cdnlivetv.tv; \
+      media-src 'self' https://www.vidking.net https://multiembed.mov https://streamingnow.mov https://www.2embed.cc https://mostream.us https://streamvaultsrc.click https://ezvidapi.com https://player.embed-api.stream https://vidsrc.mov;\
+    """
+
+# ---- Redirects -----------------------------------------------------------
 
 [[redirects]]
   from = "/tv-shows"

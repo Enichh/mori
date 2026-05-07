@@ -11,8 +11,10 @@ export default function MainLayout({
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
-      <NativeBanner />
-      <main className="flex-1 pt-12 md:pt-12 pb-16 md:pb-0">{children}</main>
+      <div className="mt-12">
+        <NativeBanner />
+      </div>
+      <main className="flex-1 pb-16 md:pb-0">{children}</main>
       <Footer />
       <MobileNav />
     </div>

@@ -6,7 +6,7 @@ import { Pagination } from "@/components/ui/pagination";
 import { SelectSort } from "@/components/ui/select-sort";
 import type { Genre } from "@/types";
 
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 interface MoviesPageProps {
   searchParams: Promise<{ page?: string; genre?: string; sort?: string }>;
@@ -29,28 +29,19 @@ export default async function MoviesPage({ searchParams }: MoviesPageProps) {
   const currentPage = parseInt(page, 10) || 1;
   const tmdb = TmdbService.getInstance();
 
-  let moviesData = null;
-  let genres: Genre[] = [];
+  const [moviesResult, movieGenresResult] = await Promise.allSettled([
+    tmdb.movies.discover({
+      sort_by: sort,
+      with_genres: genre ? parseInt(genre, 10) : undefined,
+      page: currentPage,
+    }),
+    tmdb.genres.getMovieGenres(),
+  ]);
 
-  try {
-    const [movies, movieGenres] = await Promise.allSettled([
-      genre
-        ? tmdb.movies.getByGenre(parseInt(genre, 10), currentPage)
-        : sort !== "popularity.desc"
-          ? Promise.resolve(null) // fall through to discover via tmdb client
-          : tmdb.movies.getPopular(currentPage),
-      tmdb.genres.getMovieGenres(),
-    ]);
-
-    if (movies.status === "fulfilled") {
-      moviesData = movies.value;
-    }
-    if (movieGenres.status === "fulfilled") {
-      genres = movieGenres.value;
-    }
-  } catch (error) {
-    console.error("Failed to fetch movies:", error);
-  }
+  const moviesData =
+    moviesResult.status === "fulfilled" ? moviesResult.value : null;
+  const genres: Genre[] =
+    movieGenresResult.status === "fulfilled" ? movieGenresResult.value : [];
 
   return (
     <div className="container-cine py-8">
@@ -94,6 +85,7 @@ export default async function MoviesPage({ searchParams }: MoviesPageProps) {
         </div>
       )}
 
+      {/* In-content ad — subtle separator before pagination */}
       {moviesData && moviesData.totalPages > 1 && (
         <Pagination
           currentPage={currentPage}

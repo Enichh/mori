@@ -1,104 +1,110 @@
 import type { Metadata } from "next";
 import { TmdbService } from "@/services/tmdb";
-import { MediaHero } from "@/components/media/media-hero";
 import { MediaGrid } from "@/components/media/media-grid";
-import type { Movie, TVShow } from "@/types";
+import { GenreFilter } from "@/components/ui/genre-filter";
+import { Pagination } from "@/components/ui/pagination";
+import { SelectSort } from "@/components/ui/select-sort";
+import type { Genre, TVShow } from "@/types";
 
-export const revalidate = 3600;
+export const revalidate = 86400;
+
+interface PinoyPageProps {
+  searchParams: Promise<{ page?: string; genre?: string; sort?: string }>;
+}
 
 export const metadata: Metadata = {
-  title: "Pinoy Movies & TV",
+  title: "Pinoy Movies & TV 🇵🇭 | Mori",
   description: "Stream the best Filipino (Tagalog) movies and TV shows.",
 };
 
-export default async function PinoyPage() {
+const SORT_OPTIONS = [
+  { value: "popularity.desc" as const, label: "Most Popular" },
+  { value: "vote_average.desc" as const, label: "Highest Rated" },
+  { value: "release_date.desc" as const, label: "Newest" },
+];
+
+export default async function PinoyPage({ searchParams }: PinoyPageProps) {
+  const { page = "1", genre, sort = "popularity.desc" } = await searchParams;
+  const currentPage = parseInt(page, 10) || 1;
   const tmdb = TmdbService.getInstance();
 
-  let featuredMovie: Movie | null = null;
-  let filipinoMovies: Movie[] = [];
-  let filipinoTV: TVShow[] = [];
-  const errors: string[] = [];
+  const [moviesResult, genresResult, tvResult] = await Promise.allSettled([
+    tmdb.regional.discoverFilipinoMovies({
+      sort_by: sort,
+      with_genres: genre ? parseInt(genre, 10) : undefined,
+      page: currentPage,
+    }),
+    tmdb.genres.getMovieGenres(),
+    tmdb.regional.getFilipinoTV(),
+  ]);
 
-  try {
-    const [moviesData, tvData] = await Promise.allSettled([
-      tmdb.regional.getFilipinoMovies(),
-      tmdb.regional.getFilipinoTV(),
-    ]);
-
-    if (moviesData.status === "fulfilled") {
-      filipinoMovies = moviesData.value.results;
-      featuredMovie = filipinoMovies[0] || null;
-    } else {
-      errors.push(`Movies: ${moviesData.reason}`);
-    }
-
-    if (tvData.status === "fulfilled") {
-      filipinoTV = tvData.value.results;
-    } else {
-      errors.push(`TV: ${tvData.reason}`);
-    }
-  } catch (error) {
-    console.error("Failed to fetch Pinoy content:", error);
-    errors.push(String(error));
-  }
+  const moviesData =
+    moviesResult.status === "fulfilled" ? moviesResult.value : null;
+  const genres: Genre[] =
+    genresResult.status === "fulfilled" ? genresResult.value : [];
+  const pinoyTV: TVShow[] =
+    tvResult.status === "fulfilled" ? tvResult.value.results.slice(0, 12) : [];
 
   return (
-    <div>
-      {featuredMovie && <MediaHero media={featuredMovie} mediaType="movie" />}
+    <div className="container-cine py-8">
+      <div className="mb-6">
+        <h1 className="text-2xl md:text-3xl font-heading font-bold text-foreground mb-2">
+          Pinoy Movies & TV <span className="text-primary">🇵🇭</span>
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Stream the best Filipino movies and TV shows in Tagalog.
+        </p>
+      </div>
 
-      {!featuredMovie && (
-        <section className="relative w-full min-h-[40vh] flex items-center justify-center bg-gradient-to-br from-card via-background to-card">
-          <div className="container-cine text-center py-16">
-            <h1 className="text-3xl md:text-5xl font-heading font-bold text-foreground mb-4">
-              Pinoy Movies & TV 🇵🇭
-            </h1>
-            <p className="text-muted-foreground max-w-md mx-auto">
-              Stream the best Filipino movies and TV shows in Tagalog.
-            </p>
-            {errors.length > 0 && (
-              <div className="terminal-box max-w-lg mx-auto text-left mt-6">
-                <p className="text-destructive/80 text-xs mb-2">
-                  ⚠ Debug info:
-                </p>
-                {errors.map((err, i) => (
-                  <p
-                    key={i}
-                    className="text-muted-foreground text-xs font-mono break-all"
-                  >
-                    {err}
-                  </p>
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
+      {genres.length > 0 && (
+        <GenreFilter
+          genres={genres}
+          activeGenre={genre}
+          baseHref="/pinoy"
+          currentSort={sort}
+        />
       )}
 
-      <div className="container-cine py-8 space-y-10">
-        {filipinoMovies.length > 0 && (
-          <MediaGrid
-            title="Pinoy Movies"
-            items={filipinoMovies.slice(0, 18)}
-            mediaType="movie"
-          />
-        )}
-
-        {filipinoTV.length > 0 && (
-          <MediaGrid
-            title="Pinoy TV Shows"
-            items={filipinoTV.slice(0, 18)}
-            mediaType="tv"
-          />
-        )}
-
-        {filipinoMovies.length === 0 && filipinoTV.length === 0 && (
-          <div className="py-20 text-center">
-            <p className="text-muted-foreground">
-              No Filipino content found. Please try again later.
-            </p>
-          </div>
-        )}
+      <div className="flex items-center justify-between py-4 border-b border-border">
+        <p className="text-xs text-muted-foreground">
+          {moviesData?.totalResults?.toLocaleString() || 0} movies found
+        </p>
+        <SelectSort
+          options={SORT_OPTIONS}
+          currentSort={sort}
+          baseHref="/pinoy"
+          genre={genre}
+        />
       </div>
+
+      {moviesData && moviesData.results.length > 0 && (
+        <MediaGrid title="" items={moviesData.results} mediaType="movie" />
+      )}
+
+      {(!moviesData || moviesData.results.length === 0) && (
+        <div className="py-20 text-center">
+          <p className="text-muted-foreground">No Pinoy movies found.</p>
+        </div>
+      )}
+
+      {moviesData && moviesData.totalPages > 1 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={moviesData.totalPages}
+          baseHref="/pinoy"
+          searchParams={{
+            genre: genre || "",
+            sort: sort !== "popularity.desc" ? sort : "",
+          }}
+        />
+      )}
+
+      {/* Pinoy TV section (secondary, no pagination) */}
+      {pinoyTV.length > 0 && (
+        <div className="mt-12">
+          <MediaGrid title="Pinoy TV Shows" items={pinoyTV} mediaType="tv" />
+        </div>
+      )}
     </div>
   );
 }

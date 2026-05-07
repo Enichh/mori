@@ -134,7 +134,7 @@ export default async function TVDetailPage({ params }: TVDetailPageProps) {
             </div>
 
             <div className="flex-1 min-w-0">
-              <h1 className="text-3xl md:text-4xl lg:text-display-sm font-heading font-bold text-foreground mb-3">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-display-sm font-heading font-bold text-foreground mb-3 break-words">
                 {show.name}
               </h1>
               {show.tagline && (
@@ -189,7 +189,7 @@ export default async function TVDetailPage({ params }: TVDetailPageProps) {
 
               {show.overview && (
                 <div className="bg-black/50 backdrop-blur-sm border border-white/10 rounded-sm p-4 mb-6 max-w-2xl">
-                  <p className="text-sm md:text-base text-white/85 leading-relaxed">
+                  <p className="text-sm md:text-base text-white/85 leading-relaxed break-words">
                     {show.overview}
                   </p>
                 </div>
@@ -260,6 +260,7 @@ export default async function TVDetailPage({ params }: TVDetailPageProps) {
         </section>
       )}
 
+      {/* In-content ad between cast and similar */}
       {similarShows.length > 0 && (
         <MediaGrid
           title="Similar TV Shows"

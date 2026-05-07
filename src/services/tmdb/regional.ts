@@ -78,6 +78,16 @@ export interface IRegionalService {
   getFilipinoMovies(page?: number): Promise<TMDBMovieResponse>;
   getFilipinoTV(page?: number): Promise<TMDBTVResponse>;
   getByCountry(country: string, page?: number): Promise<TMDBMovieResponse>;
+  discoverFilipinoMovies(params: {
+    sort_by?: string;
+    with_genres?: number;
+    page?: number;
+  }): Promise<TMDBMovieResponse>;
+  discoverFilipinoTV(params: {
+    sort_by?: string;
+    with_genres?: number;
+    page?: number;
+  }): Promise<TMDBTVResponse>;
 }
 
 // ---------------------------------------------------------------------------
@@ -98,12 +108,8 @@ export class RegionalService implements IRegionalService {
         api_key: this.apiKey,
         with_original_language: "tl",
         with_origin_country: "PH",
-        sort_by: "vote_average.desc",
+        sort_by: "popularity.desc",
         include_adult: false,
-        certification_country: "US",
-        "certification.lte": "PG-13",
-        "vote_count.gte": 10,
-        with_release_type: "3",
         page,
       },
     );
@@ -128,6 +134,62 @@ export class RegionalService implements IRegionalService {
         sort_by: "popularity.desc",
         include_adult: false,
         page,
+      },
+    );
+    if (!res.success || !res.data) {
+      return { page: 1, results: [], totalPages: 1, totalResults: 0 };
+    }
+    return {
+      page: res.data.page,
+      results: res.data.results.map(mapTVResult),
+      totalPages: res.data.total_pages,
+      totalResults: res.data.total_results,
+    };
+  }
+
+  async discoverFilipinoMovies(params: {
+    sort_by?: string;
+    with_genres?: number;
+    page?: number;
+  }): Promise<TMDBMovieResponse> {
+    const res = await this.client.get<TMDBPaginatedResponse<TMDBMovieResult>>(
+      "/discover/movie",
+      {
+        api_key: this.apiKey,
+        with_original_language: "tl",
+        with_origin_country: "PH",
+        sort_by: params.sort_by ?? "popularity.desc",
+        with_genres: params.with_genres?.toString(),
+        include_adult: false,
+        page: params.page ?? 1,
+      },
+    );
+    if (!res.success || !res.data) {
+      return { page: 1, results: [], totalPages: 1, totalResults: 0 };
+    }
+    return {
+      page: res.data.page,
+      results: res.data.results.map(mapMovieResult),
+      totalPages: res.data.total_pages,
+      totalResults: res.data.total_results,
+    };
+  }
+
+  async discoverFilipinoTV(params: {
+    sort_by?: string;
+    with_genres?: number;
+    page?: number;
+  }): Promise<TMDBTVResponse> {
+    const res = await this.client.get<TMDBPaginatedResponse<TMDBTVResult>>(
+      "/discover/tv",
+      {
+        api_key: this.apiKey,
+        with_original_language: "tl",
+        with_origin_country: "PH",
+        sort_by: params.sort_by ?? "popularity.desc",
+        with_genres: params.with_genres?.toString(),
+        include_adult: false,
+        page: params.page ?? 1,
       },
     );
     if (!res.success || !res.data) {

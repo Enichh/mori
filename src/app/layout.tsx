@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import { AD_CONFIG } from "@/config/ads";
 import "./globals.css";
 
 const GA_ID = "G-C6KT3V4GW5";
@@ -23,6 +24,12 @@ export const metadata: Metadata = {
     "tagalog dubbed",
     "HD",
     "Mori",
+    "sports streaming",
+    "live sports",
+    "NBA streams",
+    "NFL streams",
+    "UFC streams",
+    "football streams",
   ],
   icons: {
     icon: "/favicon.svg",
@@ -108,18 +115,22 @@ export default function RootLayout({
           href="https://image.tmdb.org"
           crossOrigin="anonymous"
         />
+        <link
+          rel="preconnect"
+          href="https://cdnlivetv.tv"
+          crossOrigin="anonymous"
+        />
         <link rel="dns-prefetch" href="https://www.vidking.net" />
         <link rel="dns-prefetch" href="https://multiembed.mov" />
         <link rel="dns-prefetch" href="https://image.tmdb.org" />
+        <link rel="dns-prefetch" href="https://api.cdnlivetv.ru" />
       </head>
       <body className="font-body bg-background text-foreground min-h-screen">
+        <script async data-cfasync="false" src={AD_CONFIG.popunder.scriptSrc} />
         <script
           async
-          src="https://planetsrecipe.com/1d/8c/65/1d8c6541dcf8fe08a691fdd72627a917.js"
-        />
-        <script
-          async
-          src="https://pl29360736.profitablecpmratenetwork.com/b4/a0/18/b4a018fd53e73b05da8c99c85735b46f.js"
+          data-cfasync="false"
+          src={AD_CONFIG.socialBar.scriptSrc}
         />
         {children}
       </body>

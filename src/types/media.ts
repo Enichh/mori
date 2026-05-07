@@ -26,6 +26,7 @@ export interface Movie extends BaseMedia {
   revenue: number;
   status: string;
   tagline: string | null;
+  imdbId?: string | null;
   genres?: Genre[];
   credits: Credits;
   similar: SimilarResponse;
@@ -48,6 +49,7 @@ export interface TVShow extends BaseMedia {
   similar: SimilarResponse;
   videos: VideoResult;
   nextEpisodeToAir: Episode | null;
+  imdbId?: string | null;
 }
 
 export interface Anime extends BaseMedia {
@@ -175,4 +177,94 @@ export interface SearchResult {
   releaseDate?: string;
   firstAirDate?: string;
   voteAverage?: number;
+}
+
+// ---- AniList Types --------------------------------------------------------
+
+export interface AnilistAnime {
+  id: number;
+  title: string;
+  nativeTitle: string;
+  description: string;
+  coverImage: string;
+  bannerImage: string | null;
+  format: string;
+  status: string;
+  episodes: number | null;
+  season: string | null;
+  seasonYear: number | null;
+  averageScore: number | null;
+  popularity: number;
+  genres: string[];
+  studios: string[];
+}
+
+export interface AnilistCharacter {
+  id: number;
+  name: string;
+  image: string;
+  role: string;
+  voiceActors: {
+    id: number;
+    name: string;
+    image: string;
+    language: string;
+  }[];
+}
+
+export interface AnilistAnimeDetail extends AnilistAnime {
+  characters: AnilistCharacter[];
+  recommendations: (AnilistAnime & { rating: number })[];
+  streamingEpisodes: {
+    title: string;
+    thumbnail: string;
+    url: string;
+    site: string;
+  }[];
+}
+
+export interface AnilistPaginatedResult {
+  page: number;
+  results: AnilistAnime[];
+  totalPages: number;
+  totalResults: number;
+  hasNextPage: boolean;
+}
+
+// ---- Consumet Types -------------------------------------------------------
+
+export interface ConsumetAnimeInfo {
+  id: string;
+  title: string;
+  url: string;
+  image: string;
+  releaseDate: string | null;
+  description: string | null;
+  genres: string[];
+  subOrDub: "sub" | "dub";
+  type: string | null;
+  status: string;
+  otherName: string | null;
+  totalEpisodes: number;
+  episodes: ConsumetEpisode[];
+}
+
+export interface ConsumetEpisode {
+  id: string;
+  number: number;
+  title?: string;
+  url: string;
+  isFiller?: boolean;
+}
+
+export interface ConsumetSource {
+  url: string;
+  isM3U8: boolean;
+  quality: string;
+}
+
+export interface ConsumetStreamingData {
+  headers?: Record<string, string>;
+  sources: ConsumetSource[];
+  subtitles?: { url: string; lang: string }[];
 }

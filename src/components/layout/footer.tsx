@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { footerLinks } from "@/config/navigation";
+import { getSmartlinkUrl } from "@/lib/smartlink";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -58,8 +59,18 @@ export function Footer() {
                   Privacy Policy
                 </Link>
               </li>
+              <li>
+                <a
+                  href={getSmartlinkUrl()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs md:text-sm text-muted-foreground hover:text-primary transition-colors font-body"
+                >
+                  Advertise
+                </a>
+              </li>
             </ul>
-            <p className="text-[11px] md:text-xs text-muted-foreground font-body leading-relaxed mt-4">
+            <p className="text-[11px] md:text-xs text-muted-foreground font-body leading-relaxed mt-4 max-w-[240px] sm:max-w-none">
               This product uses the TMDB API but is not endorsed or certified by
               TMDB.
             </p>
@@ -79,10 +90,10 @@ export function Footer() {
         </div>
 
         <div className="mt-8 pt-5 border-t border-border flex items-center justify-between gap-4">
-          <p className="text-[10px] md:text-xs text-muted-foreground font-body">
+          <p className="text-[11px] md:text-xs text-muted-foreground font-body">
             &copy; {currentYear} Mori. All rights reserved.
           </p>
-          <p className="text-[10px] md:text-xs text-muted-foreground font-mono">
+          <p className="text-[11px] md:text-xs text-muted-foreground font-mono">
             v1.0.0
           </p>
         </div>

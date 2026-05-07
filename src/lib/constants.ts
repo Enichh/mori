@@ -38,9 +38,13 @@ export const IMAGE_SIZES = {
 // ---- Player --------------------------------------------------------------
 export const VIDEO_SERVERS = {
   vidking: "Vidking",
-  vidhide: "Vidhide",
+  vidhide: "VidhidePro",
+  vidlink: "VidLink",
+  vidstream: "VidStream",
+  vidplay: "VidPlay",
   superembed: "SuperEmbed",
   "superembed-vip": "SuperEmbed VIP",
+  consumet: "1Anime",
 } as const;
 
 export const DEFAULT_PLAYER_COLOR = "C5FF4A"; // lime green, no `#`
@@ -57,8 +61,26 @@ export const SITE_DESCRIPTION =
 // ---- TMDB API ------------------------------------------------------------
 export const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 
+// ---- AniList --------------------------------------------------------------
+export const ANILIST_BASE_URL = "https://graphql.anilist.co";
+
 // ---- Vidking -------------------------------------------------------------
 export const VIDKING_BASE_URL = "https://www.vidking.net";
 
 // ---- Vidhide -------------------------------------------------------------
-export const VIDHIDE_BASE_URL = "https://vidhide.com";
+export const VIDHIDE_BASE_URL = "https://vidhidepro.com";
+
+// ---- Anime Stream (1Anime CDN) -------------------------------------------
+export const ANIME_STREAM_BASE_URL = "https://cdn-eu.1ani.me";
+
+// ---- VidLink -------------------------------------------------------------
+export const VIDLINK_BASE_URL = "https://vidlink.pro";
+
+// ---- VidStream -----------------------------------------------------------
+export const VIDSTREAM_BASE_URL = "https://vidsrc.icu";
+
+// ---- VidPlay -------------------------------------------------------------
+export const VIDPLAY_BASE_URL = "https://vidsrc.cc";
+
+// ---- Sports API ----------------------------------------------------------
+export const SPORTS_CDNLIVE_BASE_URL = "https://api.cdnlivetv.ru/api/v1";

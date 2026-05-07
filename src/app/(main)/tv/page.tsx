@@ -6,7 +6,7 @@ import { Pagination } from "@/components/ui/pagination";
 import { SelectSort } from "@/components/ui/select-sort";
 import type { Genre } from "@/types";
 
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 interface TVPageProps {
   searchParams: Promise<{ page?: string; genre?: string; sort?: string }>;
@@ -28,17 +28,19 @@ export default async function TVPage({ searchParams }: TVPageProps) {
   const currentPage = parseInt(page, 10) || 1;
   const tmdb = TmdbService.getInstance();
 
-  let showsData = null;
-  let genres: Genre[] = [];
+  const [showsResult, tvGenresResult] = await Promise.allSettled([
+    tmdb.tv.discover({
+      sort_by: sort,
+      with_genres: genre ? parseInt(genre, 10) : undefined,
+      page: currentPage,
+    }),
+    tmdb.genres.getTVGenres(),
+  ]);
 
-  try {
-    const shows = await tmdb.tv.getPopular(currentPage);
-    showsData = shows;
-    const tvGenres = await tmdb.genres.getTVGenres();
-    genres = tvGenres;
-  } catch (error) {
-    console.error("Failed to fetch TV shows:", error);
-  }
+  const showsData =
+    showsResult.status === "fulfilled" ? showsResult.value : null;
+  const genres: Genre[] =
+    tvGenresResult.status === "fulfilled" ? tvGenresResult.value : [];
 
   return (
     <div className="container-cine py-8">
@@ -82,6 +84,7 @@ export default async function TVPage({ searchParams }: TVPageProps) {
         </div>
       )}
 
+      {/* In-content ad — subtle separator before pagination */}
       {showsData && showsData.totalPages > 1 && (
         <Pagination
           currentPage={currentPage}

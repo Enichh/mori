@@ -5,6 +5,8 @@ import { TmdbService } from "@/services/tmdb";
 import { getStillUrl, getPosterUrl } from "@/lib/tmdb-image";
 import { Star, ChevronLeft, ChevronRight, Play } from "lucide-react";
 
+export const revalidate = 31536000;
+
 interface EpisodePageProps {
   params: Promise<{ id: string; season: string; episode: string }>;
 }

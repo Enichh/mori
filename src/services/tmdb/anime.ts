@@ -143,6 +143,11 @@ export interface IAnimeService {
   getTopRated(page?: number): Promise<TMDBTVResponse>;
   getDetails(id: number): Promise<Anime>;
   getByGenre(genreIds: number[], page?: number): Promise<TMDBTVResponse>;
+  discover(params: {
+    sort_by?: string;
+    with_genres?: string;
+    page?: number;
+  }): Promise<TMDBTVResponse>;
 }
 
 // ---------------------------------------------------------------------------
@@ -228,6 +233,25 @@ export class AnimeService implements IAnimeService {
       ...this.baseParams,
       with_genres: [ANIME_GENRE_ID, ...genreIds].join(","),
       page,
+    });
+  }
+
+  async discover(params: {
+    sort_by?: string;
+    with_genres?: string;
+    page?: number;
+  }): Promise<TMDBTVResponse> {
+    const mergedGenres = params.with_genres
+      ? [ANIME_GENRE_ID.toString(), params.with_genres].join(",")
+      : ANIME_GENRE_ID.toString();
+
+    return this.getPaginated("/discover/tv", {
+      with_genres: mergedGenres,
+      with_original_language: "ja",
+      with_keywords: ANIME_KEYWORD_ID.toString(),
+      sort_by: params.sort_by ?? "popularity.desc",
+      include_adult: false,
+      page: params.page ?? 1,
     });
   }
 }

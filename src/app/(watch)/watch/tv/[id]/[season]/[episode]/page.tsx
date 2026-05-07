@@ -6,6 +6,23 @@ import { VideoPlayerWrapper } from "@/app/(watch)/watch/movie/[id]/video-player-
 import { getStillUrl } from "@/lib/tmdb-image";
 import { Star, ChevronLeft, ChevronRight } from "lucide-react";
 
+export const revalidate = 31536000;
+
+export async function generateStaticParams() {
+  try {
+    const { TmdbService } = await import("@/services/tmdb");
+    const tmdb = TmdbService.getInstance();
+    const popular = await tmdb.tv.getPopular();
+    return popular.results.slice(0, 50).map((show) => ({
+      id: String(show.id),
+      season: "1",
+      episode: "1",
+    }));
+  } catch {
+    return [];
+  }
+}
+
 interface TVWatchPageProps {
   params: Promise<{ id: string; season: string; episode: string }>;
 }
@@ -89,6 +106,7 @@ export default async function TVWatchPage({ params }: TVWatchPageProps) {
         <div className="max-w-[1400px] mx-auto">
           <VideoPlayerWrapper
             tmdbId={showId}
+            imdbId={show.imdbId}
             mediaType="tv"
             title={`${show.name} S${seasonNum} E${episodeNum}`}
             posterPath={show.posterPath}

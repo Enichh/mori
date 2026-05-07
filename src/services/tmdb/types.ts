@@ -57,6 +57,7 @@ export interface TMDBMovieDetail {
   credits: TMDBCredits;
   similar: TMDBPaginatedResponse<TMDBMovieResult>;
   videos: TMDBVideosResponse;
+  imdb_id?: string | null;
 }
 
 // ---- TV ------------------------------------------------------------------
@@ -103,6 +104,7 @@ export interface TMDBTVDetail {
   videos: TMDBVideosResponse;
   next_episode_to_air: TMDBEpisode | null;
   origin_country?: string[];
+  imdb_id?: string | null;
 }
 
 // ---- Season / Episode ----------------------------------------------------
@@ -184,7 +186,7 @@ export interface TMDBVideo {
 
 export interface TMDBSearchResult {
   id: number;
-  media_type: 'movie' | 'tv' | 'person';
+  media_type: "movie" | "tv" | "person";
   title?: string;
   name?: string;
   poster_path: string | null;

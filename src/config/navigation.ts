@@ -24,6 +24,7 @@ export const mainNavigation: NavItem[] = [
   { title: "Anime", label: "Anime", href: "/anime", icon: "Swords" },
   { title: "Pinoy", label: "Pinoy 🇵🇭", href: "/pinoy", icon: "Flag" },
   { title: "KDrama", label: "KDrama 🇰🇷", href: "/kdrama", icon: "Drama" },
+  { title: "Sports", label: "Sports 🏀", href: "/sports", icon: "Trophy" },
 ];
 
 /** @deprecated Use mainNavigation */
@@ -39,6 +40,7 @@ export const mobileNavigation: NavItem[] = [
   { title: "Anime", label: "Anime", href: "/anime", icon: "Swords" },
   { title: "Pinoy", label: "Pinoy 🇵🇭", href: "/pinoy", icon: "Flag" },
   { title: "KDrama", label: "KDrama 🇰🇷", href: "/kdrama", icon: "Drama" },
+  { title: "Sports", label: "Sports 🏀", href: "/sports", icon: "Trophy" },
   { title: "Search", label: "Search", href: "/search", icon: "Search" },
 ];
 
@@ -51,6 +53,7 @@ export const footerLinks: NavItem[] = [
   { label: "Anime", href: "/anime" },
   { label: "Pinoy 🇵🇭", href: "/pinoy" },
   { label: "KDrama 🇰🇷", href: "/kdrama" },
+  { label: "Sports 🏀", href: "/sports" },
 ];
 
 export const footerNav: NavSection[] = [
@@ -66,6 +69,16 @@ export const footerNav: NavSection[] = [
       { label: "Drama", href: "/genre/drama" },
       { label: "Horror", href: "/genre/horror" },
       { label: "Animation", href: "/genre/animation" },
+    ],
+  },
+  {
+    title: "Sports",
+    items: [
+      { label: "Basketball", href: "/sports/basketball" },
+      { label: "Football", href: "/sports/football" },
+      { label: "Baseball", href: "/sports/baseball" },
+      { label: "Hockey", href: "/sports/hockey" },
+      { label: "UFC/Boxing", href: "/sports/fight" },
     ],
   },
 ];

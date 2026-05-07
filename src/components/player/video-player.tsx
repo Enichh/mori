@@ -18,6 +18,11 @@ import { TwoEmbedPlayer } from "@/components/player/twoembed-player";
 import { StreamVaultPlayer } from "@/components/player/streamvault-player";
 import { EzVidApiPlayer } from "@/components/player/ezvidapi-player";
 import { VidSrcPlayer } from "@/components/player/vidsrc-player";
+import { VidLinkPlayer } from "@/components/player/vidlink-player";
+import { VidStreamPlayer } from "@/components/player/vidstream-player";
+import { VidPlayPlayer } from "@/components/player/vidplay-player";
+import { VidhidePlayer } from "@/components/player/vidhide-player";
+import { ConsumetPlayer } from "@/components/player/consumet-player";
 import { EpisodeNavigator } from "@/components/player/episode-navigator";
 import type { VidkingPlayerConfig, EpisodeNavData } from "@/types";
 
@@ -30,7 +35,12 @@ type PlayerServer =
   | "twoembed"
   | "streamvault"
   | "ezvidapi"
-  | "vidsrc";
+  | "vidsrc"
+  | "vidlink"
+  | "vidstream"
+  | "vidplay"
+  | "vidhide"
+  | "consumet";
 
 const SERVERS: { id: PlayerServer; label: string; tags?: string[] }[] = [
   { id: "superembed", label: "SuperEmbed" },
@@ -42,17 +52,27 @@ const SERVERS: { id: PlayerServer; label: string; tags?: string[] }[] = [
   { id: "streamvault", label: "StreamVault" },
   { id: "ezvidapi", label: "vid.api" },
   { id: "vidsrc", label: "VidSrc" },
+  { id: "vidlink", label: "VidLink" },
+  { id: "vidstream", label: "VidStream" },
+  { id: "vidplay", label: "VidPlay" },
+  { id: "vidhide", label: "VidhidePro" },
+  { id: "consumet", label: "1Anime", tags: ["Anime"] },
 ];
 
 const AUTO_FAILOVER_ORDER: PlayerServer[] = [
   "vidsrc",
+  "vidlink",
+  "vidstream",
+  "vidplay",
   "twoembed",
   "embedapi",
   "mostream",
   "vidking",
   "streamvault",
   "ezvidapi",
+  "vidhide",
   "superembed",
+  "consumet",
 ];
 
 interface VideoPlayerProps {
@@ -118,6 +138,11 @@ export function VideoPlayer({
       "https://streamvaultsrc.click",
       "https://ezvidapi.com",
       "https://embedmaster.com",
+      "https://vidlink.pro",
+      "https://vidsrc.icu",
+      "https://vidsrc.cc",
+      "https://vidhidepro.com",
+      "https://cdn-eu.1ani.me",
     ];
     for (const origin of origins) {
       ReactDOM.preconnect(origin, { crossOrigin: "anonymous" });
@@ -358,6 +383,41 @@ export function VideoPlayer({
             onError={handleError}
           />
         )}
+        {activated && server === "vidlink" && (
+          <VidLinkPlayer
+            config={config}
+            onLoad={handleLoad}
+            onError={handleError}
+          />
+        )}
+        {activated && server === "vidstream" && (
+          <VidStreamPlayer
+            config={config}
+            onLoad={handleLoad}
+            onError={handleError}
+          />
+        )}
+        {activated && server === "vidplay" && (
+          <VidPlayPlayer
+            config={config}
+            onLoad={handleLoad}
+            onError={handleError}
+          />
+        )}
+        {activated && server === "vidhide" && (
+          <VidhidePlayer
+            config={config}
+            onLoad={handleLoad}
+            onError={handleError}
+          />
+        )}
+        {activated && server === "consumet" && (
+          <ConsumetPlayer
+            config={config}
+            onLoad={handleLoad}
+            onError={handleError}
+          />
+        )}
       </div>
 
       {activated && episodeNav && (
@@ -460,8 +520,8 @@ export function VideoPlayer({
           <div className="flex items-center justify-center gap-1.5 mt-2 text-[10px] text-muted-foreground/50 font-mono">
             <ShieldAlert className="w-3 h-3" />
             <span>
-              Ads may appear — we recommend uBlock Origin (ublockorigin.com). Mori does not host
-              any content.
+              Ads may appear — we recommend uBlock Origin (ublockorigin.com).
+              Mori does not host any content.
             </span>
           </div>
         </>

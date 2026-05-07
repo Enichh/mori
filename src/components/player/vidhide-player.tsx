@@ -15,10 +15,10 @@ function buildVidhideUrl(config: VidkingPlayerConfig): string {
   const { tmdbId, mediaType, season, episode } = config;
 
   if (mediaType === "tv" && season !== undefined && episode !== undefined) {
-    return `https://vidhide.com/embed/tv/${tmdbId}/${season}/${episode}`;
+    return `https://vidhidepro.com/embed/tv/${tmdbId}/${season}/${episode}`;
   }
 
-  return `https://vidhide.com/embed/movie/${tmdbId}`;
+  return `https://vidhidepro.com/embed/movie/${tmdbId}`;
 }
 
 export function VidhidePlayer({
@@ -34,7 +34,7 @@ export function VidhidePlayer({
 
   React.useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      if (event.origin !== "https://vidhide.com") return;
+      if (event.origin !== "https://vidhidepro.com") return;
 
       try {
         const data =

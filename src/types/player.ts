@@ -14,6 +14,7 @@ export interface EpisodeNavData {
 /** Configuration used to build a Vidking iframe embed URL. */
 export interface VidkingPlayerConfig {
   tmdbId: number;
+  imdbId?: string | null;
   mediaType: "movie" | "tv";
   season?: number;
   episode?: number;
@@ -66,6 +67,9 @@ export interface VidhideSource {
 
 export type PlayerServer =
   | "vidking"
+  | "vidlink"
+  | "vidstream"
+  | "vidplay"
   | "superembed"
   | "superembed-vip"
   | "embedapi"
@@ -73,4 +77,5 @@ export type PlayerServer =
   | "twoembed"
   | "streamvault"
   | "ezvidapi"
-  | "embedmaster";
+  | "embedmaster"
+  | "consumet";

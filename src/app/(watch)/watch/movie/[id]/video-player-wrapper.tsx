@@ -9,6 +9,7 @@ import type { VidkingPlayerConfig, EpisodeNavData } from "@/types";
 
 interface VideoPlayerWrapperProps {
   tmdbId: number;
+  imdbId?: string | null;
   mediaType: "movie" | "tv";
   title: string;
   posterPath?: string | null;
@@ -21,6 +22,7 @@ interface VideoPlayerWrapperProps {
 
 export function VideoPlayerWrapper({
   tmdbId,
+  imdbId,
   mediaType,
   title,
   posterPath,
@@ -34,6 +36,7 @@ export function VideoPlayerWrapper({
 
   const config: VidkingPlayerConfig = {
     tmdbId,
+    imdbId,
     mediaType,
     season,
     episode,

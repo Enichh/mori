@@ -1,9 +1,16 @@
 import type { Metadata } from "next";
 import { TmdbService } from "@/services/tmdb";
 import { MediaGrid } from "@/components/media/media-grid";
-import type { TVShow } from "@/types";
+import { GenreFilter } from "@/components/ui/genre-filter";
+import { Pagination } from "@/components/ui/pagination";
+import { SelectSort } from "@/components/ui/select-sort";
+import type { Genre } from "@/types";
 
-export const revalidate = 3600;
+export const revalidate = 86400;
+
+interface KDramaPageProps {
+  searchParams: Promise<{ page?: string; genre?: string; sort?: string }>;
+}
 
 export const metadata: Metadata = {
   title: "KDrama 🇰🇷 | Mori",
@@ -11,68 +18,85 @@ export const metadata: Metadata = {
     "Stream the most popular Korean dramas and TV shows. From romance to thriller, find your next KDrama obsession.",
 };
 
-export default async function KDramaPage() {
+const SORT_OPTIONS = [
+  { value: "popularity.desc" as const, label: "Most Popular" },
+  { value: "vote_average.desc" as const, label: "Highest Rated" },
+  { value: "first_air_date.desc" as const, label: "Newest" },
+];
+
+export default async function KDramaPage({ searchParams }: KDramaPageProps) {
+  const { page = "1", genre, sort = "popularity.desc" } = await searchParams;
+  const currentPage = parseInt(page, 10) || 1;
   const tmdb = TmdbService.getInstance();
-  let kdramas: TVShow[] = [];
-  let topRated: TVShow[] = [];
 
-  try {
-    const [kdramaData, topData] = await Promise.allSettled([
-      tmdb.tv.getKDrama(),
-      tmdb.tv.getKDrama(), // same for now, could be different sort
-    ]);
+  const [kdramaResult, tvGenresResult] = await Promise.allSettled([
+    tmdb.tv.discoverKDrama({
+      sort_by: sort,
+      with_genres: genre ? parseInt(genre, 10) : undefined,
+      page: currentPage,
+    }),
+    tmdb.genres.getTVGenres(),
+  ]);
 
-    if (kdramaData.status === "fulfilled") {
-      kdramas = kdramaData.value.results;
-    }
-    if (topData.status === "fulfilled") {
-      topRated = topData.value.results;
-    }
-  } catch (e) {
-    console.error("Failed to fetch KDrama:", e);
-  }
+  const kdramaData =
+    kdramaResult.status === "fulfilled" ? kdramaResult.value : null;
+  const genres: Genre[] =
+    tvGenresResult.status === "fulfilled" ? tvGenresResult.value : [];
 
   return (
     <div className="container-cine py-8">
-      {/* Section label */}
-      <div className="section-label mb-6">
-        <span aria-hidden="true">[</span>
-        <span>KOREAN DRAMA</span>
-        <span aria-hidden="true">]</span>
+      <div className="mb-6">
+        <h1 className="text-2xl md:text-3xl font-heading font-bold text-foreground mb-2">
+          KDrama <span className="text-primary">🇰🇷</span>
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Discover the best Korean dramas — from heart-wrenching romance to
+          edge-of-your-seat thrillers.
+        </p>
       </div>
 
-      <h1 className="text-3xl md:text-4xl font-heading font-bold text-foreground mb-2">
-        KDrama <span className="text-primary">🇰🇷</span>
-      </h1>
-      <p className="text-sm text-muted-foreground mb-10 max-w-2xl">
-        Discover the best Korean dramas — from heart-wrenching romance to
-        edge-of-your-seat thrillers. All powered by TMDB with multiple streaming
-        servers.
-      </p>
-
-      {kdramas.length > 0 && (
-        <MediaGrid
-          title="Popular KDramas"
-          items={kdramas.slice(0, 12)}
-          mediaType="tv"
+      {genres.length > 0 && (
+        <GenreFilter
+          genres={genres}
+          activeGenre={genre}
+          baseHref="/kdrama"
+          currentSort={sort}
         />
       )}
 
-      {kdramas.length > 12 && (
-        <MediaGrid
-          title="More KDramas"
-          items={kdramas.slice(12, 24)}
-          mediaType="tv"
+      <div className="flex items-center justify-between py-4 border-b border-border">
+        <p className="text-xs text-muted-foreground">
+          {kdramaData?.totalResults?.toLocaleString() || 0} shows found
+        </p>
+        <SelectSort
+          options={SORT_OPTIONS}
+          currentSort={sort}
+          baseHref="/kdrama"
+          genre={genre}
         />
+      </div>
+
+      {kdramaData && kdramaData.results.length > 0 && (
+        <MediaGrid title="" items={kdramaData.results} mediaType="tv" />
       )}
 
-      {kdramas.length === 0 && (
-        <div className="text-center py-20 text-muted-foreground">
-          <p className="text-lg font-heading">No KDramas found</p>
-          <p className="text-sm mt-2">
-            Try again later — the TMDB API may be rate-limited.
-          </p>
+      {(!kdramaData || kdramaData.results.length === 0) && (
+        <div className="py-20 text-center">
+          <p className="text-muted-foreground">No KDramas found.</p>
         </div>
+      )}
+
+      {/* In-content ad — subtle separator before pagination */}
+      {kdramaData && kdramaData.totalPages > 1 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={kdramaData.totalPages}
+          baseHref="/kdrama"
+          searchParams={{
+            genre: genre || "",
+            sort: sort !== "popularity.desc" ? sort : "",
+          }}
+        />
       )}
     </div>
   );

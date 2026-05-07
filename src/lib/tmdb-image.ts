@@ -23,21 +23,25 @@ const PLACEHOLDER_PROFILE =
 
 // ---- public API ----------------------------------------------------------
 
-/** Build a poster URL. Returns an inline SVG placeholder when `path` is null. */
+/** Build a poster URL. Returns an inline SVG placeholder when `path` is null.
+ *  If `path` is already an absolute URL (e.g. AniList), returns it as-is. */
 export function getPosterUrl(
   path: string | null,
   size: string = IMAGE_SIZES.poster.w342,
 ): string {
   if (!path) return PLACEHOLDER_POSTER;
+  if (path.startsWith("http")) return path;
   return `${TMDB_IMAGE_BASE_URL}/${size}${path}`;
 }
 
-/** Build a backdrop URL. Returns an inline SVG placeholder when `path` is null. */
+/** Build a backdrop URL. Returns an inline SVG placeholder when `path` is null.
+ *  If `path` is already an absolute URL (e.g. AniList), returns it as-is. */
 export function getBackdropUrl(
   path: string | null,
   size: string = IMAGE_SIZES.backdrop.w1280,
 ): string {
   if (!path) return PLACEHOLDER_BACKDROP;
+  if (path.startsWith("http")) return path;
   return `${TMDB_IMAGE_BASE_URL}/${size}${path}`;
 }
 

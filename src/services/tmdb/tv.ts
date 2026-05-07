@@ -80,6 +80,7 @@ function mapTVDetail(d: TMDBTVDetail): TVShow {
     nextEpisodeToAir: d.next_episode_to_air
       ? mapEpisode(d.next_episode_to_air)
       : null,
+    imdbId: d.imdb_id ?? null,
   };
 }
 
@@ -191,6 +192,16 @@ export interface ITVService {
   ): Promise<Episode>;
   getVideos(id: number): Promise<VideoResult>;
   getKDrama(page?: number): Promise<TMDBTVResponse>;
+  discoverKDrama(params: {
+    sort_by?: string;
+    with_genres?: number;
+    page?: number;
+  }): Promise<TMDBTVResponse>;
+  discover(params: {
+    sort_by?: string;
+    with_genres?: number;
+    page?: number;
+  }): Promise<TMDBTVResponse>;
 }
 
 // ---------------------------------------------------------------------------
@@ -252,7 +263,7 @@ export class TVService implements ITVService {
   async getDetails(id: number): Promise<TVShow> {
     const res = await this.client.get<TMDBTVDetail>(`/tv/${id}`, {
       api_key: this.apiKey,
-      append_to_response: "credits,similar,videos",
+      append_to_response: "credits,similar,videos,external_ids",
     });
     if (!res.success || !res.data) {
       throw new Error(res.error ?? "Failed to fetch TV details");
@@ -341,10 +352,36 @@ export class TVService implements ITVService {
     return this.getPaginated("/discover/tv", {
       with_original_language: "ko",
       with_origin_country: "KR",
-      with_genres: "18",
       sort_by: "popularity.desc",
       include_adult: false,
       page,
+    });
+  }
+
+  async discoverKDrama(params: {
+    sort_by?: string;
+    with_genres?: number;
+    page?: number;
+  }): Promise<TMDBTVResponse> {
+    return this.getPaginated("/discover/tv", {
+      with_original_language: "ko",
+      with_origin_country: "KR",
+      sort_by: params.sort_by ?? "popularity.desc",
+      with_genres: params.with_genres?.toString(),
+      include_adult: false,
+      page: params.page ?? 1,
+    });
+  }
+
+  async discover(params: {
+    sort_by?: string;
+    with_genres?: number;
+    page?: number;
+  }): Promise<TMDBTVResponse> {
+    return this.getPaginated("/discover/tv", {
+      sort_by: params.sort_by ?? "popularity.desc",
+      with_genres: params.with_genres,
+      page: params.page ?? 1,
     });
   }
 }

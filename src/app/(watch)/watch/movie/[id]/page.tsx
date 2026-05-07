@@ -6,6 +6,19 @@ import { VideoPlayerWrapper } from "./video-player-wrapper";
 import { getPosterUrl } from "@/lib/tmdb-image";
 import { Star, Clock, Calendar, ChevronLeft } from "lucide-react";
 
+export const revalidate = 31536000;
+
+export async function generateStaticParams() {
+  try {
+    const { TmdbService } = await import("@/services/tmdb");
+    const tmdb = TmdbService.getInstance();
+    const popular = await tmdb.movies.getPopular();
+    return popular.results.slice(0, 50).map((m) => ({ id: String(m.id) }));
+  } catch {
+    return [];
+  }
+}
+
 interface MovieWatchPageProps {
   params: Promise<{ id: string }>;
 }
@@ -61,6 +74,7 @@ export default async function MovieWatchPage({ params }: MovieWatchPageProps) {
         <div className="max-w-[1400px] mx-auto">
           <VideoPlayerWrapper
             tmdbId={movieId}
+            imdbId={movie.imdbId}
             mediaType="movie"
             title={movie.title}
             posterPath={movie.posterPath}
@@ -88,7 +102,7 @@ export default async function MovieWatchPage({ params }: MovieWatchPageProps) {
             />
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl md:text-2xl font-heading font-bold text-foreground mb-2">
+            <h1 className="text-xl md:text-2xl font-heading font-bold text-foreground mb-2 break-words">
               {movie.title}
             </h1>
             <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mb-3">
@@ -126,7 +140,7 @@ export default async function MovieWatchPage({ params }: MovieWatchPageProps) {
               ))}
             </div>
             {movie.overview && (
-              <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
+              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed line-clamp-3 break-words">
                 {movie.overview}
               </p>
             )}

@@ -88,7 +88,7 @@ export function MediaCard({
 
       {/* Info */}
       <div className="mt-1.5">
-        <h3 className="text-xs sm:text-sm font-body font-medium text-foreground line-clamp-1 group-hover:text-primary transition-colors">
+        <h3 className="text-xs sm:text-sm font-body font-medium text-foreground line-clamp-1 break-words group-hover:text-primary transition-colors">
           {title}
         </h3>
         {year && (

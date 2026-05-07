@@ -67,7 +67,7 @@ export function GenreFilter({
       </button>
 
       {open && (
-        <div className="absolute top-full mt-1 left-0 z-50 w-48 max-h-64 overflow-y-auto bg-card border border-border shadow-lg animate-fade-in">
+        <div className="absolute top-full mt-1 left-0 z-50 w-44 sm:w-48 max-h-60 sm:max-h-64 overflow-y-auto bg-card border border-border shadow-lg animate-fade-in">
           <button
             onClick={() => navigate()}
             className={cn(
