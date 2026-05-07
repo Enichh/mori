@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 interface CacheEntry<T> {
   data: T;
@@ -8,82 +8,109 @@ interface CacheEntry<T> {
   ttl: number;
 }
 
+const CACHE_PREFIX = "mori:cache:";
+
+function readCache<T>(key: string): T | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(`${CACHE_PREFIX}${key}`);
+    if (!raw) return null;
+    const entry: CacheEntry<T> = JSON.parse(raw);
+    if (Date.now() - entry.timestamp < entry.ttl) return entry.data;
+  } catch {
+    /* corrupt */
+  }
+  return null;
+}
+
+function writeCache<T>(key: string, data: T, ttlMs: number): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(
+      `${CACHE_PREFIX}${key}`,
+      JSON.stringify({ data, timestamp: Date.now(), ttl: ttlMs }),
+    );
+  } catch {
+    /* full */
+  }
+}
+
 /**
  * Client-side fetch with localStorage caching.
- *
- * - Returns cached data instantly if available and not expired
- * - Refetches in the background if cache is expired (stale-while-revalidate)
- * - Cache TTL is configurable (default: 1 hour for listings, 24h for details)
+ * - Reads cache instantly on mount and on every key change
+ * - Fetches from network if cache miss or expired
+ * - Refetches on key change
  */
 export function useCachedFetch<T>(
   key: string,
   fetcher: () => Promise<T>,
-  ttlMs: number = 3600000, // 1 hour default
+  ttlMs: number = 3600000,
 ) {
-  const [data, setData] = useState<T | null>(() => {
-    if (typeof window === "undefined") return null;
-    try {
-      const raw = localStorage.getItem(`mori:cache:${key}`);
-      if (!raw) return null;
-      const entry: CacheEntry<T> = JSON.parse(raw);
-      if (Date.now() - entry.timestamp < entry.ttl) {
-        return entry.data;
-      }
-    } catch {
-      // corrupted cache — ignore
-    }
-    return null;
-  });
-
-  const [loading, setLoading] = useState(!data);
+  const [data, setData] = useState<T | null>(() => readCache<T>(key));
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const fetchData = useCallback(
-    async (force = false) => {
-      if (!force && data) return; // already have fresh data
-
-      try {
-        setLoading(true);
-        setError(null);
-        const result = await fetcher();
-
-        setData(result);
-
-        if (typeof window !== "undefined") {
-          const entry: CacheEntry<T> = {
-            data: result,
-            timestamp: Date.now(),
-            ttl: ttlMs,
-          };
-          try {
-            localStorage.setItem(`mori:cache:${key}`, JSON.stringify(entry));
-          } catch {
-            // localStorage full — silently ignore
-          }
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [key, ttlMs, data, fetcher],
-  );
+  const fetcherRef = useRef(fetcher);
+  fetcherRef.current = fetcher;
+  const ttlRef = useRef(ttlMs);
+  ttlRef.current = ttlMs;
 
   useEffect(() => {
-    fetchData();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    let cancelled = false;
 
-  return { data, loading, error, refetch: () => fetchData(true) };
+    // Try cache first
+    const cached = readCache<T>(key);
+    if (cached !== null) {
+      setData(cached);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
+    // Fetch from network
+    setLoading(true);
+    setError(null);
+
+    fetcherRef
+      .current()
+      .then((result) => {
+        if (cancelled) return;
+        setData(result);
+        writeCache(key, result, ttlRef.current);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setError(err instanceof Error ? err.message : "Failed to fetch");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [key]); // ✅ Re-fetches when key changes
+
+  const refetch = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await fetcherRef.current();
+      setData(result);
+      writeCache(key, result, ttlRef.current);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch");
+    } finally {
+      setLoading(false);
+    }
+  }, [key]);
+
+  return { data, loading, error, refetch };
 }
 
-/** Clear all mori cached data from localStorage */
 export function clearMoriCache() {
   if (typeof window === "undefined") return;
   const keys = Object.keys(localStorage);
-  for (const key of keys) {
-    if (key.startsWith("mori:cache:")) {
-      localStorage.removeItem(key);
-    }
+  for (const k of keys) {
+    if (k.startsWith(CACHE_PREFIX)) localStorage.removeItem(k);
   }
 }
