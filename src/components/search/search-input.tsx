@@ -22,6 +22,11 @@ export function SearchInput({
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
+  // Sync when initialValue changes (e.g., URL search param change)
+  useEffect(() => {
+    setValue(initialValue);
+  }, [initialValue]);
+
   useEffect(() => {
     if (autoFocus && inputRef.current) {
       inputRef.current.focus();

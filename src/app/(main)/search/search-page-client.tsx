@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SearchInput } from "@/components/search/search-input";
 import { MediaGrid } from "@/components/media/media-grid";
@@ -10,7 +10,6 @@ import { LoaderCircle, Film, Tv, Swords, Grid3X3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TMDB_BASE_URL } from "@/lib/constants";
 
-// Snake_case to camelCase mappers for raw TMDB API results
 function mapResult(r: any, fallbackType?: string): any {
   return {
     id: r.id,
@@ -40,7 +39,6 @@ function mapResult(r: any, fallbackType?: string): any {
   };
 }
 
-// Direct TMDB API call (no proxy — saves Netlify Function invocations)
 async function tmdbFetch(
   endpoint: string,
   query: string,
@@ -50,7 +48,6 @@ async function tmdbFetch(
   url.searchParams.set("api_key", process.env.NEXT_PUBLIC_TMDB_API_KEY!);
   url.searchParams.set("query", query);
   url.searchParams.set("page", String(page));
-
   const res = await fetch(url.toString(), {
     headers: { Accept: "application/json" },
   });
@@ -67,26 +64,23 @@ const TYPE_FILTERS = [
 
 export function SearchPageClient() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const initialQuery = searchParams.get("q") || "";
-  const initialType = searchParams.get("type") || "all";
+  const sp = useSearchParams();
+  const urlQ = useMemo(() => sp.get("q") || "", [sp]);
+  const urlType = useMemo(() => sp.get("type") || "all", [sp]);
 
-  const [query, setQuery] = useState(initialQuery);
-  const [activeType, setActiveType] = useState(initialType);
+  const [query, setQuery] = useState(urlQ);
+  const [activeType, setActiveType] = useState(urlType);
   const [results, setResults] = useState<(Movie | TVShow)[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalResults, setTotalResults] = useState(0);
-  const [hasSearched, setHasSearched] = useState(!!initialQuery);
+  const [hasSearched, setHasSearched] = useState(false);
+  const didInit = useRef(false);
 
   const performSearch = useCallback(
-    async (
-      searchQuery: string,
-      searchPage: number = 1,
-      type: string = activeType,
-    ) => {
+    async (searchQuery: string, searchPage = 1, type: string) => {
       if (!searchQuery.trim()) {
         setResults([]);
         setHasSearched(false);
@@ -95,87 +89,55 @@ export function SearchPageClient() {
       setIsLoading(true);
       setError(null);
       setHasSearched(true);
-
       try {
         if (type === "anime") {
-          try {
-            const gqlQuery = `
-              query ($q: String, $page: Int) {
-                Page(page: $page, perPage: 18) {
-                  pageInfo { total perPage currentPage lastPage hasNextPage }
-                  media(search: $q, type: ANIME, sort: SEARCH_MATCH) {
-                    id
-                    title { romaji english native }
-                    coverImage { large }
-                    format
-                    status
-                    episodes
-                    averageScore
-                    popularity
-                    genres
-                    season
-                    seasonYear
-                  }
-                }
-              }
-            `;
-            const res = await fetch("https://graphql.anilist.co", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-              },
-              body: JSON.stringify({
-                query: gqlQuery,
-                variables: { q: searchQuery.trim(), page: searchPage },
-              }),
-            });
-            if (!res.ok) throw new Error("Search failed");
-            const json = await res.json();
-            if (json.errors)
-              throw new Error(json.errors[0]?.message ?? "AniList error");
-
-            const pageData = json.data.Page;
-            setResults(
-              pageData.media.map((m: any) => ({
-                id: m.id,
-                title:
-                  m.title?.english ?? m.title?.romaji ?? m.title?.native ?? "",
-                name: m.title?.english ?? m.title?.romaji ?? "",
-                mediaType: "anime" as const,
-                posterPath: m.coverImage?.large ?? "",
-                backdropPath: null,
-                overview: "",
-                voteAverage: m.averageScore ? m.averageScore / 10 : 0,
-                voteCount: m.popularity ?? 0,
-                genreIds: [],
-                releaseDate: m.seasonYear ? `${m.seasonYear}-01-01` : "",
-                firstAirDate: m.seasonYear ? `${m.seasonYear}-01-01` : "",
-                originalLanguage: "ja",
-                popularity: m.popularity ?? 0,
-                adult: false,
-                runtime: null,
-                numberOfSeasons: 1,
-                numberOfEpisodes: m.episodes ?? 0,
-                status: m.status ?? "NOT_YET_RELEASED",
-                tagline: null,
-                credits: { cast: [], crew: [] },
-                similar: {
-                  page: 1,
-                  results: [],
-                  totalPages: 1,
-                  totalResults: 0,
-                },
-                videos: { results: [] },
-              })),
-            );
-            setTotalPages(pageData.pageInfo.lastPage || 1);
-            setTotalResults(pageData.pageInfo.total || 0);
-            setPage(searchPage);
-          } catch (err) {
-            setError(err instanceof Error ? err.message : "Search failed");
-            setResults([]);
-          }
+          const gql = `query($q:String,$page:Int){Page(page:$page,perPage:18){pageInfo{total perPage currentPage lastPage hasNextPage}media(search:$q,type:ANIME,sort:SEARCH_MATCH){id title{romaji english native}coverImage{large}format status episodes averageScore popularity genres season seasonYear}}}`;
+          const res = await fetch("https://graphql.anilist.co", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify({
+              query: gql,
+              variables: { q: searchQuery.trim(), page: searchPage },
+            }),
+          });
+          if (!res.ok) throw new Error("Search failed");
+          const json = await res.json();
+          if (json.errors)
+            throw new Error(json.errors[0]?.message ?? "AniList error");
+          const pd = json.data.Page;
+          setResults(
+            pd.media.map((m: any) => ({
+              id: m.id,
+              title:
+                m.title?.english ?? m.title?.romaji ?? m.title?.native ?? "",
+              name: m.title?.english ?? m.title?.romaji ?? "",
+              mediaType: "anime" as const,
+              posterPath: m.coverImage?.large ?? "",
+              backdropPath: null,
+              overview: "",
+              voteAverage: m.averageScore ? m.averageScore / 10 : 0,
+              voteCount: m.popularity ?? 0,
+              genreIds: [],
+              releaseDate: m.seasonYear ? `${m.seasonYear}-01-01` : "",
+              firstAirDate: m.seasonYear ? `${m.seasonYear}-01-01` : "",
+              originalLanguage: "ja",
+              popularity: m.popularity ?? 0,
+              adult: false,
+              runtime: null,
+              numberOfSeasons: 1,
+              numberOfEpisodes: m.episodes ?? 0,
+              status: m.status ?? "NOT_YET_RELEASED",
+              tagline: null,
+              credits: { cast: [], crew: [] },
+              similar: { page: 1, results: [], totalPages: 1, totalResults: 0 },
+              videos: { results: [] },
+            })),
+          );
+          setTotalPages(pd.pageInfo.lastPage || 1);
+          setTotalResults(pd.pageInfo.total || 0);
         } else if (type === "all") {
           const data = await tmdbFetch(
             "search/multi",
@@ -188,7 +150,6 @@ export function SearchPageClient() {
           setResults(filtered);
           setTotalPages(data.total_pages || 1);
           setTotalResults(data.total_results || 0);
-          setPage(searchPage);
         } else if (type === "movie") {
           const data = await tmdbFetch(
             "search/movie",
@@ -200,7 +161,6 @@ export function SearchPageClient() {
           );
           setTotalPages(data.total_pages || 1);
           setTotalResults(data.total_results || 0);
-          setPage(searchPage);
         } else {
           const data = await tmdbFetch(
             "search/tv",
@@ -210,8 +170,8 @@ export function SearchPageClient() {
           setResults((data.results || []).map((r: any) => mapResult(r, "tv")));
           setTotalPages(data.total_pages || 1);
           setTotalResults(data.total_results || 0);
-          setPage(searchPage);
         }
+        setPage(searchPage);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Search failed");
         setResults([]);
@@ -219,12 +179,18 @@ export function SearchPageClient() {
         setIsLoading(false);
       }
     },
-    [activeType],
+    [],
   );
 
+  // Auto-search on URL params (only once per unique urlQ+urlType)
   useEffect(() => {
-    if (initialQuery) performSearch(initialQuery, 1, initialType);
-  }, [initialQuery, initialType, performSearch]);
+    if (urlQ && !didInit.current) {
+      didInit.current = true;
+      setQuery(urlQ);
+      setActiveType(urlType);
+      performSearch(urlQ, 1, urlType);
+    }
+  }, [urlQ, urlType, performSearch]);
 
   const handleSearch = useCallback(
     (e: React.FormEvent) => {
@@ -259,32 +225,30 @@ export function SearchPageClient() {
           <SearchInput
             className="flex-1"
             placeholder="Search movies, TV shows, anime..."
-            autoFocus={!initialQuery}
+            autoFocus={!urlQ}
             initialValue={query}
           />
         </div>
       </form>
-
       <div className="flex items-center gap-2 mb-6">
-        {TYPE_FILTERS.map((filter) => {
-          const Icon = filter.icon;
+        {TYPE_FILTERS.map((f) => {
+          const Icon = f.icon;
           return (
             <button
-              key={filter.value}
-              onClick={() => handleTypeChange(filter.value)}
+              key={f.value}
+              onClick={() => handleTypeChange(f.value)}
               className={cn(
                 "flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-md border transition-colors",
-                activeType === filter.value
+                activeType === f.value
                   ? "bg-primary text-primary-foreground border-primary"
                   : "border-border text-muted-foreground hover:text-foreground hover:border-primary/50",
               )}
             >
-              <Icon className="w-3.5 h-3.5" /> {filter.label}
+              <Icon className="w-3.5 h-3.5" /> {f.label}
             </button>
           );
         })}
       </div>
-
       {isLoading && (
         <div className="flex items-center justify-center py-20">
           <div className="flex flex-col items-center gap-3">
@@ -295,7 +259,6 @@ export function SearchPageClient() {
           </div>
         </div>
       )}
-
       {error && (
         <div className="py-20 text-center">
           <p className="text-destructive mb-2">Error: {error}</p>
@@ -307,7 +270,6 @@ export function SearchPageClient() {
           </button>
         </div>
       )}
-
       {!isLoading && !error && hasSearched && results.length === 0 && (
         <div className="py-20 text-center">
           <p className="text-muted-foreground text-lg mb-2">No results found</p>
@@ -316,7 +278,6 @@ export function SearchPageClient() {
           </p>
         </div>
       )}
-
       {!isLoading && !error && results.length > 0 && (
         <>
           <p className="text-xs text-muted-foreground mb-4">
@@ -346,7 +307,6 @@ export function SearchPageClient() {
           )}
         </>
       )}
-
       {!isLoading && !error && !hasSearched && (
         <div className="py-20 text-center">
           <p className="text-muted-foreground">
