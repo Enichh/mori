@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     template: "%s",
   },
   description:
-    "Stream free movies, TV shows, anime, Pinoy teleserye & KDrama online in HD. No sign-up. Watch now on Mori.",
+    "Stream free movies, TV shows, anime &amp; KDrama online in HD. No sign-up. Watch now on Mori.",
 };
 
 export default function HomePage() {

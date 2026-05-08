@@ -68,6 +68,11 @@
 # ---- Redirects -----------------------------------------------------------
 
 [[redirects]]
+  from = "/pinoy"
+  to = "/movies"
+  status = 301
+
+[[redirects]]
   from = "/tv-shows"
   to = "/tv"
   status = 301

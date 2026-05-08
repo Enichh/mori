@@ -80,7 +80,9 @@ async function fetchTV(
   if (!res.ok) return { shows: [], totalPages: 0, totalResults: 0 };
   const data = await res.json();
   return {
-    shows: (data.results || []).map(mapTVShow),
+    shows: (data.results || [])
+      .map(mapTVShow)
+      .filter((s: any) => s.originalLanguage !== "tl"),
     totalPages: Math.min(data.total_pages || 0, 500),
     totalResults: data.total_results || 0,
   };

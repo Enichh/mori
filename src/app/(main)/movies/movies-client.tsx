@@ -79,7 +79,9 @@ async function fetchMovies(
   if (!res.ok) return { movies: [], totalPages: 0, totalResults: 0 };
   const data = await res.json();
   return {
-    movies: (data.results || []).map(mapMovie),
+    movies: (data.results || [])
+      .map(mapMovie)
+      .filter((m: any) => m.originalLanguage !== "tl"),
     totalPages: Math.min(data.total_pages || 0, 500), // TMDB caps at 500
     totalResults: data.total_results || 0,
   };

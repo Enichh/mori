@@ -25,9 +25,7 @@ async function fetchTrendingMovies(): Promise<Movie[]> {
 }
 
 async function fetchTrendingTV(): Promise<TVShow[]> {
-  const res = await fetch(
-    `${TMDB_BASE}/trending/tv/week?api_key=${TMDB_KEY}`,
-  );
+  const res = await fetch(`${TMDB_BASE}/trending/tv/week?api_key=${TMDB_KEY}`);
   if (!res.ok) return [];
   const data = await res.json();
   return (data.results || []).slice(0, 12).map(mapTV);
@@ -86,15 +84,6 @@ async function fetchPopularAnime(): Promise<TVShow[]> {
     videos: { results: [] },
     nextEpisodeToAir: null,
   })) as any;
-}
-
-async function fetchFilipinoMovies(): Promise<Movie[]> {
-  const res = await fetch(
-    `${TMDB_BASE}/discover/movie?api_key=${TMDB_KEY}&with_original_language=tl&sort_by=popularity.desc&page=1`,
-  );
-  if (!res.ok) return [];
-  const data = await res.json();
-  return (data.results || []).slice(0, 12).map(mapMovie);
 }
 
 // ---- Mappers ----
@@ -177,15 +166,9 @@ export function HomeClient() {
     3600000,
   );
 
-  const { data: filipinoMovies, loading: pinoyLoading } = useCachedFetch(
-    "home:filipino-movies",
-    fetchFilipinoMovies,
-    3600000,
-  );
-
   const featuredMovie = trendingMovies?.[0] || null;
 
-  const isLoading = moviesLoading || tvLoading || animeLoading || pinoyLoading;
+  const isLoading = moviesLoading || tvLoading || animeLoading;
 
   return (
     <div>
@@ -247,15 +230,6 @@ export function HomeClient() {
             items={popularAnime}
             mediaType="anime"
             viewAllHref="/anime"
-          />
-        )}
-
-        {filipinoMovies && filipinoMovies.length > 0 && (
-          <MediaGrid
-            title="Pinoy Movies 🇵🇭"
-            items={filipinoMovies}
-            mediaType="movie"
-            viewAllHref="/pinoy"
           />
         )}
       </div>

@@ -22,7 +22,6 @@ export const mainNavigation: NavItem[] = [
   { title: "Movies", label: "Movies", href: "/movies", icon: "Film" },
   { title: "TV Shows", label: "TV Shows", href: "/tv", icon: "Tv" },
   { title: "Anime", label: "Anime", href: "/anime", icon: "Swords" },
-  { title: "Pinoy", label: "Pinoy 🇵🇭", href: "/pinoy", icon: "Flag" },
   { title: "KDrama", label: "KDrama 🇰🇷", href: "/kdrama", icon: "Drama" },
   { title: "Sports", label: "Sports 🏀", href: "/sports", icon: "Trophy" },
 ];
@@ -38,7 +37,6 @@ export const mobileNavigation: NavItem[] = [
   { title: "Movies", label: "Movies", href: "/movies", icon: "Film" },
   { title: "TV", label: "TV", href: "/tv", icon: "Tv" },
   { title: "Anime", label: "Anime", href: "/anime", icon: "Swords" },
-  { title: "Pinoy", label: "Pinoy 🇵🇭", href: "/pinoy", icon: "Flag" },
   { title: "KDrama", label: "KDrama 🇰🇷", href: "/kdrama", icon: "Drama" },
   { title: "Sports", label: "Sports 🏀", href: "/sports", icon: "Trophy" },
   { title: "Search", label: "Search", href: "/search", icon: "Search" },
@@ -51,7 +49,6 @@ export const footerLinks: NavItem[] = [
   { label: "Movies", href: "/movies" },
   { label: "TV Shows", href: "/tv" },
   { label: "Anime", href: "/anime" },
-  { label: "Pinoy 🇵🇭", href: "/pinoy" },
   { label: "KDrama 🇰🇷", href: "/kdrama" },
   { label: "Sports 🏀", href: "/sports" },
 ];
