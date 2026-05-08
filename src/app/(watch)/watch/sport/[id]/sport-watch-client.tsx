@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import { ChevronLeft, AlertTriangle, Tv, Radio, Loader2 } from "lucide-react";
 import type { SportChannel } from "@/types";
 
@@ -79,7 +79,12 @@ export function SportWatchClient({
   gameId: propGameId,
 }: SportWatchClientProps) {
   const params = useParams();
-  const gameId = (propGameId ?? params?.id ?? "") as string;
+  const pathname = usePathname();
+
+  // Static export: useParams() returns the pre-rendered "placeholder" param.
+  // Extract the real ID from the URL pathname instead.
+  const pathId = pathname ? pathname.split("/").filter(Boolean).pop() : null;
+  const gameId = (propGameId ?? pathId ?? params?.id ?? "") as string;
   const [channels, setChannels] = React.useState<SportChannel[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
