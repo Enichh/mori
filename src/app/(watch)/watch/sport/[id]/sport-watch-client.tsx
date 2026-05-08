@@ -88,6 +88,10 @@ export function SportWatchClient({
     let cancelled = false;
 
     async function fetchChannels() {
+      console.group("🏀 SportWatchClient — fetchChannels");
+      console.log("gameId:", gameId);
+      console.log("sports to try:", ALL_CDN_SPORTS);
+
       try {
         setLoading(true);
         setError(null);
@@ -101,32 +105,86 @@ export function SportWatchClient({
           const cdnSport = CDNLIVE_SPORT_MAP[sport] ?? sport;
           const url = `${CDNLIVE_BASE}/events/sports/${cdnSport}?user=cdnlivetv&plan=free`;
 
+          console.log(`→ Fetching ${sport} (cdn: ${cdnSport})`);
+          console.log(`  URL: ${url}`);
+
           let res: Response;
           try {
             res = await fetch(url);
-          } catch {
-            // Network error — skip this sport
+          } catch (fetchErr: any) {
+            console.warn(
+              `  ❌ Network error for ${sport}:`,
+              fetchErr.message || fetchErr,
+            );
             continue;
           }
 
-          if (!res.ok) continue;
+          console.log(`  Response status: ${res.status} ${res.statusText}`);
+          console.log(`  Content-Type: ${res.headers.get("content-type")}`);
+
+          if (!res.ok) {
+            console.warn(`  ⚠️ Non-OK status for ${sport}, skipping`);
+            try {
+              const snippet = await res.text();
+              console.log(
+                `  Body preview (first 300 chars):`,
+                snippet.slice(0, 300),
+              );
+            } catch {}
+            continue;
+          }
 
           let data: any;
           try {
             data = await res.json();
-          } catch {
+            console.log(`  ✅ JSON parsed. Keys:`, Object.keys(data ?? {}));
+          } catch (jsonErr: any) {
+            console.warn(
+              `  ❌ JSON parse failed for ${sport}:`,
+              jsonErr.message || jsonErr,
+            );
+            try {
+              const raw = await res.text();
+              console.log(`  Raw body (first 300 chars):`, raw.slice(0, 300));
+            } catch {}
             continue;
           }
 
           const grouped = data?.["cdn-live-tv"];
-          if (!grouped || typeof grouped !== "object") continue;
+          console.log(
+            `  Has "cdn-live-tv" key:`,
+            !!grouped,
+            `| type:`,
+            typeof grouped,
+          );
 
-          for (const key of Object.keys(grouped)) {
+          if (!grouped || typeof grouped !== "object") {
+            console.warn(`  ⚠️ No valid "cdn-live-tv" object, skipping`);
+            continue;
+          }
+
+          const groupKeys = Object.keys(grouped);
+          console.log(`  Group keys:`, groupKeys);
+
+          for (const key of groupKeys) {
             const group = grouped[key];
-            if (!Array.isArray(group)) continue;
+            if (!Array.isArray(group)) {
+              console.log(
+                `  Group "${key}" is not an array (type: ${typeof group}), skipping`,
+              );
+              continue;
+            }
+
+            console.log(`  Group "${key}" has ${group.length} events`);
 
             for (const dto of group as CdnEventDTO[]) {
               if (dto.gameID === gameId) {
+                console.log(
+                  `  🎯 MATCH FOUND in sport=${sport}, group=${key}, gameID=${dto.gameID}`,
+                );
+                console.log(
+                  `     event: ${dto.event}, channels: ${dto.channels?.length ?? 0}`,
+                );
                 for (const ch of dto.channels) {
                   const channelKey = ch.channel_code + ch.channel_name;
                   if (!seen.has(channelKey)) {
@@ -144,8 +202,17 @@ export function SportWatchClient({
             }
           }
 
-          if (found.length > 0) break;
+          if (found.length > 0) {
+            console.log(`  🎉 Found ${found.length} channels, stopping search`);
+            break;
+          } else {
+            console.log(`  🔍 No match in ${sport}, trying next sport...`);
+          }
         }
+
+        console.log(
+          `🏁 Final result: ${found.length} channels, error: ${found.length === 0 ? "NO STREAMS" : "NONE"}`,
+        );
 
         if (!cancelled) {
           setChannels(found);
@@ -162,6 +229,7 @@ export function SportWatchClient({
           );
         }
       } finally {
+        console.groupEnd();
         if (!cancelled) setLoading(false);
       }
     }
