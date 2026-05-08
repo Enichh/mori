@@ -1,3 +1,5 @@
+
+import { Suspense } from "react";
 import { WatchSportShell } from "./watch-sport-shell";
 
 export function generateStaticParams() {
@@ -5,5 +7,9 @@ export function generateStaticParams() {
 }
 
 export default function Page() {
-  return <WatchSportShell />;
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-black" />}>
+      <WatchSportShell />
+    </Suspense>
+  );
 }
