@@ -71,6 +71,7 @@ export function MediaHero({
             alt={title}
             className="absolute inset-0 w-full h-full object-cover opacity-60"
             loading="eager"
+            suppressHydrationWarning
           />
         )}
 

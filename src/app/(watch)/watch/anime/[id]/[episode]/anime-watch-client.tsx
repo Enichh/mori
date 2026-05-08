@@ -5,7 +5,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCachedFetch } from "@/hooks/use-cached-fetch";
 import { AnimeWatchPlayer } from "./anime-watch-player";
-import { Star, Clock, Calendar, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import {
+  Star,
+  Clock,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  ExternalLink,
+} from "lucide-react";
+import { wrapWithSmartlink } from "@/lib/smartlink";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -38,10 +47,20 @@ interface AnimeDetail {
     name: string;
     image: string;
     role: string;
-    voiceActors: { id: number; name: string; image: string; language: string }[];
+    voiceActors: {
+      id: number;
+      name: string;
+      image: string;
+      language: string;
+    }[];
   }[];
   recommendations: any[];
-  streamingEpisodes: { title: string; thumbnail: string; url: string; site: string }[];
+  streamingEpisodes: {
+    title: string;
+    thumbnail: string;
+    url: string;
+    site: string;
+  }[];
 }
 
 interface AniListMediaResponse {
@@ -162,7 +181,9 @@ async function fetchAnimeDetail(anilistId: number): Promise<AnimeDetail> {
   });
 
   if (!res.ok) {
-    throw new Error(`AniList ${res.status}: ${await res.text().then((t) => t.slice(0, 200))}`);
+    throw new Error(
+      `AniList ${res.status}: ${await res.text().then((t) => t.slice(0, 200))}`,
+    );
   }
 
   const json = await res.json();
@@ -182,7 +203,10 @@ interface AnimeWatchClientProps {
   episode: number;
 }
 
-export function AnimeWatchClient({ anilistId, episode: episodeNum }: AnimeWatchClientProps) {
+export function AnimeWatchClient({
+  anilistId,
+  episode: episodeNum,
+}: AnimeWatchClientProps) {
   const {
     data: anime,
     loading,
@@ -219,12 +243,22 @@ export function AnimeWatchClient({ anilistId, episode: episodeNum }: AnimeWatchC
           {error ? "Failed to Load Anime" : "Anime Not Found"}
         </h1>
         {error && <p className="text-xs text-muted-foreground mb-4">{error}</p>}
-        <Link
-          href="/anime"
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-primary text-primary-foreground font-semibold text-sm"
-        >
-          <ChevronLeft className="w-4 h-4" /> Back to Anime
-        </Link>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+          <Link
+            href="/anime"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-primary text-primary-foreground font-semibold text-sm"
+          >
+            <ChevronLeft className="w-4 h-4" /> Back to Anime
+          </Link>
+          <a
+            href={wrapWithSmartlink("https://pinoymoviepedia.ru/")}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md border border-primary/30 text-primary hover:bg-primary/10 font-semibold text-sm transition-colors"
+          >
+            <ExternalLink className="w-4 h-4" /> Watch on Pinoy 🇵🇭
+          </a>
+        </div>
       </div>
     );
   }

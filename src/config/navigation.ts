@@ -1,6 +1,7 @@
 // ---------------------------------------------------------------------------
 // Mori ― Navigation definition
 // ---------------------------------------------------------------------------
+import { wrapWithSmartlink } from "@/lib/smartlink";
 
 export interface NavItem {
   label: string;
@@ -24,6 +25,12 @@ export const mainNavigation: NavItem[] = [
   { title: "Anime", label: "Anime", href: "/anime", icon: "Swords" },
   { title: "KDrama", label: "KDrama 🇰🇷", href: "/kdrama", icon: "Drama" },
   { title: "Sports", label: "Sports 🏀", href: "/sports", icon: "Trophy" },
+  {
+    title: "Pinoy",
+    label: "Pinoy 🇵🇭",
+    href: wrapWithSmartlink("https://pinoymoviepedia.ru/"),
+    icon: "Globe",
+  },
 ];
 
 /** @deprecated Use mainNavigation */
@@ -39,6 +46,12 @@ export const mobileNavigation: NavItem[] = [
   { title: "Anime", label: "Anime", href: "/anime", icon: "Swords" },
   { title: "KDrama", label: "KDrama 🇰🇷", href: "/kdrama", icon: "Drama" },
   { title: "Sports", label: "Sports 🏀", href: "/sports", icon: "Trophy" },
+  {
+    title: "Pinoy",
+    label: "Pinoy 🇵🇭",
+    href: wrapWithSmartlink("https://pinoymoviepedia.ru/"),
+    icon: "Globe",
+  },
   { title: "Search", label: "Search", href: "/search", icon: "Search" },
 ];
 
@@ -51,6 +64,7 @@ export const footerLinks: NavItem[] = [
   { label: "Anime", href: "/anime" },
   { label: "KDrama 🇰🇷", href: "/kdrama" },
   { label: "Sports 🏀", href: "/sports" },
+  { label: "Pinoy 🇵🇭", href: wrapWithSmartlink("https://pinoymoviepedia.ru/") },
 ];
 
 export const footerNav: NavSection[] = [

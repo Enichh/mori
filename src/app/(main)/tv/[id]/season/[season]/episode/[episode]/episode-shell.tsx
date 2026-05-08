@@ -1,15 +1,17 @@
 "use client";
+import { useState, useEffect } from "react";
 import { EpisodeDetailClient } from "./episode-detail-client";
 
 export function EpisodeShell() {
-  // /tv/12345/season/2/episode/5 → id=12345, season=2, episode=5
-  const parts =
-    typeof window !== "undefined"
-      ? window.location.pathname.split("/").filter(Boolean)
-      : [];
-  const id = parts[1] || "0";
-  const season = parts[3] || "1";
-  const episode = parts[5] || "1";
+  const [id, setId] = useState("0");
+  const [season, setSeason] = useState("1");
+  const [episode, setEpisode] = useState("1");
+  useEffect(() => {
+    const parts = window.location.pathname.split("/").filter(Boolean);
+    setId(parts[1] || "0");
+    setSeason(parts[3] || "1");
+    setEpisode(parts[5] || "1");
+  }, []);
   return (
     <EpisodeDetailClient
       showId={parseInt(id) || 0}

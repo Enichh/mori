@@ -1,14 +1,17 @@
 "use client";
+import { useState, useEffect } from "react";
 import { VideoPlayerWrapper } from "@/app/(watch)/watch/movie/[id]/video-player-wrapper";
 
 export function WatchTVShell() {
-  const parts =
-    typeof window !== "undefined"
-      ? window.location.pathname.split("/").filter(Boolean)
-      : [];
-  const id = parts[2] || "0";
-  const season = parts[3] || "1";
-  const episode = parts[4] || "1";
+  const [id, setId] = useState("0");
+  const [season, setSeason] = useState("1");
+  const [episode, setEpisode] = useState("1");
+  useEffect(() => {
+    const parts = window.location.pathname.split("/").filter(Boolean);
+    setId(parts[2] || "0");
+    setSeason(parts[3] || "1");
+    setEpisode(parts[4] || "1");
+  }, []);
   return (
     <VideoPlayerWrapper
       tmdbId={parseInt(id) || 0}

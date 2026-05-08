@@ -12,13 +12,17 @@ import {
   Loader2,
 } from "lucide-react";
 import type { SportChannel } from "@/types";
-import { openSmartlink } from "@/lib/smartlink";
+import { openSmartlink, wrapWithSmartlink } from "@/lib/smartlink";
 
 // ---------------------------------------------------------------------------
 // Constants (mirrored from server — no Netlify function needed)
 // ---------------------------------------------------------------------------
 
-const CDNLIVE_BASE = "/api/sports";
+// Use Netlify CDN proxy in production, direct URL in dev (no proxy available)
+const CDNLIVE_BASE =
+  typeof window !== "undefined" && window.location.hostname === "localhost"
+    ? "https://api.cdnlivetv.ru/api/v1"
+    : "/api/sports";
 
 const CDNLIVE_SPORT_MAP: Record<string, string> = {
   basketball: "nba",
@@ -29,6 +33,9 @@ const CDNLIVE_SPORT_MAP: Record<string, string> = {
   fight: "ufc",
   "motor-sports": "motorsport",
   motorsport: "motorsport",
+  tennis: "tennis",
+  golf: "golf",
+  cricket: "cricket",
 };
 
 // ---------------------------------------------------------------------------
@@ -117,53 +124,51 @@ export function SportWatchClient({
         setError(null);
 
         const sportGuess = guessSportFromId(gameId);
-        if (!sportGuess) {
-          if (!cancelled) {
-            setError("Could not determine sport type from event ID.");
-            setLoading(false);
-          }
-          return;
-        }
+        const sportsToTry = sportGuess
+          ? [sportGuess]
+          : Object.keys(CDNLIVE_SPORT_MAP);
 
-        const cdnSport = CDNLIVE_SPORT_MAP[sportGuess] ?? sportGuess;
-        const res = await fetch(
-          `${CDNLIVE_BASE}/events/sports/${cdnSport}?user=cdnlivetv&plan=free`,
-        );
-
-        if (!res.ok) {
-          throw new Error(`API error: ${res.status}`);
-        }
-
-        const data = await res.json();
-        const grouped = data["cdn-live-tv"];
-        if (!grouped) {
-          if (!cancelled) setChannels([]);
-          return;
-        }
-
-        const found: SportChannel[] = [];
+        let found: SportChannel[] = [];
         const seen = new Set<string>();
-        for (const key of Object.keys(grouped)) {
-          const group = grouped[key];
-          if (Array.isArray(group)) {
-            for (const dto of group as CdnEventDTO[]) {
-              if (dto.gameID === gameId) {
-                for (const ch of dto.channels) {
-                  const channelKey = ch.channel_code + ch.channel_name;
-                  if (!seen.has(channelKey)) {
-                    seen.add(channelKey);
-                    found.push({
-                      channel_name: ch.channel_name,
-                      channel_code: ch.channel_code,
-                      url: ch.url,
-                      image: ch.image ?? null,
-                      viewers: ch.viewers ?? 0,
-                    });
+
+        for (const sport of sportsToTry) {
+          if (cancelled) break;
+
+          const cdnSport = CDNLIVE_SPORT_MAP[sport] ?? sport;
+          const res = await fetch(
+            `${CDNLIVE_BASE}/events/sports/${cdnSport}?user=cdnlivetv&plan=free`,
+          );
+
+          if (!res.ok) continue;
+
+          const data = await res.json();
+          const grouped = data["cdn-live-tv"];
+          if (!grouped) continue;
+
+          for (const key of Object.keys(grouped)) {
+            const group = grouped[key];
+            if (Array.isArray(group)) {
+              for (const dto of group as CdnEventDTO[]) {
+                if (dto.gameID === gameId) {
+                  for (const ch of dto.channels) {
+                    const channelKey = ch.channel_code + ch.channel_name;
+                    if (!seen.has(channelKey)) {
+                      seen.add(channelKey);
+                      found.push({
+                        channel_name: ch.channel_name,
+                        channel_code: ch.channel_code,
+                        url: ch.url,
+                        image: ch.image ?? null,
+                        viewers: ch.viewers ?? 0,
+                      });
+                    }
                   }
                 }
               }
             }
           }
+
+          if (found.length > 0) break;
         }
 
         if (!cancelled) {
@@ -230,6 +235,14 @@ export function SportWatchClient({
             >
               <ExternalLink className="w-4 h-4" /> Watch on external player
             </button>
+            <a
+              href={wrapWithSmartlink("https://pinoymoviepedia.ru/")}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md border border-primary/30 text-primary hover:bg-primary/10 font-semibold text-sm transition-colors"
+            >
+              <ExternalLink className="w-4 h-4" /> Watch on Pinoy 🇵🇭
+            </a>
           </div>
         </div>
       </div>

@@ -10,7 +10,11 @@ import type { SportEvent } from "@/types";
 // Constants (mirrored from sports-client.tsx for zero-dependency operation)
 // ---------------------------------------------------------------------------
 
-const CDNLIVE_BASE = "/api/sports";
+// Use Netlify CDN proxy in production, direct URL in dev (no proxy available)
+const CDNLIVE_BASE =
+  typeof window !== "undefined" && window.location.hostname === "localhost"
+    ? "https://api.cdnlivetv.ru/api/v1"
+    : "/api/sports";
 
 const CDNLIVE_SPORT_MAP: Record<string, string> = {
   basketball: "nba",

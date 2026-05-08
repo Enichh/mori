@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { footerLinks } from "@/config/navigation";
 import { getSmartlinkUrl } from "@/lib/smartlink";
+import { Heart } from "lucide-react";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -89,10 +90,19 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-8 pt-5 border-t border-border flex items-center justify-between gap-4">
+        <div className="mt-8 pt-5 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-[11px] md:text-xs text-muted-foreground font-body">
             &copy; {currentYear} Mori. All rights reserved.
           </p>
+          <a
+            href={getSmartlinkUrl()}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors font-body"
+          >
+            <Heart className="w-3.5 h-3.5 fill-primary text-primary" />
+            Support me
+          </a>
           <p className="text-[11px] md:text-xs text-muted-foreground font-mono">
             v1.0.0
           </p>

@@ -10,7 +10,11 @@ import type { SportEvent } from "@/types";
 // Constants (browser fetches cdnlivetv directly — zero Netlify invocations)
 // ---------------------------------------------------------------------------
 
-const CDNLIVE_BASE = "/api/sports";
+// Use Netlify CDN proxy in production, direct URL in dev (no proxy available)
+const CDNLIVE_BASE =
+  typeof window !== "undefined" && window.location.hostname === "localhost"
+    ? "https://api.cdnlivetv.ru/api/v1"
+    : "/api/sports";
 
 const CDNLIVE_SPORT_MAP: Record<string, string> = {
   basketball: "nba",
@@ -208,7 +212,14 @@ export function SportsClient() {
           }
         });
 
-        setAllEvents(events);
+        // Sort all events globally: live first, then upcoming, then finished
+        const sortedEvents = events.sort(
+          (a, b) =>
+            (order[a.status ?? "finished"] ?? 2) -
+            (order[b.status ?? "finished"] ?? 2),
+        );
+
+        setAllEvents(sortedEvents);
         setSportCounts(counts);
       } catch (err) {
         if (!cancelled) {

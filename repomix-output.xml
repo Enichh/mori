@@ -253,118 +253,6 @@ vitest.config.ts
 <files>
 This section contains the contents of the repository's files.
 
-<file path="public/_redirects">
-# CDN rewrites for dynamic routes — serve the shell HTML for all matching paths
-# Static export generates a single .html per route pattern
-
-/movies/*        /movies/[id]                        200
-/tv/*            /tv/[id]                            200
-/anime/*         /anime/[id]                         200
-/sports/*        /sports/[sport]                     200
-/tv/*/season/*/episode/*  /tv/[id]/season/[season]/episode/[episode]  200
-/watch/movie/*   /watch/movie/[id]                   200
-/watch/tv/*/*/*  /watch/tv/[id]/[season]/[episode]   200
-/watch/anime/*/* /watch/anime/[id]/[episode]         200
-/watch/sport/*   /watch/sport/[id]                   200
-</file>
-
-<file path="src/app/(main)/anime/[id]/anime-shell.tsx">
-"use client";
-import { useParams } from "next/navigation";
-import { AnimeDetailClient } from "./anime-detail-client";
-
-export function AnimeShell() {
-  const { id } = useParams<{ id: string }>();
-  return <AnimeDetailClient anilistId={parseInt(id || "0")} />;
-}
-</file>
-
-<file path="src/app/(main)/movies/[id]/movie-shell.tsx">
-"use client";
-import { useParams } from "next/navigation";
-import { MovieDetailClient } from "./movie-detail-client";
-
-export function MovieShell() {
-  const { id } = useParams<{ id: string }>();
-  return <MovieDetailClient movieId={parseInt(id || "0")} />;
-}
-</file>
-
-<file path="src/app/(main)/sports/[sport]/sport-shell.tsx">
-"use client";
-import { useParams } from "next/navigation";
-import { SportDetailClient } from "./sport-detail-client";
-
-export function SportShell() {
-  const { sport } = useParams<{ sport: string }>();
-  return <SportDetailClient sport={sport || ""} />;
-}
-</file>
-
-<file path="src/app/(main)/tv/[id]/season/[season]/episode/[episode]/episode-shell.tsx">
-"use client";
-import { useParams } from "next/navigation";
-import { EpisodeDetailClient } from "./episode-detail-client";
-
-export function EpisodeShell() {
-  const p = useParams<{ id: string; season: string; episode: string }>();
-  return <EpisodeDetailClient showId={parseInt(p.id||"0")} seasonNum={parseInt(p.season||"1")} episodeNum={parseInt(p.episode||"1")} />;
-}
-</file>
-
-<file path="src/app/(main)/tv/[id]/tv-shell.tsx">
-"use client";
-import { useParams } from "next/navigation";
-import { TVDetailClient } from "./tv-detail-client";
-
-export function TVShell() {
-  const { id } = useParams<{ id: string }>();
-  return <TVDetailClient showId={parseInt(id || "0")} />;
-}
-</file>
-
-<file path="src/app/(watch)/watch/anime/[id]/[episode]/watch-anime-shell.tsx">
-"use client";
-import { useParams } from "next/navigation";
-import { AnimeWatchClient } from "./anime-watch-client";
-
-export function WatchAnimeShell() {
-  const p = useParams<{ id: string; episode: string }>();
-  return <AnimeWatchClient anilistId={parseInt(p.id||"0")} episode={parseInt(p.episode||"1")} />;
-}
-</file>
-
-<file path="src/app/(watch)/watch/movie/[id]/watch-movie-shell.tsx">
-"use client";
-import { useParams } from "next/navigation";
-import { VideoPlayerWrapper } from "./video-player-wrapper";
-
-export function WatchMovieShell() {
-  const { id } = useParams<{ id: string }>();
-  return <VideoPlayerWrapper tmdbId={parseInt(id || "0")} imdbId={null} mediaType="movie" title="" />;
-}
-</file>
-
-<file path="src/app/(watch)/watch/sport/[id]/watch-sport-shell.tsx">
-"use client";
-import { SportWatchClient } from "./sport-watch-client";
-
-export function WatchSportShell() {
-  return <SportWatchClient />;
-}
-</file>
-
-<file path="src/app/(watch)/watch/tv/[id]/[season]/[episode]/watch-tv-shell.tsx">
-"use client";
-import { useParams } from "next/navigation";
-import { VideoPlayerWrapper } from "@/app/(watch)/watch/movie/[id]/video-player-wrapper";
-
-export function WatchTVShell() {
-  const p = useParams<{ id: string; season: string; episode: string }>();
-  return <VideoPlayerWrapper tmdbId={parseInt(p.id||"0")} imdbId={null} mediaType="tv" title="" season={parseInt(p.season||"1")} episode={parseInt(p.episode||"1")} />;
-}
-</file>
-
 <file path=".playwright-mcp/page-2026-05-07T05-11-46-265Z.yml">
 - alert [ref=e2]
 </file>
@@ -3115,756 +3003,6 @@ export default function PrivacyPage() {
 }
 </file>
 
-<file path="src/app/(main)/sports/[sport]/sport-detail-client.tsx">
-"use client";
-
-import * as React from "react";
-import Link from "next/link";
-import { ChevronLeft, Loader2 } from "lucide-react";
-import { SportGrid } from "@/components/sports/sport-grid";
-import type { SportEvent } from "@/types";
-
-// ---------------------------------------------------------------------------
-// Constants (mirrored from sports-client.tsx for zero-dependency operation)
-// ---------------------------------------------------------------------------
-
-const CDNLIVE_BASE = "https://api.cdnlivetv.ru/api/v1";
-
-const CDNLIVE_SPORT_MAP: Record<string, string> = {
-  basketball: "nba",
-  football: "soccer",
-  baseball: "mlb",
-  hockey: "nhl",
-  fight: "ufc",
-  motorsport: "motorsport",
-};
-
-const VALID_SPORTS = new Set([
-  "basketball",
-  "football",
-  "baseball",
-  "hockey",
-  "american-football",
-  "fight",
-  "tennis",
-  "golf",
-  "cricket",
-  "rugby",
-  "motorsport",
-  "motor-sports",
-  "afl",
-  "darts",
-  "billiards",
-  "other",
-]);
-
-const CACHE_TTL = 300000; // 5 minutes for live sports
-
-// ---------------------------------------------------------------------------
-// API types
-// ---------------------------------------------------------------------------
-
-interface CdnChannelDTO {
-  channel_name: string;
-  channel_code: string;
-  url: string;
-  image?: string;
-  viewers: number;
-}
-
-interface CdnEventDTO {
-  gameID: string;
-  homeTeam?: string;
-  awayTeam?: string;
-  event?: string;
-  tournament?: string;
-  status: string;
-  start: string;
-  time: string;
-  homeTeamIMG?: string;
-  awayTeamIMG?: string;
-  eventIMG?: string;
-  country?: string;
-  countryIMG?: string;
-  channels: CdnChannelDTO[];
-}
-
-// ---------------------------------------------------------------------------
-// Mapper
-// ---------------------------------------------------------------------------
-
-function mapCdnEvent(dto: CdnEventDTO, sport: string): SportEvent {
-  let title: string;
-  if (dto.homeTeam && dto.awayTeam) {
-    title = `${dto.homeTeam} vs ${dto.awayTeam}`;
-  } else if (dto.event) {
-    title = dto.event;
-  } else {
-    title = dto.tournament || "Unknown Event";
-  }
-
-  let date: number;
-  const parsed = new Date(dto.start).getTime();
-  if (!isNaN(parsed)) {
-    date = parsed;
-  } else {
-    const timeParsed = new Date(dto.time).getTime();
-    date = !isNaN(timeParsed) ? timeParsed : Date.now();
-  }
-
-  const poster = dto.homeTeamIMG ?? dto.awayTeamIMG ?? dto.eventIMG ?? null;
-  const viewerCount = dto.channels.reduce(
-    (sum, ch) => sum + (ch.viewers || 0),
-    0,
-  );
-  const hasTeams =
-    (dto.homeTeam && dto.homeTeam.trim().length > 0) ||
-    (dto.awayTeam && dto.awayTeam.trim().length > 0);
-
-  return {
-    id: dto.gameID,
-    title,
-    category: sport as SportEvent["category"],
-    date,
-    poster,
-    popular: false,
-    teams: hasTeams
-      ? {
-          home: { name: dto.homeTeam || "", badge: dto.homeTeamIMG ?? null },
-          away: { name: dto.awayTeam || "", badge: dto.awayTeamIMG ?? null },
-        }
-      : undefined,
-    status: (dto.status as SportEvent["status"]) ?? "finished",
-    tournament: dto.tournament,
-    country: dto.country,
-    countryIMG: dto.countryIMG,
-    viewerCount,
-    channels: dto.channels.map((ch) => ({
-      channel_name: ch.channel_name,
-      channel_code: ch.channel_code,
-      url: ch.url,
-      image: ch.image ?? null,
-      viewers: ch.viewers ?? 0,
-    })),
-  };
-}
-
-// ---------------------------------------------------------------------------
-// Fetcher
-// ---------------------------------------------------------------------------
-
-async function fetchSportEvents(sport: string): Promise<SportEvent[]> {
-  const cdnSport = CDNLIVE_SPORT_MAP[sport] ?? sport;
-  const res = await fetch(
-    `${CDNLIVE_BASE}/events/sports/${cdnSport}?user=cdnlivetv&plan=free`,
-  );
-  if (!res.ok) return [];
-  const data = await res.json();
-  const grouped = data["cdn-live-tv"];
-  if (!grouped) return [];
-
-  const events: SportEvent[] = [];
-  const seen = new Set<string>();
-  for (const key of Object.keys(grouped)) {
-    const group = grouped[key];
-    if (Array.isArray(group)) {
-      for (const dto of group as CdnEventDTO[]) {
-        if (seen.has(dto.gameID)) continue;
-        seen.add(dto.gameID);
-        events.push(mapCdnEvent(dto, sport));
-      }
-    }
-  }
-  return events;
-}
-
-// ---------------------------------------------------------------------------
-// Cache helpers
-// ---------------------------------------------------------------------------
-
-interface CacheEntry {
-  data: SportEvent[];
-  timestamp: number;
-}
-
-function getCacheKey(sport: string): string {
-  return `mori:cache:sports:${sport}`;
-}
-
-function readCache(key: string): CacheEntry | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return null;
-    const entry: CacheEntry = JSON.parse(raw);
-    if (Date.now() - entry.timestamp < CACHE_TTL) return entry;
-  } catch {
-    // corrupted cache
-  }
-  return null;
-}
-
-function writeCache(key: string, data: SportEvent[]): void {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem(
-      key,
-      JSON.stringify({ data, timestamp: Date.now() }),
-    );
-  } catch {
-    // localStorage full
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
-
-interface SportDetailClientProps {
-  sport: string;
-}
-
-export function SportDetailClient({ sport }: SportDetailClientProps) {
-  const displayName =
-    sport.charAt(0).toUpperCase() + sport.slice(1).replace(/-/g, " ");
-
-  // ---- Invalid sport ----
-  if (!VALID_SPORTS.has(sport)) {
-    return (
-      <div className="container-cine py-20 text-center">
-        <h1 className="text-2xl font-heading font-bold text-foreground mb-4">
-          Unknown Sport
-        </h1>
-        <p className="text-muted-foreground mb-6">
-          &quot;{sport}&quot; is not a recognized sport category.
-        </p>
-        <Link
-          href="/sports"
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-primary text-primary-foreground font-semibold text-sm"
-        >
-          <ChevronLeft className="w-4 h-4" /> Back to Sports
-        </Link>
-      </div>
-    );
-  }
-
-  const cacheKey = getCacheKey(sport);
-  const [events, setEvents] = React.useState<SportEvent[]>(() => {
-    const cached = readCache(cacheKey);
-    return cached?.data ?? [];
-  });
-  const [loading, setLoading] = React.useState(!events.length);
-  const [error, setError] = React.useState<string | null>(null);
-
-  React.useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      // Check cache first
-      const cached = readCache(cacheKey);
-      if (cached?.data && !cancelled) {
-        setEvents(cached.data);
-        setLoading(false);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        setError(null);
-        const raw = await fetchSportEvents(sport);
-        if (cancelled) return;
-
-        // Sort: live first, then upcoming, then finished
-        const order = { live: 0, upcoming: 1, finished: 2 } as const;
-        const sorted = raw.sort(
-          (a, b) =>
-            (order[a.status ?? "finished"] ?? 2) -
-            (order[b.status ?? "finished"] ?? 2),
-        );
-
-        setEvents(sorted);
-        writeCache(cacheKey, sorted);
-      } catch (err) {
-        if (!cancelled) {
-          setError(
-            err instanceof Error ? err.message : "Failed to load events",
-          );
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [cacheKey, sport]);
-
-  // ---- Loading ----
-  if (loading && events.length === 0) {
-    return (
-      <div className="container-cine py-8">
-        <Link
-          href="/sports"
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
-        >
-          <ChevronLeft className="w-4 h-4" /> Back to Sports
-        </Link>
-        <div className="mb-6">
-          <h1 className="text-2xl md:text-3xl font-heading font-bold text-foreground mb-2">
-            {displayName}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Stream live {displayName.toLowerCase()} matches and events.
-          </p>
-        </div>
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-8 h-8 text-primary animate-spin" />
-        </div>
-      </div>
-    );
-  }
-
-  // ---- Error ----
-  if (error && events.length === 0) {
-    return (
-      <div className="container-cine py-8">
-        <Link
-          href="/sports"
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
-        >
-          <ChevronLeft className="w-4 h-4" /> Back to Sports
-        </Link>
-        <div className="mb-6">
-          <h1 className="text-2xl md:text-3xl font-heading font-bold text-foreground mb-2">
-            {displayName}
-          </h1>
-        </div>
-        <div className="py-20 text-center">
-          <p className="text-destructive mb-2">Failed to load events</p>
-          <p className="text-xs text-muted-foreground">{error}</p>
-          <Link
-            href="/sports"
-            className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-md bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors"
-          >
-            <ChevronLeft className="w-4 h-4" /> Back to Sports
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="container-cine py-8">
-      <Link
-        href="/sports"
-        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
-      >
-        <ChevronLeft className="w-4 h-4" /> Back to Sports
-      </Link>
-
-      <div className="mb-6">
-        <h1 className="text-2xl md:text-3xl font-heading font-bold text-foreground mb-2">
-          {displayName}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Stream live {displayName.toLowerCase()} matches and events.
-        </p>
-      </div>
-
-      {events.length > 0 ? (
-        <SportGrid
-          title=""
-          items={events}
-          emptyMessage={`No ${displayName.toLowerCase()} matches available right now.`}
-        />
-      ) : (
-        <div className="py-20 text-center">
-          <p className="text-muted-foreground">
-            No {displayName.toLowerCase()} matches available right now.
-          </p>
-          <Link
-            href="/sports"
-            className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-md bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors"
-          >
-            <ChevronLeft className="w-4 h-4" /> Back to Sports
-          </Link>
-        </div>
-      )}
-    </div>
-  );
-}
-</file>
-
-<file path="src/app/(main)/sports/sports-client.tsx">
-"use client";
-
-import * as React from "react";
-import { SportHero } from "@/components/sports/sport-hero";
-import { SportFilter } from "@/components/sports/sport-filter";
-import { Loader2 } from "lucide-react";
-import type { SportEvent } from "@/types";
-
-// ---------------------------------------------------------------------------
-// Constants (browser fetches cdnlivetv directly — zero Netlify invocations)
-// ---------------------------------------------------------------------------
-
-const CDNLIVE_BASE = "https://api.cdnlivetv.ru/api/v1";
-
-const CDNLIVE_SPORT_MAP: Record<string, string> = {
-  basketball: "nba",
-  football: "soccer",
-  baseball: "mlb",
-  hockey: "nhl",
-  fight: "ufc",
-  motorsport: "motorsport",
-};
-
-const ALL_SPORTS = [
-  "basketball",
-  "football",
-  "baseball",
-  "hockey",
-  "fight",
-  "tennis",
-  "golf",
-  "cricket",
-  "darts",
-  "motorsport",
-] as const;
-
-const SPORT_LABELS: Record<string, string> = {
-  basketball: "NBA",
-  football: "Football",
-  baseball: "MLB",
-  hockey: "NHL",
-  fight: "UFC / MMA",
-  tennis: "Tennis",
-  golf: "Golf",
-  cricket: "Cricket",
-  darts: "Darts",
-  motorsport: "F1 / Moto",
-};
-
-// ---------------------------------------------------------------------------
-// API types
-// ---------------------------------------------------------------------------
-
-interface CdnChannelDTO {
-  channel_name: string;
-  channel_code: string;
-  url: string;
-  image?: string;
-  viewers: number;
-}
-
-interface CdnEventDTO {
-  gameID: string;
-  homeTeam?: string;
-  awayTeam?: string;
-  event?: string;
-  tournament?: string;
-  status: string;
-  start: string;
-  time: string;
-  homeTeamIMG?: string;
-  awayTeamIMG?: string;
-  eventIMG?: string;
-  country?: string;
-  countryIMG?: string;
-  channels: CdnChannelDTO[];
-}
-
-// ---------------------------------------------------------------------------
-// Mapper (duplicated from server — runs in browser now)
-// ---------------------------------------------------------------------------
-
-function mapCdnEvent(dto: CdnEventDTO, sport: string): SportEvent {
-  let title: string;
-  if (dto.homeTeam && dto.awayTeam) {
-    title = `${dto.homeTeam} vs ${dto.awayTeam}`;
-  } else if (dto.event) {
-    title = dto.event;
-  } else {
-    title = dto.tournament || "Unknown Event";
-  }
-
-  let date: number;
-  const parsed = new Date(dto.start).getTime();
-  if (!isNaN(parsed)) {
-    date = parsed;
-  } else {
-    const timeParsed = new Date(dto.time).getTime();
-    date = !isNaN(timeParsed) ? timeParsed : Date.now();
-  }
-
-  const poster = dto.homeTeamIMG ?? dto.awayTeamIMG ?? dto.eventIMG ?? null;
-  const viewerCount = dto.channels.reduce(
-    (sum, ch) => sum + (ch.viewers || 0),
-    0,
-  );
-  const hasTeams =
-    (dto.homeTeam && dto.homeTeam.trim().length > 0) ||
-    (dto.awayTeam && dto.awayTeam.trim().length > 0);
-
-  return {
-    id: dto.gameID,
-    title,
-    category: sport as SportEvent["category"],
-    date,
-    poster,
-    popular: false,
-    teams: hasTeams
-      ? {
-          home: { name: dto.homeTeam || "", badge: dto.homeTeamIMG ?? null },
-          away: { name: dto.awayTeam || "", badge: dto.awayTeamIMG ?? null },
-        }
-      : undefined,
-    status: (dto.status as SportEvent["status"]) ?? "finished",
-    tournament: dto.tournament,
-    country: dto.country,
-    countryIMG: dto.countryIMG,
-    viewerCount,
-    channels: dto.channels.map((ch) => ({
-      channel_name: ch.channel_name,
-      channel_code: ch.channel_code,
-      url: ch.url,
-      image: ch.image ?? null,
-      viewers: ch.viewers ?? 0,
-    })),
-  };
-}
-
-async function fetchSportEvents(sport: string): Promise<SportEvent[]> {
-  const cdnSport = CDNLIVE_SPORT_MAP[sport] ?? sport;
-  const res = await fetch(
-    `${CDNLIVE_BASE}/events/sports/${cdnSport}?user=cdnlivetv&plan=free`,
-  );
-  if (!res.ok) return [];
-  const data = await res.json();
-  const grouped = data["cdn-live-tv"];
-  if (!grouped) return [];
-
-  const events: SportEvent[] = [];
-  const seen = new Set<string>();
-  for (const key of Object.keys(grouped)) {
-    const group = grouped[key];
-    if (Array.isArray(group)) {
-      for (const dto of group as CdnEventDTO[]) {
-        if (seen.has(dto.gameID)) continue;
-        seen.add(dto.gameID);
-        events.push(mapCdnEvent(dto, sport));
-      }
-    }
-  }
-  return events;
-}
-
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
-
-export function SportsClient() {
-  const [allEvents, setAllEvents] = React.useState<SportEvent[]>([]);
-  const [sportCounts, setSportCounts] = React.useState<Record<string, number>>(
-    {},
-  );
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
-
-  React.useEffect(() => {
-    let cancelled = false;
-
-    async function fetchAll() {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const results = await Promise.allSettled(
-          ALL_SPORTS.map((sport) => fetchSportEvents(sport)),
-        );
-
-        if (cancelled) return;
-
-        const events: SportEvent[] = [];
-        const counts: Record<string, number> = {};
-
-        const order = { live: 0, upcoming: 1, finished: 2 } as const;
-
-        ALL_SPORTS.forEach((sport, i) => {
-          const result = results[i];
-          if (result.status === "fulfilled" && result.value.length > 0) {
-            const sorted = result.value.sort(
-              (a, b) =>
-                (order[a.status ?? "finished"] ?? 2) -
-                (order[b.status ?? "finished"] ?? 2),
-            );
-            for (const evt of sorted) {
-              evt.category = sport as SportEvent["category"];
-              events.push(evt);
-            }
-            counts[sport] = sorted.length;
-          }
-        });
-
-        setAllEvents(events);
-        setSportCounts(counts);
-      } catch (err) {
-        if (!cancelled) {
-          setError(
-            err instanceof Error ? err.message : "Failed to load sports",
-          );
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    fetchAll();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const featured =
-    allEvents.find(
-      (e) =>
-        e.status === "live" &&
-        (e.category === "basketball" || e.category === "football"),
-    ) ??
-    allEvents.find((e) => e.status === "live") ??
-    allEvents[0] ??
-    null;
-
-  const liveCount = allEvents.filter((e) => e.status === "live").length;
-
-  // ---- Loading ----
-  if (loading) {
-    return (
-      <div>
-        <section className="min-h-[40vh] flex items-center justify-center bg-gradient-to-br from-card via-background to-card">
-          <div className="container-cine text-center py-16">
-            <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto mb-4" />
-            <h1 className="text-3xl md:text-5xl font-heading font-bold text-foreground">
-              Live Sports
-            </h1>
-            <p className="text-muted-foreground mt-2">Loading events...</p>
-          </div>
-        </section>
-      </div>
-    );
-  }
-
-  // ---- Error ----
-  if (error && allEvents.length === 0) {
-    return (
-      <div>
-        <section className="min-h-[40vh] flex items-center justify-center bg-gradient-to-br from-card via-background to-card">
-          <div className="container-cine text-center py-16">
-            <h1 className="text-3xl md:text-5xl font-heading font-bold text-foreground">
-              Live Sports
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              Unable to load events. Please try again later.
-            </p>
-          </div>
-        </section>
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      {/* ---- Hero Section ---- */}
-      {featured ? (
-        <SportHero event={featured} />
-      ) : (
-        <section className="min-h-[40vh] flex items-center justify-center bg-gradient-to-br from-card via-background to-card">
-          <div className="container-cine text-center py-16">
-            <h1 className="text-3xl md:text-5xl font-heading font-bold text-foreground">
-              Live Sports
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              Stream live sports from around the world.
-            </p>
-          </div>
-        </section>
-      )}
-
-      {/* ---- Marquee Ticker ---- */}
-      <section className="marquee-ticker">
-        <div className="marquee-ticker-content">
-          {ALL_SPORTS.map((sport) => (
-            <span key={sport} className="inline-flex items-center gap-7 pr-7">
-              <span className="text-[11px] tracking-[0.18em] text-primary uppercase font-body">
-                {SPORT_LABELS[sport] ?? sport}
-              </span>
-              <span className="text-[rgb(61,61,61)] text-xs">
-                {sportCounts[sport] ?? 0} events
-              </span>
-            </span>
-          ))}
-        </div>
-      </section>
-
-      {/* ---- Live-status banner ---- */}
-      <div className="container-cine pt-8 pb-2">
-        {liveCount > 0 ? (
-          <div className="flex items-center gap-3 px-5 py-3 rounded-lg bg-red-600/10 border border-red-600/25">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
-            </span>
-            <span className="text-sm font-semibold text-red-400">
-              {liveCount} {liveCount === 1 ? "game" : "games"} live now
-            </span>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2 px-5 py-3 rounded-lg bg-muted/60 border border-border">
-            <span className="relative flex h-2 w-2">
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-muted-foreground/50" />
-            </span>
-            <span className="text-sm text-muted-foreground">
-              No live events right now · Showing upcoming &amp; recent
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* ---- Sport Filter + Grid ---- */}
-      <div className="container-cine pt-6 pb-10">
-        <SportFilter
-          sports={ALL_SPORTS as readonly string[]}
-          labels={SPORT_LABELS}
-          counts={sportCounts}
-          allEvents={allEvents}
-        />
-      </div>
-
-      {/* ---- Footer ASCII Art ---- */}
-      <section className="py-12">
-        <div className="container-cine">
-          <div className="terminal-box text-center">
-            <pre className="ascii-art text-primary/25 pointer-events-none">
-              {`  ╔══════════════════════════════════════════════╗
-  ║    ███╗   ███╗ ██████╗ ██████╗ ██╗          ║
-  ║    ████╗ ████║██╔═══██╗██╔══██╗██║          ║
-  ║    ██╔████╔██║██║   ██║██████╔╝██║          ║
-  ║    ██║╚██╔╝██║██║   ██║██╔══██╗██║          ║
-  ║    ██║ ╚═╝ ██║╚██████╔╝██║  ██║██║          ║
-  ║    ╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝          ║
-  ║      cdnlivetv · Live Sports · Mori          ║
-  ╚══════════════════════════════════════════════╝`}
-            </pre>
-          </div>
-        </div>
-      </section>
-    </div>
-  );
-}
-</file>
-
 <file path="src/app/(main)/tv/[id]/season-episode-picker.tsx">
 "use client";
 
@@ -5335,344 +4473,12 @@ export function AnimeWatchPlayer({
 }
 </file>
 
-<file path="src/app/(watch)/watch/sport/[id]/sport-watch-client.tsx">
+<file path="src/app/(watch)/watch/sport/[id]/watch-sport-shell.tsx">
 "use client";
+import { SportWatchClient } from "./sport-watch-client";
 
-import * as React from "react";
-import Link from "next/link";
-import { useParams } from "next/navigation";
-import {
-  ChevronLeft,
-  AlertTriangle,
-  Tv,
-  Radio,
-  ExternalLink,
-  Loader2,
-} from "lucide-react";
-import type { SportChannel } from "@/types";
-import { openSmartlink } from "@/lib/smartlink";
-
-// ---------------------------------------------------------------------------
-// Constants (mirrored from server — no Netlify function needed)
-// ---------------------------------------------------------------------------
-
-const CDNLIVE_BASE = "https://api.cdnlivetv.ru/api/v1";
-
-const CDNLIVE_SPORT_MAP: Record<string, string> = {
-  basketball: "nba",
-  football: "soccer",
-  "american-football": "nfl",
-  hockey: "nhl",
-  baseball: "mlb",
-  fight: "ufc",
-  "motor-sports": "motorsport",
-  motorsport: "motorsport",
-};
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-interface CdnChannelDTO {
-  channel_name: string;
-  channel_code: string;
-  url: string;
-  image?: string;
-  viewers: number;
-}
-
-interface CdnEventDTO {
-  gameID: string;
-  homeTeam?: string;
-  awayTeam?: string;
-  event?: string;
-  tournament?: string;
-  status: string;
-  start: string;
-  time: string;
-  homeTeamIMG?: string;
-  awayTeamIMG?: string;
-  eventIMG?: string;
-  country?: string;
-  countryIMG?: string;
-  channels: CdnChannelDTO[];
-}
-
-function guessSportFromId(id: string): string | null {
-  const lower = id.toLowerCase();
-  if (lower.includes("basketball") || lower.includes("nba"))
-    return "basketball";
-  if (lower.includes("football") || lower.includes("soccer")) return "football";
-  if (lower.includes("baseball") || lower.includes("mlb")) return "baseball";
-  if (lower.includes("hockey") || lower.includes("nhl")) return "hockey";
-  if (lower.includes("american-football") || lower.includes("nfl"))
-    return "american-football";
-  if (
-    lower.includes("fight") ||
-    lower.includes("ufc") ||
-    lower.includes("boxing") ||
-    lower.includes("wwe") ||
-    lower.includes("mma")
-  )
-    return "fight";
-  if (lower.includes("tennis")) return "tennis";
-  if (lower.includes("golf")) return "golf";
-  if (lower.includes("cricket")) return "cricket";
-  if (lower.includes("rugby")) return "rugby";
-  if (
-    lower.includes("motor") ||
-    lower.includes("f1") ||
-    lower.includes("nascar") ||
-    lower.includes("moto")
-  )
-    return "motor-sports";
-  return null;
-}
-
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
-
-interface SportWatchClientProps {
-  gameId?: string;
-}
-
-export function SportWatchClient({
-  gameId: propGameId,
-}: SportWatchClientProps) {
-  const params = useParams();
-  const gameId = (propGameId ?? params?.id ?? "") as string;
-  const [channels, setChannels] = React.useState<SportChannel[]>([]);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
-
-  React.useEffect(() => {
-    let cancelled = false;
-
-    async function fetchChannels() {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const sportGuess = guessSportFromId(gameId);
-        if (!sportGuess) {
-          if (!cancelled) {
-            setError("Could not determine sport type from event ID.");
-            setLoading(false);
-          }
-          return;
-        }
-
-        const cdnSport = CDNLIVE_SPORT_MAP[sportGuess] ?? sportGuess;
-        const res = await fetch(
-          `${CDNLIVE_BASE}/events/sports/${cdnSport}?user=cdnlivetv&plan=free`,
-        );
-
-        if (!res.ok) {
-          throw new Error(`API error: ${res.status}`);
-        }
-
-        const data = await res.json();
-        const grouped = data["cdn-live-tv"];
-        if (!grouped) {
-          if (!cancelled) setChannels([]);
-          return;
-        }
-
-        const found: SportChannel[] = [];
-        const seen = new Set<string>();
-        for (const key of Object.keys(grouped)) {
-          const group = grouped[key];
-          if (Array.isArray(group)) {
-            for (const dto of group as CdnEventDTO[]) {
-              if (dto.gameID === gameId) {
-                for (const ch of dto.channels) {
-                  const channelKey = ch.channel_code + ch.channel_name;
-                  if (!seen.has(channelKey)) {
-                    seen.add(channelKey);
-                    found.push({
-                      channel_name: ch.channel_name,
-                      channel_code: ch.channel_code,
-                      url: ch.url,
-                      image: ch.image ?? null,
-                      viewers: ch.viewers ?? 0,
-                    });
-                  }
-                }
-              }
-            }
-          }
-        }
-
-        if (!cancelled) {
-          setChannels(found);
-          if (found.length === 0) {
-            setError(
-              "No streams found for this event. The match may not have started yet or is no longer available.",
-            );
-          }
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(
-            err instanceof Error ? err.message : "Failed to load streams",
-          );
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    fetchChannels();
-    return () => {
-      cancelled = true;
-    };
-  }, [gameId]);
-
-  // ---- Loading state ----
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-10 h-10 text-primary animate-spin" />
-          <p className="text-sm text-muted-foreground font-mono">
-            Loading stream...
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  // ---- Error / no channels ----
-  if (error && channels.length === 0) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="container-cine text-center py-20">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-6">
-            <AlertTriangle className="w-8 h-8 text-muted-foreground" />
-          </div>
-          <h1 className="text-2xl font-heading font-bold text-foreground mb-4">
-            Stream Unavailable
-          </h1>
-          <p className="text-muted-foreground max-w-md mx-auto mb-6">{error}</p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link
-              href="/sports"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-primary text-primary-foreground font-semibold text-sm"
-            >
-              <ChevronLeft className="w-4 h-4" /> Back to Sports
-            </Link>
-            <button
-              onClick={openSmartlink}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md border border-muted-foreground/30 text-muted-foreground hover:text-foreground hover:border-foreground/50 font-semibold text-sm transition-colors"
-            >
-              <ExternalLink className="w-4 h-4" /> Watch on external player
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const primaryChannel = channels[0] ?? null;
-
-  return (
-    <div className="min-h-screen bg-black flex flex-col">
-      {/* Top bar */}
-      <div className="fixed top-0 left-0 right-0 z-50 h-12 bg-gradient-to-b from-black/90 to-transparent flex items-center px-4">
-        <Link
-          href="/sports"
-          className="inline-flex items-center gap-2 text-sm text-white/70 hover:text-white transition-colors font-body"
-        >
-          <ChevronLeft className="w-4 h-4" />
-          <span className="hidden sm:inline">Back to Sports</span>
-        </Link>
-      </div>
-
-      {/* Video player */}
-      <section className="w-full bg-black flex-1 flex flex-col">
-        <div className="max-w-[1400px] mx-auto w-full flex-1 flex flex-col">
-          <div className="relative w-full aspect-video bg-black">
-            {primaryChannel ? (
-              <iframe
-                src={primaryChannel.url}
-                title={`${primaryChannel.channel_name} Stream`}
-                className="absolute inset-0 w-full h-full"
-                allowFullScreen
-                allow="autoplay; encrypted-media; picture-in-picture"
-                sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-              />
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center bg-muted">
-                <div className="text-center">
-                  <Tv className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-                  <p className="text-muted-foreground text-sm">
-                    No playable stream available.
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* Info bar */}
-      <section className="bg-card border-t border-border py-4">
-        <div className="container-cine">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <h1 className="text-lg font-heading font-bold text-foreground">
-                {primaryChannel
-                  ? `${primaryChannel.channel_name}`
-                  : "Live Sports Event"}
-              </h1>
-              <p className="text-sm text-muted-foreground font-mono">
-                ID: {gameId}
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-3">
-              {channels.length > 0 && (
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Radio className="w-3.5 h-3.5 text-primary animate-pulse" />
-                  <span>
-                    {primaryChannel?.channel_name}
-                    {primaryChannel?.viewers
-                      ? ` (${primaryChannel.viewers} watching)`
-                      : ""}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {channels.length > 1 && (
-            <div className="mt-3 flex flex-wrap gap-2">
-              {channels.map((ch) => (
-                <a
-                  key={ch.channel_code + ch.channel_name}
-                  href={ch.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                    ch === primaryChannel
-                      ? "bg-primary/20 text-primary border border-primary/30"
-                      : "bg-muted text-muted-foreground hover:bg-muted/80 border border-transparent"
-                  }`}
-                >
-                  {ch.channel_name}
-                  {ch.viewers > 0 && (
-                    <span className="text-[10px] opacity-70">
-                      ({ch.viewers})
-                    </span>
-                  )}
-                </a>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-    </div>
-  );
+export function WatchSportShell() {
+  return <SportWatchClient />;
 }
 </file>
 
@@ -5828,62 +4634,6 @@ export default function NotFound() {
       </div>
     </div>
   );
-}
-</file>
-
-<file path="src/app/robots.ts">
-import type { MetadataRoute } from "next";
-
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://mori.vercel.app";
-
-export default function robots(): MetadataRoute.Robots {
-  return {
-    rules: {
-      userAgent: "*",
-      allow: "/",
-      disallow: ["/api/", "/watch/"],
-    },
-    sitemap: `${BASE_URL}/sitemap.xml`,
-  };
-}
-</file>
-
-<file path="src/app/sitemap.ts">
-import type { MetadataRoute } from "next";
-
-export default function sitemap(): MetadataRoute.Sitemap {
-  return [
-    {
-      url: "https://morimovie.netlify.app",
-      changeFrequency: "daily",
-      priority: 1,
-    },
-    {
-      url: "https://morimovie.netlify.app/movies",
-      changeFrequency: "daily",
-      priority: 0.9,
-    },
-    {
-      url: "https://morimovie.netlify.app/tv",
-      changeFrequency: "daily",
-      priority: 0.9,
-    },
-    {
-      url: "https://morimovie.netlify.app/anime",
-      changeFrequency: "daily",
-      priority: 0.9,
-    },
-    {
-      url: "https://morimovie.netlify.app/kdrama",
-      changeFrequency: "daily",
-      priority: 0.8,
-    },
-    {
-      url: "https://morimovie.netlify.app/sports",
-      changeFrequency: "hourly",
-      priority: 0.8,
-    },
-  ];
 }
 </file>
 
@@ -13248,30 +11998,32 @@ _Changed Since Last Scan: Sports streaming, AniList integration, testing framewo
 - **Validation Status**: All claims verified against actual codebase
 </file>
 
-<file path="next.config.ts">
-import type { NextConfig } from "next";
+<file path="public/_redirects">
+# CDN rewrites for dynamic routes — serve the shell HTML for all matching paths
+# Targets match the actual filenames generated by Next.js (placeholder params)
 
-const nextConfig: NextConfig = {
-  output: "export",
-  poweredByHeader: false,
-  images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "image.tmdb.org",
-        pathname: "/t/p/**",
-      },
-    ],
-    unoptimized: true,
-    minimumCacheTTL: 86400,
-  },
-  experimental: {
-    scrollRestoration: true,
-    optimizePackageImports: ["lucide-react"],
-  },
-};
+/movies/*        /movies/placeholder.html                        200
+/tv/*            /tv/placeholder.html                            200
+/anime/*         /anime/placeholder.html                         200
+/sports/*        /sports/basketball.html                         200
+/tv/*/season/*/episode/*  /tv/placeholder/season/1/episode/1.html  200
+/watch/movie/*   /watch/movie/placeholder.html                   200
+/watch/tv/*/*/*  /watch/tv/placeholder/1/1.html                  200
+/watch/anime/*/* /watch/anime/placeholder/1.html                 200
+/watch/sport/*   /watch/sport/placeholder.html                   200
+</file>
 
-export default nextConfig;
+<file path="src/app/(main)/anime/[id]/anime-shell.tsx">
+"use client";
+import { AnimeDetailClient } from "./anime-detail-client";
+
+export function AnimeShell() {
+  const id =
+    typeof window !== "undefined"
+      ? window.location.pathname.split("/").filter(Boolean).pop() || "0"
+      : "0";
+  return <AnimeDetailClient anilistId={parseInt(id) || 0} />;
+}
 </file>
 
 <file path="src/app/(main)/home-client.tsx">
@@ -13530,6 +12282,20 @@ export function HomeClient() {
       </section>
     </div>
   );
+}
+</file>
+
+<file path="src/app/(main)/movies/[id]/movie-shell.tsx">
+"use client";
+import { MovieDetailClient } from "./movie-detail-client";
+
+export function MovieShell() {
+  // Read ID from URL path — more reliable than useParams with CDN rewrites
+  const id =
+    typeof window !== "undefined"
+      ? window.location.pathname.split("/").pop() || "0"
+      : "0";
+  return <MovieDetailClient movieId={parseInt(id) || 0} />;
 }
 </file>
 
@@ -13833,13 +12599,800 @@ export function MoviesClient() {
 }
 </file>
 
-<file path="src/app/(main)/sports/[sport]/page.tsx">
-export function generateStaticParams() {
-  return [{ sport: "basketball" }];
+<file path="src/app/(main)/sports/[sport]/sport-detail-client.tsx">
+"use client";
+
+import * as React from "react";
+import Link from "next/link";
+import { ChevronLeft, Loader2 } from "lucide-react";
+import { SportGrid } from "@/components/sports/sport-grid";
+import type { SportEvent } from "@/types";
+
+// ---------------------------------------------------------------------------
+// Constants (mirrored from sports-client.tsx for zero-dependency operation)
+// ---------------------------------------------------------------------------
+
+const CDNLIVE_BASE = "/api/sports";
+
+const CDNLIVE_SPORT_MAP: Record<string, string> = {
+  basketball: "nba",
+  football: "soccer",
+  baseball: "mlb",
+  hockey: "nhl",
+  fight: "ufc",
+  motorsport: "motorsport",
+};
+
+const VALID_SPORTS = new Set([
+  "basketball",
+  "football",
+  "baseball",
+  "hockey",
+  "american-football",
+  "fight",
+  "tennis",
+  "golf",
+  "cricket",
+  "rugby",
+  "motorsport",
+  "motor-sports",
+  "afl",
+  "darts",
+  "billiards",
+  "other",
+]);
+
+const CACHE_TTL = 300000; // 5 minutes for live sports
+
+// ---------------------------------------------------------------------------
+// API types
+// ---------------------------------------------------------------------------
+
+interface CdnChannelDTO {
+  channel_name: string;
+  channel_code: string;
+  url: string;
+  image?: string;
+  viewers: number;
 }
 
-import { SportShell } from "./sport-shell";
-export default SportShell;
+interface CdnEventDTO {
+  gameID: string;
+  homeTeam?: string;
+  awayTeam?: string;
+  event?: string;
+  tournament?: string;
+  status: string;
+  start: string;
+  time: string;
+  homeTeamIMG?: string;
+  awayTeamIMG?: string;
+  eventIMG?: string;
+  country?: string;
+  countryIMG?: string;
+  channels: CdnChannelDTO[];
+}
+
+// ---------------------------------------------------------------------------
+// Mapper
+// ---------------------------------------------------------------------------
+
+function mapCdnEvent(dto: CdnEventDTO, sport: string): SportEvent {
+  let title: string;
+  if (dto.homeTeam && dto.awayTeam) {
+    title = `${dto.homeTeam} vs ${dto.awayTeam}`;
+  } else if (dto.event) {
+    title = dto.event;
+  } else {
+    title = dto.tournament || "Unknown Event";
+  }
+
+  let date: number;
+  const parsed = new Date(dto.start).getTime();
+  if (!isNaN(parsed)) {
+    date = parsed;
+  } else {
+    const timeParsed = new Date(dto.time).getTime();
+    date = !isNaN(timeParsed) ? timeParsed : Date.now();
+  }
+
+  const poster = dto.homeTeamIMG ?? dto.awayTeamIMG ?? dto.eventIMG ?? null;
+  const viewerCount = dto.channels.reduce(
+    (sum, ch) => sum + (ch.viewers || 0),
+    0,
+  );
+  const hasTeams =
+    (dto.homeTeam && dto.homeTeam.trim().length > 0) ||
+    (dto.awayTeam && dto.awayTeam.trim().length > 0);
+
+  return {
+    id: dto.gameID,
+    title,
+    category: sport as SportEvent["category"],
+    date,
+    poster,
+    popular: false,
+    teams: hasTeams
+      ? {
+          home: { name: dto.homeTeam || "", badge: dto.homeTeamIMG ?? null },
+          away: { name: dto.awayTeam || "", badge: dto.awayTeamIMG ?? null },
+        }
+      : undefined,
+    status: (dto.status as SportEvent["status"]) ?? "finished",
+    tournament: dto.tournament,
+    country: dto.country,
+    countryIMG: dto.countryIMG,
+    viewerCount,
+    channels: dto.channels.map((ch) => ({
+      channel_name: ch.channel_name,
+      channel_code: ch.channel_code,
+      url: ch.url,
+      image: ch.image ?? null,
+      viewers: ch.viewers ?? 0,
+    })),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Fetcher
+// ---------------------------------------------------------------------------
+
+async function fetchSportEvents(sport: string): Promise<SportEvent[]> {
+  const cdnSport = CDNLIVE_SPORT_MAP[sport] ?? sport;
+  const res = await fetch(
+    `${CDNLIVE_BASE}/events/sports/${cdnSport}?user=cdnlivetv&plan=free`,
+  );
+  if (!res.ok) return [];
+  const data = await res.json();
+  const grouped = data["cdn-live-tv"];
+  if (!grouped) return [];
+
+  const events: SportEvent[] = [];
+  const seen = new Set<string>();
+  for (const key of Object.keys(grouped)) {
+    const group = grouped[key];
+    if (Array.isArray(group)) {
+      for (const dto of group as CdnEventDTO[]) {
+        if (seen.has(dto.gameID)) continue;
+        seen.add(dto.gameID);
+        events.push(mapCdnEvent(dto, sport));
+      }
+    }
+  }
+  return events;
+}
+
+// ---------------------------------------------------------------------------
+// Cache helpers
+// ---------------------------------------------------------------------------
+
+interface CacheEntry {
+  data: SportEvent[];
+  timestamp: number;
+}
+
+function getCacheKey(sport: string): string {
+  return `mori:cache:sports:${sport}`;
+}
+
+function readCache(key: string): CacheEntry | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const entry: CacheEntry = JSON.parse(raw);
+    if (Date.now() - entry.timestamp < CACHE_TTL) return entry;
+  } catch {
+    // corrupted cache
+  }
+  return null;
+}
+
+function writeCache(key: string, data: SportEvent[]): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
+  } catch {
+    // localStorage full
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
+interface SportDetailClientProps {
+  sport: string;
+}
+
+export function SportDetailClient({ sport }: SportDetailClientProps) {
+  const displayName =
+    sport.charAt(0).toUpperCase() + sport.slice(1).replace(/-/g, " ");
+
+  // ---- Invalid sport ----
+  if (!VALID_SPORTS.has(sport)) {
+    return (
+      <div className="container-cine py-20 text-center">
+        <h1 className="text-2xl font-heading font-bold text-foreground mb-4">
+          Unknown Sport
+        </h1>
+        <p className="text-muted-foreground mb-6">
+          &quot;{sport}&quot; is not a recognized sport category.
+        </p>
+        <Link
+          href="/sports"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-primary text-primary-foreground font-semibold text-sm"
+        >
+          <ChevronLeft className="w-4 h-4" /> Back to Sports
+        </Link>
+      </div>
+    );
+  }
+
+  const cacheKey = getCacheKey(sport);
+  const [events, setEvents] = React.useState<SportEvent[]>(() => {
+    const cached = readCache(cacheKey);
+    return cached?.data ?? [];
+  });
+  const [loading, setLoading] = React.useState(!events.length);
+  const [error, setError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      // Check cache first
+      const cached = readCache(cacheKey);
+      if (cached?.data && !cancelled) {
+        setEvents(cached.data);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+        const raw = await fetchSportEvents(sport);
+        if (cancelled) return;
+
+        // Sort: live first, then upcoming, then finished
+        const order = { live: 0, upcoming: 1, finished: 2 } as const;
+        const sorted = raw.sort(
+          (a, b) =>
+            (order[a.status ?? "finished"] ?? 2) -
+            (order[b.status ?? "finished"] ?? 2),
+        );
+
+        setEvents(sorted);
+        writeCache(cacheKey, sorted);
+      } catch (err) {
+        if (!cancelled) {
+          setError(
+            err instanceof Error ? err.message : "Failed to load events",
+          );
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [cacheKey, sport]);
+
+  // ---- Loading ----
+  if (loading && events.length === 0) {
+    return (
+      <div className="container-cine py-8">
+        <Link
+          href="/sports"
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
+        >
+          <ChevronLeft className="w-4 h-4" /> Back to Sports
+        </Link>
+        <div className="mb-6">
+          <h1 className="text-2xl md:text-3xl font-heading font-bold text-foreground mb-2">
+            {displayName}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Stream live {displayName.toLowerCase()} matches and events.
+          </p>
+        </div>
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="w-8 h-8 text-primary animate-spin" />
+        </div>
+      </div>
+    );
+  }
+
+  // ---- Error ----
+  if (error && events.length === 0) {
+    return (
+      <div className="container-cine py-8">
+        <Link
+          href="/sports"
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
+        >
+          <ChevronLeft className="w-4 h-4" /> Back to Sports
+        </Link>
+        <div className="mb-6">
+          <h1 className="text-2xl md:text-3xl font-heading font-bold text-foreground mb-2">
+            {displayName}
+          </h1>
+        </div>
+        <div className="py-20 text-center">
+          <p className="text-destructive mb-2">Failed to load events</p>
+          <p className="text-xs text-muted-foreground">{error}</p>
+          <Link
+            href="/sports"
+            className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-md bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4" /> Back to Sports
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container-cine py-8">
+      <Link
+        href="/sports"
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
+      >
+        <ChevronLeft className="w-4 h-4" /> Back to Sports
+      </Link>
+
+      <div className="mb-6">
+        <h1 className="text-2xl md:text-3xl font-heading font-bold text-foreground mb-2">
+          {displayName}
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Stream live {displayName.toLowerCase()} matches and events.
+        </p>
+      </div>
+
+      {events.length > 0 ? (
+        <SportGrid
+          title=""
+          items={events}
+          emptyMessage={`No ${displayName.toLowerCase()} matches available right now.`}
+        />
+      ) : (
+        <div className="py-20 text-center">
+          <p className="text-muted-foreground">
+            No {displayName.toLowerCase()} matches available right now.
+          </p>
+          <Link
+            href="/sports"
+            className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-md bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4" /> Back to Sports
+          </Link>
+        </div>
+      )}
+    </div>
+  );
+}
+</file>
+
+<file path="src/app/(main)/sports/[sport]/sport-shell.tsx">
+"use client";
+import { SportDetailClient } from "./sport-detail-client";
+
+export function SportShell() {
+  const sport =
+    typeof window !== "undefined"
+      ? window.location.pathname.split("/").filter(Boolean).pop() || ""
+      : "";
+  return <SportDetailClient sport={sport} />;
+}
+</file>
+
+<file path="src/app/(main)/sports/sports-client.tsx">
+"use client";
+
+import * as React from "react";
+import { SportHero } from "@/components/sports/sport-hero";
+import { SportFilter } from "@/components/sports/sport-filter";
+import { Loader2 } from "lucide-react";
+import type { SportEvent } from "@/types";
+
+// ---------------------------------------------------------------------------
+// Constants (browser fetches cdnlivetv directly — zero Netlify invocations)
+// ---------------------------------------------------------------------------
+
+const CDNLIVE_BASE = "/api/sports";
+
+const CDNLIVE_SPORT_MAP: Record<string, string> = {
+  basketball: "nba",
+  football: "soccer",
+  baseball: "mlb",
+  hockey: "nhl",
+  fight: "ufc",
+  motorsport: "motorsport",
+};
+
+const ALL_SPORTS = [
+  "basketball",
+  "football",
+  "baseball",
+  "hockey",
+  "fight",
+  "tennis",
+  "golf",
+  "cricket",
+  "darts",
+  "motorsport",
+] as const;
+
+const SPORT_LABELS: Record<string, string> = {
+  basketball: "NBA",
+  football: "Football",
+  baseball: "MLB",
+  hockey: "NHL",
+  fight: "UFC / MMA",
+  tennis: "Tennis",
+  golf: "Golf",
+  cricket: "Cricket",
+  darts: "Darts",
+  motorsport: "F1 / Moto",
+};
+
+// ---------------------------------------------------------------------------
+// API types
+// ---------------------------------------------------------------------------
+
+interface CdnChannelDTO {
+  channel_name: string;
+  channel_code: string;
+  url: string;
+  image?: string;
+  viewers: number;
+}
+
+interface CdnEventDTO {
+  gameID: string;
+  homeTeam?: string;
+  awayTeam?: string;
+  event?: string;
+  tournament?: string;
+  status: string;
+  start: string;
+  time: string;
+  homeTeamIMG?: string;
+  awayTeamIMG?: string;
+  eventIMG?: string;
+  country?: string;
+  countryIMG?: string;
+  channels: CdnChannelDTO[];
+}
+
+// ---------------------------------------------------------------------------
+// Mapper (duplicated from server — runs in browser now)
+// ---------------------------------------------------------------------------
+
+function mapCdnEvent(dto: CdnEventDTO, sport: string): SportEvent {
+  let title: string;
+  if (dto.homeTeam && dto.awayTeam) {
+    title = `${dto.homeTeam} vs ${dto.awayTeam}`;
+  } else if (dto.event) {
+    title = dto.event;
+  } else {
+    title = dto.tournament || "Unknown Event";
+  }
+
+  let date: number;
+  const parsed = new Date(dto.start).getTime();
+  if (!isNaN(parsed)) {
+    date = parsed;
+  } else {
+    const timeParsed = new Date(dto.time).getTime();
+    date = !isNaN(timeParsed) ? timeParsed : Date.now();
+  }
+
+  const poster = dto.homeTeamIMG ?? dto.awayTeamIMG ?? dto.eventIMG ?? null;
+  const viewerCount = dto.channels.reduce(
+    (sum, ch) => sum + (ch.viewers || 0),
+    0,
+  );
+  const hasTeams =
+    (dto.homeTeam && dto.homeTeam.trim().length > 0) ||
+    (dto.awayTeam && dto.awayTeam.trim().length > 0);
+
+  return {
+    id: dto.gameID,
+    title,
+    category: sport as SportEvent["category"],
+    date,
+    poster,
+    popular: false,
+    teams: hasTeams
+      ? {
+          home: { name: dto.homeTeam || "", badge: dto.homeTeamIMG ?? null },
+          away: { name: dto.awayTeam || "", badge: dto.awayTeamIMG ?? null },
+        }
+      : undefined,
+    status: (dto.status as SportEvent["status"]) ?? "finished",
+    tournament: dto.tournament,
+    country: dto.country,
+    countryIMG: dto.countryIMG,
+    viewerCount,
+    channels: dto.channels.map((ch) => ({
+      channel_name: ch.channel_name,
+      channel_code: ch.channel_code,
+      url: ch.url,
+      image: ch.image ?? null,
+      viewers: ch.viewers ?? 0,
+    })),
+  };
+}
+
+async function fetchSportEvents(sport: string): Promise<SportEvent[]> {
+  const cdnSport = CDNLIVE_SPORT_MAP[sport] ?? sport;
+  const res = await fetch(
+    `${CDNLIVE_BASE}/events/sports/${cdnSport}?user=cdnlivetv&plan=free`,
+  );
+  if (!res.ok) return [];
+  const data = await res.json();
+  const grouped = data["cdn-live-tv"];
+  if (!grouped) return [];
+
+  const events: SportEvent[] = [];
+  const seen = new Set<string>();
+  for (const key of Object.keys(grouped)) {
+    const group = grouped[key];
+    if (Array.isArray(group)) {
+      for (const dto of group as CdnEventDTO[]) {
+        if (seen.has(dto.gameID)) continue;
+        seen.add(dto.gameID);
+        events.push(mapCdnEvent(dto, sport));
+      }
+    }
+  }
+  return events;
+}
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
+export function SportsClient() {
+  const [allEvents, setAllEvents] = React.useState<SportEvent[]>([]);
+  const [sportCounts, setSportCounts] = React.useState<Record<string, number>>(
+    {},
+  );
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    let cancelled = false;
+
+    async function fetchAll() {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const results = await Promise.allSettled(
+          ALL_SPORTS.map((sport) => fetchSportEvents(sport)),
+        );
+
+        if (cancelled) return;
+
+        const events: SportEvent[] = [];
+        const counts: Record<string, number> = {};
+
+        const order = { live: 0, upcoming: 1, finished: 2 } as const;
+
+        ALL_SPORTS.forEach((sport, i) => {
+          const result = results[i];
+          if (result.status === "fulfilled" && result.value.length > 0) {
+            const sorted = result.value.sort(
+              (a, b) =>
+                (order[a.status ?? "finished"] ?? 2) -
+                (order[b.status ?? "finished"] ?? 2),
+            );
+            for (const evt of sorted) {
+              evt.category = sport as SportEvent["category"];
+              events.push(evt);
+            }
+            counts[sport] = sorted.length;
+          }
+        });
+
+        setAllEvents(events);
+        setSportCounts(counts);
+      } catch (err) {
+        if (!cancelled) {
+          setError(
+            err instanceof Error ? err.message : "Failed to load sports",
+          );
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    fetchAll();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const featured =
+    allEvents.find(
+      (e) =>
+        e.status === "live" &&
+        (e.category === "basketball" || e.category === "football"),
+    ) ??
+    allEvents.find((e) => e.status === "live") ??
+    allEvents[0] ??
+    null;
+
+  const liveCount = allEvents.filter((e) => e.status === "live").length;
+
+  // ---- Loading ----
+  if (loading) {
+    return (
+      <div>
+        <section className="min-h-[40vh] flex items-center justify-center bg-gradient-to-br from-card via-background to-card">
+          <div className="container-cine text-center py-16">
+            <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto mb-4" />
+            <h1 className="text-3xl md:text-5xl font-heading font-bold text-foreground">
+              Live Sports
+            </h1>
+            <p className="text-muted-foreground mt-2">Loading events...</p>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
+  // ---- Error ----
+  if (error && allEvents.length === 0) {
+    return (
+      <div>
+        <section className="min-h-[40vh] flex items-center justify-center bg-gradient-to-br from-card via-background to-card">
+          <div className="container-cine text-center py-16">
+            <h1 className="text-3xl md:text-5xl font-heading font-bold text-foreground">
+              Live Sports
+            </h1>
+            <p className="text-muted-foreground mt-2">
+              Unable to load events. Please try again later.
+            </p>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {/* ---- Hero Section ---- */}
+      {featured ? (
+        <SportHero event={featured} />
+      ) : (
+        <section className="min-h-[40vh] flex items-center justify-center bg-gradient-to-br from-card via-background to-card">
+          <div className="container-cine text-center py-16">
+            <h1 className="text-3xl md:text-5xl font-heading font-bold text-foreground">
+              Live Sports
+            </h1>
+            <p className="text-muted-foreground mt-2">
+              Stream live sports from around the world.
+            </p>
+          </div>
+        </section>
+      )}
+
+      {/* ---- Marquee Ticker ---- */}
+      <section className="marquee-ticker">
+        <div className="marquee-ticker-content">
+          {ALL_SPORTS.map((sport) => (
+            <span key={sport} className="inline-flex items-center gap-7 pr-7">
+              <span className="text-[11px] tracking-[0.18em] text-primary uppercase font-body">
+                {SPORT_LABELS[sport] ?? sport}
+              </span>
+              <span className="text-[rgb(61,61,61)] text-xs">
+                {sportCounts[sport] ?? 0} events
+              </span>
+            </span>
+          ))}
+        </div>
+      </section>
+
+      {/* ---- Live-status banner ---- */}
+      <div className="container-cine pt-8 pb-2">
+        {liveCount > 0 ? (
+          <div className="flex items-center gap-3 px-5 py-3 rounded-lg bg-red-600/10 border border-red-600/25">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
+            </span>
+            <span className="text-sm font-semibold text-red-400">
+              {liveCount} {liveCount === 1 ? "game" : "games"} live now
+            </span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 px-5 py-3 rounded-lg bg-muted/60 border border-border">
+            <span className="relative flex h-2 w-2">
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-muted-foreground/50" />
+            </span>
+            <span className="text-sm text-muted-foreground">
+              No live events right now · Showing upcoming &amp; recent
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* ---- Sport Filter + Grid ---- */}
+      <div className="container-cine pt-6 pb-10">
+        <SportFilter
+          sports={ALL_SPORTS as readonly string[]}
+          labels={SPORT_LABELS}
+          counts={sportCounts}
+          allEvents={allEvents}
+        />
+      </div>
+
+      {/* ---- Footer ASCII Art ---- */}
+      <section className="py-12">
+        <div className="container-cine">
+          <div className="terminal-box text-center">
+            <pre className="ascii-art text-primary/25 pointer-events-none">
+              {`  ╔══════════════════════════════════════════════╗
+  ║    ███╗   ███╗ ██████╗ ██████╗ ██╗          ║
+  ║    ████╗ ████║██╔═══██╗██╔══██╗██║          ║
+  ║    ██╔████╔██║██║   ██║██████╔╝██║          ║
+  ║    ██║╚██╔╝██║██║   ██║██╔══██╗██║          ║
+  ║    ██║ ╚═╝ ██║╚██████╔╝██║  ██║██║          ║
+  ║    ╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝          ║
+  ║      cdnlivetv · Live Sports · Mori          ║
+  ╚══════════════════════════════════════════════╝`}
+            </pre>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+</file>
+
+<file path="src/app/(main)/tv/[id]/season/[season]/episode/[episode]/episode-shell.tsx">
+"use client";
+import { EpisodeDetailClient } from "./episode-detail-client";
+
+export function EpisodeShell() {
+  // /tv/12345/season/2/episode/5 → id=12345, season=2, episode=5
+  const parts =
+    typeof window !== "undefined"
+      ? window.location.pathname.split("/").filter(Boolean)
+      : [];
+  const id = parts[1] || "0";
+  const season = parts[3] || "1";
+  const episode = parts[5] || "1";
+  return (
+    <EpisodeDetailClient
+      showId={parseInt(id) || 0}
+      seasonNum={parseInt(season) || 1}
+      episodeNum={parseInt(episode) || 1}
+    />
+  );
+}
+</file>
+
+<file path="src/app/(main)/tv/[id]/tv-shell.tsx">
+"use client";
+import { TVDetailClient } from "./tv-detail-client";
+
+export function TVShell() {
+  const id =
+    typeof window !== "undefined"
+      ? window.location.pathname.split("/").filter(Boolean).pop() || "0"
+      : "0";
+  return <TVDetailClient showId={parseInt(id) || 0} />;
+}
 </file>
 
 <file path="src/app/(main)/tv/tv-client.tsx">
@@ -14233,22 +13786,24 @@ export default function WatchLayout({
 }
 </file>
 
-<file path="src/app/(watch)/watch/anime/[id]/[episode]/page.tsx">
-export function generateStaticParams() {
-  return [{ id: "placeholder", episode: "1" }];
+<file path="src/app/(watch)/watch/anime/[id]/[episode]/watch-anime-shell.tsx">
+"use client";
+import { AnimeWatchClient } from "./anime-watch-client";
+
+export function WatchAnimeShell() {
+  const parts =
+    typeof window !== "undefined"
+      ? window.location.pathname.split("/").filter(Boolean)
+      : [];
+  const id = parts[2] || "0";
+  const episode = parts[3] || "1";
+  return (
+    <AnimeWatchClient
+      anilistId={parseInt(id) || 0}
+      episode={parseInt(episode) || 1}
+    />
+  );
 }
-
-import { WatchAnimeShell } from "./watch-anime-shell";
-export default WatchAnimeShell;
-</file>
-
-<file path="src/app/(watch)/watch/movie/[id]/page.tsx">
-export function generateStaticParams() {
-  return [{ id: "placeholder" }];
-}
-
-import { WatchMovieShell } from "./watch-movie-shell";
-export default WatchMovieShell;
 </file>
 
 <file path="src/app/(watch)/watch/movie/[id]/video-player-wrapper.tsx">
@@ -14342,6 +13897,392 @@ export function VideoPlayerWrapper({
         className="w-full"
       />
     </div>
+  );
+}
+</file>
+
+<file path="src/app/(watch)/watch/movie/[id]/watch-movie-shell.tsx">
+"use client";
+import { VideoPlayerWrapper } from "./video-player-wrapper";
+
+export function WatchMovieShell() {
+  const id =
+    typeof window !== "undefined"
+      ? window.location.pathname.split("/").filter(Boolean).pop() || "0"
+      : "0";
+  return (
+    <VideoPlayerWrapper
+      tmdbId={parseInt(id) || 0}
+      imdbId={null}
+      mediaType="movie"
+      title=""
+    />
+  );
+}
+</file>
+
+<file path="src/app/(watch)/watch/sport/[id]/sport-watch-client.tsx">
+"use client";
+
+import * as React from "react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import {
+  ChevronLeft,
+  AlertTriangle,
+  Tv,
+  Radio,
+  ExternalLink,
+  Loader2,
+} from "lucide-react";
+import type { SportChannel } from "@/types";
+import { openSmartlink } from "@/lib/smartlink";
+
+// ---------------------------------------------------------------------------
+// Constants (mirrored from server — no Netlify function needed)
+// ---------------------------------------------------------------------------
+
+const CDNLIVE_BASE = "/api/sports";
+
+const CDNLIVE_SPORT_MAP: Record<string, string> = {
+  basketball: "nba",
+  football: "soccer",
+  "american-football": "nfl",
+  hockey: "nhl",
+  baseball: "mlb",
+  fight: "ufc",
+  "motor-sports": "motorsport",
+  motorsport: "motorsport",
+};
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+interface CdnChannelDTO {
+  channel_name: string;
+  channel_code: string;
+  url: string;
+  image?: string;
+  viewers: number;
+}
+
+interface CdnEventDTO {
+  gameID: string;
+  homeTeam?: string;
+  awayTeam?: string;
+  event?: string;
+  tournament?: string;
+  status: string;
+  start: string;
+  time: string;
+  homeTeamIMG?: string;
+  awayTeamIMG?: string;
+  eventIMG?: string;
+  country?: string;
+  countryIMG?: string;
+  channels: CdnChannelDTO[];
+}
+
+function guessSportFromId(id: string): string | null {
+  const lower = id.toLowerCase();
+  if (lower.includes("basketball") || lower.includes("nba"))
+    return "basketball";
+  if (lower.includes("football") || lower.includes("soccer")) return "football";
+  if (lower.includes("baseball") || lower.includes("mlb")) return "baseball";
+  if (lower.includes("hockey") || lower.includes("nhl")) return "hockey";
+  if (lower.includes("american-football") || lower.includes("nfl"))
+    return "american-football";
+  if (
+    lower.includes("fight") ||
+    lower.includes("ufc") ||
+    lower.includes("boxing") ||
+    lower.includes("wwe") ||
+    lower.includes("mma")
+  )
+    return "fight";
+  if (lower.includes("tennis")) return "tennis";
+  if (lower.includes("golf")) return "golf";
+  if (lower.includes("cricket")) return "cricket";
+  if (lower.includes("rugby")) return "rugby";
+  if (
+    lower.includes("motor") ||
+    lower.includes("f1") ||
+    lower.includes("nascar") ||
+    lower.includes("moto")
+  )
+    return "motor-sports";
+  return null;
+}
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
+interface SportWatchClientProps {
+  gameId?: string;
+}
+
+export function SportWatchClient({
+  gameId: propGameId,
+}: SportWatchClientProps) {
+  const params = useParams();
+  const gameId = (propGameId ?? params?.id ?? "") as string;
+  const [channels, setChannels] = React.useState<SportChannel[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    let cancelled = false;
+
+    async function fetchChannels() {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const sportGuess = guessSportFromId(gameId);
+        if (!sportGuess) {
+          if (!cancelled) {
+            setError("Could not determine sport type from event ID.");
+            setLoading(false);
+          }
+          return;
+        }
+
+        const cdnSport = CDNLIVE_SPORT_MAP[sportGuess] ?? sportGuess;
+        const res = await fetch(
+          `${CDNLIVE_BASE}/events/sports/${cdnSport}?user=cdnlivetv&plan=free`,
+        );
+
+        if (!res.ok) {
+          throw new Error(`API error: ${res.status}`);
+        }
+
+        const data = await res.json();
+        const grouped = data["cdn-live-tv"];
+        if (!grouped) {
+          if (!cancelled) setChannels([]);
+          return;
+        }
+
+        const found: SportChannel[] = [];
+        const seen = new Set<string>();
+        for (const key of Object.keys(grouped)) {
+          const group = grouped[key];
+          if (Array.isArray(group)) {
+            for (const dto of group as CdnEventDTO[]) {
+              if (dto.gameID === gameId) {
+                for (const ch of dto.channels) {
+                  const channelKey = ch.channel_code + ch.channel_name;
+                  if (!seen.has(channelKey)) {
+                    seen.add(channelKey);
+                    found.push({
+                      channel_name: ch.channel_name,
+                      channel_code: ch.channel_code,
+                      url: ch.url,
+                      image: ch.image ?? null,
+                      viewers: ch.viewers ?? 0,
+                    });
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        if (!cancelled) {
+          setChannels(found);
+          if (found.length === 0) {
+            setError(
+              "No streams found for this event. The match may not have started yet or is no longer available.",
+            );
+          }
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(
+            err instanceof Error ? err.message : "Failed to load streams",
+          );
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    fetchChannels();
+    return () => {
+      cancelled = true;
+    };
+  }, [gameId]);
+
+  // ---- Loading state ----
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-10 h-10 text-primary animate-spin" />
+          <p className="text-sm text-muted-foreground font-mono">
+            Loading stream...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // ---- Error / no channels ----
+  if (error && channels.length === 0) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="container-cine text-center py-20">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-6">
+            <AlertTriangle className="w-8 h-8 text-muted-foreground" />
+          </div>
+          <h1 className="text-2xl font-heading font-bold text-foreground mb-4">
+            Stream Unavailable
+          </h1>
+          <p className="text-muted-foreground max-w-md mx-auto mb-6">{error}</p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Link
+              href="/sports"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-primary text-primary-foreground font-semibold text-sm"
+            >
+              <ChevronLeft className="w-4 h-4" /> Back to Sports
+            </Link>
+            <button
+              onClick={openSmartlink}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md border border-muted-foreground/30 text-muted-foreground hover:text-foreground hover:border-foreground/50 font-semibold text-sm transition-colors"
+            >
+              <ExternalLink className="w-4 h-4" /> Watch on external player
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const primaryChannel = channels[0] ?? null;
+
+  return (
+    <div className="min-h-screen bg-black flex flex-col">
+      {/* Top bar */}
+      <div className="fixed top-0 left-0 right-0 z-50 h-12 bg-gradient-to-b from-black/90 to-transparent flex items-center px-4">
+        <Link
+          href="/sports"
+          className="inline-flex items-center gap-2 text-sm text-white/70 hover:text-white transition-colors font-body"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          <span className="hidden sm:inline">Back to Sports</span>
+        </Link>
+      </div>
+
+      {/* Video player */}
+      <section className="w-full bg-black flex-1 flex flex-col">
+        <div className="max-w-[1400px] mx-auto w-full flex-1 flex flex-col">
+          <div className="relative w-full aspect-video bg-black">
+            {primaryChannel ? (
+              <iframe
+                src={primaryChannel.url}
+                title={`${primaryChannel.channel_name} Stream`}
+                className="absolute inset-0 w-full h-full"
+                allowFullScreen
+                allow="autoplay; encrypted-media; picture-in-picture"
+                sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+              />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center bg-muted">
+                <div className="text-center">
+                  <Tv className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-muted-foreground text-sm">
+                    No playable stream available.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Info bar */}
+      <section className="bg-card border-t border-border py-4">
+        <div className="container-cine">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h1 className="text-lg font-heading font-bold text-foreground">
+                {primaryChannel
+                  ? `${primaryChannel.channel_name}`
+                  : "Live Sports Event"}
+              </h1>
+              <p className="text-sm text-muted-foreground font-mono">
+                ID: {gameId}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              {channels.length > 0 && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Radio className="w-3.5 h-3.5 text-primary animate-pulse" />
+                  <span>
+                    {primaryChannel?.channel_name}
+                    {primaryChannel?.viewers
+                      ? ` (${primaryChannel.viewers} watching)`
+                      : ""}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {channels.length > 1 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {channels.map((ch) => (
+                <a
+                  key={ch.channel_code + ch.channel_name}
+                  href={ch.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                    ch === primaryChannel
+                      ? "bg-primary/20 text-primary border border-primary/30"
+                      : "bg-muted text-muted-foreground hover:bg-muted/80 border border-transparent"
+                  }`}
+                >
+                  {ch.channel_name}
+                  {ch.viewers > 0 && (
+                    <span className="text-[10px] opacity-70">
+                      ({ch.viewers})
+                    </span>
+                  )}
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+    </div>
+  );
+}
+</file>
+
+<file path="src/app/(watch)/watch/tv/[id]/[season]/[episode]/watch-tv-shell.tsx">
+"use client";
+import { VideoPlayerWrapper } from "@/app/(watch)/watch/movie/[id]/video-player-wrapper";
+
+export function WatchTVShell() {
+  const parts =
+    typeof window !== "undefined"
+      ? window.location.pathname.split("/").filter(Boolean)
+      : [];
+  const id = parts[2] || "0";
+  const season = parts[3] || "1";
+  const episode = parts[4] || "1";
+  return (
+    <VideoPlayerWrapper
+      tmdbId={parseInt(id) || 0}
+      imdbId={null}
+      mediaType="tv"
+      title=""
+      season={parseInt(season) || 1}
+      episode={parseInt(episode) || 1}
+    />
   );
 }
 </file>
@@ -14585,6 +14526,66 @@ export function VideoPlayerWrapper({
     .safe-area-bottom {
         padding-bottom: env(safe-area-inset-bottom, 0px);
     }
+}
+</file>
+
+<file path="src/app/robots.ts">
+import type { MetadataRoute } from "next";
+
+export const dynamic = "force-static";
+
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://mori.vercel.app";
+
+export default function robots(): MetadataRoute.Robots {
+  return {
+    rules: {
+      userAgent: "*",
+      allow: "/",
+      disallow: ["/api/", "/watch/"],
+    },
+    sitemap: `${BASE_URL}/sitemap.xml`,
+  };
+}
+</file>
+
+<file path="src/app/sitemap.ts">
+import type { MetadataRoute } from "next";
+
+export const dynamic = "force-static";
+
+export default function sitemap(): MetadataRoute.Sitemap {
+  return [
+    {
+      url: "https://morimovie.netlify.app",
+      changeFrequency: "daily",
+      priority: 1,
+    },
+    {
+      url: "https://morimovie.netlify.app/movies",
+      changeFrequency: "daily",
+      priority: 0.9,
+    },
+    {
+      url: "https://morimovie.netlify.app/tv",
+      changeFrequency: "daily",
+      priority: 0.9,
+    },
+    {
+      url: "https://morimovie.netlify.app/anime",
+      changeFrequency: "daily",
+      priority: 0.9,
+    },
+    {
+      url: "https://morimovie.netlify.app/kdrama",
+      changeFrequency: "daily",
+      priority: 0.8,
+    },
+    {
+      url: "https://morimovie.netlify.app/sports",
+      changeFrequency: "hourly",
+      priority: 0.8,
+    },
+  ];
 }
 </file>
 
@@ -17949,54 +17950,30 @@ const config: Config = {
 export default config;
 </file>
 
-<file path="package.json">
-{
-  "name": "mori",
-  "version": "1.0.0",
-  "private": true,
-  "description": "Movie streaming site powered by TMDB, Vidking, and Vidhide",
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "test": "vitest run",
-    "test:watch": "vitest"
-  },
-  "dependencies": {
-    "@next/third-parties": "^16.2.5",
-    "clsx": "^2.1.1",
-    "lucide-react": "^0.468.0",
-    "next": "^15.1.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "tailwind-merge": "^2.6.0",
-    "zod": "^3.24.1"
-  },
-  "devDependencies": {
-    "@netlify/plugin-nextjs": "^5.15.10",
-    "@tailwindcss/typography": "^0.5.15",
-    "@types/node": "^22.10.0",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
-    "autoprefixer": "^10.4.0",
-    "eslint": "^9.0.0",
-    "eslint-config-next": "^15.1.0",
-    "postcss": "^8.4.0",
-    "tailwindcss": "^3.4.0",
-    "typescript": "^5.7.0",
-    "vitest": "^2.1.0"
-  }
-}
-</file>
+<file path="next.config.ts">
+import type { NextConfig } from "next";
 
-<file path="src/app/(main)/anime/[id]/page.tsx">
-export function generateStaticParams() {
-  return [{ id: "placeholder" }];
-}
+const nextConfig: NextConfig = {
+  output: "export",
+  poweredByHeader: false,
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "image.tmdb.org",
+        pathname: "/t/p/**",
+      },
+    ],
+    unoptimized: true,
+    minimumCacheTTL: 86400,
+  },
+  experimental: {
+    scrollRestoration: true,
+    optimizePackageImports: ["lucide-react"],
+  },
+};
 
-import { AnimeShell } from "./anime-shell";
-export default AnimeShell;
+export default nextConfig;
 </file>
 
 <file path="src/app/(main)/anime/page.tsx">
@@ -18133,24 +18110,6 @@ export default function SportsPage() {
 }
 </file>
 
-<file path="src/app/(main)/tv/[id]/page.tsx">
-export function generateStaticParams() {
-  return [{ id: "placeholder" }];
-}
-
-import { TVShell } from "./tv-shell";
-export default TVShell;
-</file>
-
-<file path="src/app/(main)/tv/[id]/season/[season]/episode/[episode]/page.tsx">
-export function generateStaticParams() {
-  return [{ id: "placeholder", season: "1", episode: "1" }];
-}
-
-import { EpisodeShell } from "./episode-shell";
-export default EpisodeShell;
-</file>
-
 <file path="src/app/(main)/tv/page.tsx">
 import type { Metadata } from "next";
 import { Suspense } from "react";
@@ -18177,24 +18136,6 @@ export default function TVPage() {
     </Suspense>
   );
 }
-</file>
-
-<file path="src/app/(watch)/watch/sport/[id]/page.tsx">
-export function generateStaticParams() {
-  return [{ id: "placeholder" }];
-}
-
-import { WatchSportShell } from "./watch-sport-shell";
-export default WatchSportShell;
-</file>
-
-<file path="src/app/(watch)/watch/tv/[id]/[season]/[episode]/page.tsx">
-export function generateStaticParams() {
-  return [{ id: "placeholder", season: "1", episode: "1" }];
-}
-
-import { WatchTVShell } from "./watch-tv-shell";
-export default WatchTVShell;
 </file>
 
 <file path="src/components/ui/genre-filter.tsx">
@@ -18384,6 +18325,46 @@ export const footerNav: NavSection[] = [
 ];
 </file>
 
+<file path="package.json">
+{
+  "name": "mori",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Movie streaming site powered by TMDB, Vidking, and Vidhide",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@next/third-parties": "^16.2.5",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.468.0",
+    "next": "^15.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tailwind-merge": "^2.6.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/typography": "^0.5.15",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "autoprefixer": "^10.4.0",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "^15.1.0",
+    "postcss": "^8.4.0",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  }
+}
+</file>
+
 <file path="src/app/(main)/layout.tsx">
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
@@ -18407,15 +18388,6 @@ export default function MainLayout({
     </div>
   );
 }
-</file>
-
-<file path="src/app/(main)/movies/[id]/page.tsx">
-export function generateStaticParams() {
-  return [{ id: "placeholder" }];
-}
-
-import { MovieShell } from "./movie-shell";
-export default MovieShell;
 </file>
 
 <file path="src/app/(main)/page.tsx">
@@ -18758,6 +18730,42 @@ export function SearchPageClient() {
 }
 </file>
 
+<file path="src/app/(main)/sports/[sport]/page.tsx">
+import { SportShell } from "./sport-shell";
+
+export function generateStaticParams() {
+  return [{ sport: "basketball" }];
+}
+
+export default function Page() {
+  return <SportShell />;
+}
+</file>
+
+<file path="src/app/(watch)/watch/anime/[id]/[episode]/page.tsx">
+import { WatchAnimeShell } from "./watch-anime-shell";
+
+export function generateStaticParams() {
+  return [{ id: "placeholder", episode: "1" }];
+}
+
+export default function Page() {
+  return <WatchAnimeShell />;
+}
+</file>
+
+<file path="src/app/(watch)/watch/movie/[id]/page.tsx">
+import { WatchMovieShell } from "./watch-movie-shell";
+
+export function generateStaticParams() {
+  return [{ id: "placeholder" }];
+}
+
+export default function Page() {
+  return <WatchMovieShell />;
+}
+</file>
+
 <file path="src/components/layout/footer.tsx">
 import Link from "next/link";
 import { footerLinks } from "@/config/navigation";
@@ -18968,6 +18976,66 @@ export function MediaCard({
       </div>
     </Link>
   );
+}
+</file>
+
+<file path="src/app/(main)/anime/[id]/page.tsx">
+import { AnimeShell } from "./anime-shell";
+
+export function generateStaticParams() {
+  return [{ id: "placeholder" }];
+}
+
+export default function Page() {
+  return <AnimeShell />;
+}
+</file>
+
+<file path="src/app/(main)/tv/[id]/page.tsx">
+import { TVShell } from "./tv-shell";
+
+export function generateStaticParams() {
+  return [{ id: "placeholder" }];
+}
+
+export default function Page() {
+  return <TVShell />;
+}
+</file>
+
+<file path="src/app/(main)/tv/[id]/season/[season]/episode/[episode]/page.tsx">
+import { EpisodeShell } from "./episode-shell";
+
+export function generateStaticParams() {
+  return [{ id: "placeholder", season: "1", episode: "1" }];
+}
+
+export default function Page() {
+  return <EpisodeShell />;
+}
+</file>
+
+<file path="src/app/(watch)/watch/sport/[id]/page.tsx">
+import { WatchSportShell } from "./watch-sport-shell";
+
+export function generateStaticParams() {
+  return [{ id: "placeholder" }];
+}
+
+export default function Page() {
+  return <WatchSportShell />;
+}
+</file>
+
+<file path="src/app/(watch)/watch/tv/[id]/[season]/[episode]/page.tsx">
+import { WatchTVShell } from "./watch-tv-shell";
+
+export function generateStaticParams() {
+  return [{ id: "placeholder", season: "1", episode: "1" }];
+}
+
+export default function Page() {
+  return <WatchTVShell />;
 }
 </file>
 
@@ -19505,6 +19573,18 @@ export function VideoPlayer({
 }
 </file>
 
+<file path="src/app/(main)/movies/[id]/page.tsx">
+import { MovieShell } from "./movie-shell";
+
+export function generateStaticParams() {
+  return [{ id: "placeholder" }];
+}
+
+export default function Page() {
+  return <MovieShell />;
+}
+</file>
+
 <file path="netlify.toml">
 # ---------------------------------------------------------------------------
 # Mori — Netlify configuration
@@ -19521,6 +19601,8 @@ export function VideoPlayer({
   publish = "out"
 
 [build.environment]
+  # Belt-and-suspenders: ensure Netlify never wires in the Next.js plugin
+  NETLIFY_NEXT_PLUGIN_SKIP = "true"
   # Not needed on Netlify (unoptimized images bypass sharp),
   # but kept for local parity.
   NEXT_SHARP_PATH = "node_modules/sharp"
@@ -19560,16 +19642,23 @@ export function VideoPlayer({
   [headers.values]
     Content-Security-Policy = """
       default-src 'self'; \
-      script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.vidking.net https://multiembed.mov https://pl29360734 https://pl29360735.profitablecpmratenetwork.com https://pl29360736.profitablecpmratenetwork.com;
+      script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.vidking.net https://multiembed.mov https://pl29360734 https://pl29360735.profitablecpmratenetwork.com https://pl29360736.profitablecpmratenetwork.com https://planetsrecipe.com;
       frame-src https://www.vidking.net https://multiembed.mov https://streamingnow.mov https://www.2embed.cc https://mostream.us https://streamvaultsrc.click https://ezvidapi.com https://player.embed-api.stream https://vidsrc.mov https://cdnlivetv.tv; \
       img-src 'self' data: https://image.tmdb.org https://api.cdnlivetv.tv https://flagcdn.com; \
       style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; \
       font-src 'self' https://fonts.gstatic.com; \
-      connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com https://api.themoviedb.org https://www.vidking.net https://multiembed.mov https://www.2embed.cc https://mostream.us https://streamvaultsrc.click https://ezvidapi.com https://player.embed-api.stream https://vidsrc.mov https://pl29360734 https://pl29360735.profitablecpmratenetwork.com https://pl29360736.profitablecpmratenetwork.com https://api.cdnlivetv.ru https://cdnlivetv.tv; \
+      connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com https://api.themoviedb.org https://www.vidking.net https://multiembed.mov https://www.2embed.cc https://mostream.us https://streamvaultsrc.click https://ezvidapi.com https://player.embed-api.stream https://vidsrc.mov https://pl29360734 https://pl29360735.profitablecpmratenetwork.com https://pl29360736.profitablecpmratenetwork.com https://api.cdnlivetv.ru https://cdnlivetv.tv https://planetsrecipe.com;
       media-src 'self' https://www.vidking.net https://multiembed.mov https://streamingnow.mov https://www.2embed.cc https://mostream.us https://streamvaultsrc.click https://ezvidapi.com https://player.embed-api.stream https://vidsrc.mov;\
     """
 
 # ---- Redirects -----------------------------------------------------------
+
+# Proxy cdnlivetv API through Netlify CDN to bypass CORS (zero function invocations)
+[[redirects]]
+  from = "/api/sports/*"
+  to = "https://api.cdnlivetv.ru/api/v1/:splat"
+  status = 200
+  force = true
 
 [[redirects]]
   from = "/pinoy"

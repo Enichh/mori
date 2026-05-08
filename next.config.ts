@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
+// Static export only on Netlify; dev mode uses normal server for fast refresh
+const isExport = process.env.NEXT_EXPORT === "true";
+
 const nextConfig: NextConfig = {
-  output: "export",
+  output: isExport ? "export" : undefined,
   poweredByHeader: false,
   images: {
     remotePatterns: [
