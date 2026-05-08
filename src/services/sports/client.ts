@@ -9,7 +9,7 @@ import { MemoryCache } from "@/services/cache";
 // Constants
 // ---------------------------------------------------------------------------
 
-const CDNLIVE_BASE = "https://api.cdnlivetv.ru/api/v1";
+const CDNLIVE_BASE = "/api/sports";
 
 // ---------------------------------------------------------------------------
 // Client

@@ -47,7 +47,7 @@ export const VIDEO_SERVERS = {
   consumet: "1Anime",
 } as const;
 
-export const DEFAULT_PLAYER_COLOR = "C5FF4A"; // lime green, no `#`
+export const DEFAULT_PLAYER_COLOR = "C5FF4A";
 
 // ---- Anime ---------------------------------------------------------------
 export const ANIME_GENRE_ID = 16;
@@ -55,14 +55,13 @@ export const ANIME_KEYWORD_ID = 210024;
 
 // ---- Brand ---------------------------------------------------------------
 export const SITE_NAME = "Mori";
-export const SITE_DESCRIPTION =
-  "Stream movies, TV shows, and anime. Powered by TMDB, Vidking & Vidhide.";
+export const SITE_DESCRIPTION = "Stream movies, TV shows, and anime.";
 
 // ---- TMDB API ------------------------------------------------------------
 export const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 
 // ---- AniList --------------------------------------------------------------
-export const ANILIST_BASE_URL = "https://graphql.anilist.co";
+export const ANILIST_BASE_URL = "/api/anilist";
 
 // ---- Vidking -------------------------------------------------------------
 export const VIDKING_BASE_URL = "https://www.vidking.net";
@@ -71,7 +70,7 @@ export const VIDKING_BASE_URL = "https://www.vidking.net";
 export const VIDHIDE_BASE_URL = "https://vidhidepro.com";
 
 // ---- Anime Stream (1Anime CDN) -------------------------------------------
-export const ANIME_STREAM_BASE_URL = "https://cdn-eu.1ani.me";
+export const ANIME_STREAM_BASE_URL = "/api/1anime";
 
 // ---- VidLink -------------------------------------------------------------
 export const VIDLINK_BASE_URL = "https://vidlink.pro";
@@ -83,4 +82,4 @@ export const VIDSTREAM_BASE_URL = "https://vidsrc.icu";
 export const VIDPLAY_BASE_URL = "https://vidsrc.cc";
 
 // ---- Sports API ----------------------------------------------------------
-export const SPORTS_CDNLIVE_BASE_URL = "https://api.cdnlivetv.ru/api/v1";
+export const SPORTS_CDNLIVE_BASE_URL = "/api/sports";

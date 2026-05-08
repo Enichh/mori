@@ -1,22 +1,69 @@
 "use client";
 
 import * as React from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { MediaGrid } from "@/components/media/media-grid";
 import { GenreFilter } from "@/components/ui/genre-filter";
 import { Pagination } from "@/components/ui/pagination";
-import { SelectSort } from "@/components/ui/select-sort";
 import { useCachedFetch } from "@/hooks/use-cached-fetch";
 import type { Movie, Genre } from "@/types";
+import { Loader2, AlertTriangle, ChevronDown } from "lucide-react";
 
 const TMDB_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY!;
 const TMDB_BASE = "https://api.themoviedb.org/3";
 
+// ---------------------------------------------------------------------------
+// Filter options
+// ---------------------------------------------------------------------------
+
+interface CountryOption {
+  code: string;
+  label: string;
+  tag: string;
+  language: string;
+}
+
+const REGIONS: CountryOption[] = [
+  { code: "US", label: "Hollywood", tag: "US", language: "en" },
+  { code: "GB", label: "British", tag: "GB", language: "en" },
+  { code: "KR", label: "Korean", tag: "KR", language: "ko" },
+  { code: "JP", label: "Japanese", tag: "JP", language: "ja" },
+  { code: "CN", label: "Chinese", tag: "CN", language: "zh" },
+  { code: "FR", label: "French", tag: "FR", language: "fr" },
+  { code: "IN", label: "Bollywood", tag: "IN", language: "hi" },
+  { code: "ID", label: "Indonesian", tag: "ID", language: "id" },
+  { code: "TH", label: "Thai", tag: "TH", language: "th" },
+  { code: "TW", label: "Taiwanese", tag: "TW", language: "zh" },
+  { code: "DE", label: "German", tag: "DE", language: "de" },
+  { code: "ES", label: "Spanish", tag: "ES", language: "es" },
+  { code: "MX", label: "Mexican", tag: "MX", language: "es" },
+  { code: "BR", label: "Brazilian", tag: "BR", language: "pt" },
+  { code: "IT", label: "Italian", tag: "IT", language: "it" },
+  { code: "AU", label: "Australian", tag: "AU", language: "en" },
+];
+
 const SORT_OPTIONS = [
-  { value: "popularity.desc" as const, label: "Most Popular" },
-  { value: "vote_average.desc" as const, label: "Highest Rated" },
-  { value: "release_date.desc" as const, label: "Newest" },
-  { value: "revenue.desc" as const, label: "Highest Grossing" },
+  { value: "popularity.desc", label: "Most Popular" },
+  { value: "vote_average.desc", label: "Highest Rated" },
+  { value: "release_date.desc", label: "Newest" },
+  { value: "revenue.desc", label: "Top Grossing" },
+  { value: "primary_release_date.desc", label: "Latest Release" },
+];
+
+const YEAR_OPTIONS = [
+  { value: "", label: "All Years" },
+  { value: "2026", label: "2026" },
+  { value: "2025", label: "2025" },
+  { value: "2024", label: "2024" },
+  { value: "2023", label: "2023" },
+  { value: "2022", label: "2022" },
+  { value: "2021", label: "2021" },
+  { value: "2020", label: "2020" },
+  { value: "2010-01-01|2019-12-31", label: "2010s" },
+  { value: "2000-01-01|2009-12-31", label: "2000s" },
+  { value: "1990-01-01|1999-12-31", label: "1990s" },
+  { value: "1980-01-01|1989-12-31", label: "1980s" },
+  { value: "1900-01-01|1979-12-31", label: "Older" },
 ];
 
 // ---------------------------------------------------------------------------
@@ -51,7 +98,7 @@ function mapMovie(r: any): Movie {
 }
 
 // ---------------------------------------------------------------------------
-// Data types
+// Fetchers
 // ---------------------------------------------------------------------------
 
 interface MoviesData {
@@ -60,29 +107,45 @@ interface MoviesData {
   totalResults: number;
 }
 
-// ---------------------------------------------------------------------------
-// Fetchers (run in browser)
-// ---------------------------------------------------------------------------
-
 async function fetchMovies(
   page: number,
+  region: CountryOption,
   genre?: string,
   sort?: string,
+  year?: string,
 ): Promise<MoviesData> {
   const params = new URLSearchParams();
   params.set("api_key", TMDB_KEY);
   params.set("sort_by", sort || "popularity.desc");
   params.set("page", String(page));
+  params.set("with_original_language", region.language);
+  // Don't set origin_country for US/GB since it's too restrictive for Hollywood
+  if (!["US", "GB", "AU"].includes(region.code)) {
+    params.set("with_origin_country", region.code);
+  }
   if (genre) params.set("with_genres", genre);
+  if (sort === "vote_average.desc") params.set("vote_count.gte", "50");
+
+  // Year filter: supports both single year and date range
+  if (year) {
+    if (year.includes("|")) {
+      const [from, to] = year.split("|");
+      params.set("release_date.gte", from);
+      params.set("release_date.lte", to);
+    } else {
+      params.set("primary_release_year", year);
+    }
+  }
+
+  // Filter out Filipino content
+  params.set("without_original_language", "tl");
 
   const res = await fetch(`${TMDB_BASE}/discover/movie?${params.toString()}`);
   if (!res.ok) return { movies: [], totalPages: 0, totalResults: 0 };
   const data = await res.json();
   return {
-    movies: (data.results || [])
-      .map(mapMovie)
-      .filter((m: any) => m.originalLanguage !== "tl"),
-    totalPages: Math.min(data.total_pages || 0, 500), // TMDB caps at 500
+    movies: (data.results || []).map(mapMovie),
+    totalPages: Math.min(data.total_pages || 0, 500),
     totalResults: data.total_results || 0,
   };
 }
@@ -92,6 +155,44 @@ async function fetchGenres(): Promise<Genre[]> {
   if (!res.ok) return [];
   const data = await res.json();
   return data.genres || [];
+}
+
+// ---------------------------------------------------------------------------
+// Dropdown
+// ---------------------------------------------------------------------------
+
+function SelectDropdown({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-xs text-muted-foreground whitespace-nowrap">
+        {label}
+      </span>
+      <div className="relative">
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="appearance-none bg-card border border-border rounded-md pl-3 pr-8 py-1.5 text-xs font-medium text-foreground cursor-pointer hover:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary"
+        >
+          {options.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
+      </div>
+    </div>
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -105,20 +206,11 @@ function MoviesSkeleton() {
         <div className="h-8 w-32 bg-muted rounded mb-2" />
         <div className="h-4 w-64 bg-muted rounded" />
       </div>
-
       <div className="flex flex-wrap gap-2 mb-4 animate-pulse">
         {[...Array(8)].map((_, i) => (
           <div key={i} className="h-7 w-20 bg-muted rounded" />
         ))}
       </div>
-
-      <div className="py-4 border-b border-border animate-pulse">
-        <div className="flex items-center justify-between">
-          <div className="h-4 w-28 bg-muted rounded" />
-          <div className="h-8 w-32 bg-muted rounded" />
-        </div>
-      </div>
-
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 py-6">
         {[...Array(12)].map((_, i) => (
           <div key={i} className="animate-pulse">
@@ -132,74 +224,66 @@ function MoviesSkeleton() {
 }
 
 // ---------------------------------------------------------------------------
-// Inner component (uses useSearchParams, must be inside Suspense)
+// Main
 // ---------------------------------------------------------------------------
 
-function MoviesClientInner() {
+export function MoviesClient() {
+  const router = useRouter();
   const searchParams = useSearchParams();
+
   const pageParam = searchParams.get("page") || "1";
+  const regionParam = searchParams.get("region") || "US";
   const genreParam = searchParams.get("genre") || undefined;
   const sortParam = searchParams.get("sort") || "popularity.desc";
+  const yearParam = searchParams.get("year") || "";
 
   const currentPage = parseInt(pageParam, 10) || 1;
+  const region = REGIONS.find((r) => r.code === regionParam) ?? REGIONS[0];
 
-  // Build a unique cache key from the URL params
-  const cacheKey = `movies:${currentPage}:${genreParam || "all"}:${sortParam}`;
+  const cacheKey = `movies:${currentPage}:${region.code}:${genreParam || "all"}:${sortParam}:${yearParam || "all"}`;
 
   const {
     data: moviesData,
-    loading: moviesLoading,
-    error: moviesError,
-    refetch: refetchMovies,
+    loading,
+    error,
+    refetch,
   } = useCachedFetch<MoviesData>(
     cacheKey,
-    () => fetchMovies(currentPage, genreParam, sortParam),
-    3600000, // 1 hour
+    () => fetchMovies(currentPage, region, genreParam, sortParam, yearParam),
+    3600000,
   );
 
-  const {
-    data: genres,
-    loading: genresLoading,
-    error: genresError,
-  } = useCachedFetch<Genre[]>(
+  const { data: genres, loading: genresLoading } = useCachedFetch<Genre[]>(
     "movies:genres",
     fetchGenres,
-    86400000, // 24 hours — genres rarely change
+    86400000,
   );
 
-  const isLoading = moviesLoading || genresLoading;
-  const hasError = moviesError || genresError;
+  const navigate = (updates: Record<string, string | undefined>) => {
+    const sp = new URLSearchParams(searchParams.toString());
+    for (const [k, v] of Object.entries(updates)) {
+      if (v === undefined || v === "") sp.delete(k);
+      else sp.set(k, v);
+    }
+    if (!("page" in updates)) sp.delete("page");
+    router.push(`/movies?${sp.toString()}`, { scroll: false });
+  };
 
-  // ---- Loading state ----
-  if (isLoading && !moviesData) {
-    return <MoviesSkeleton />;
-  }
+  // ---- Loading ----
+  if (loading && !moviesData) return <MoviesSkeleton />;
 
-  // ---- Error state ----
-  if (hasError && !moviesData) {
+  // ---- Error ----
+  if (error && !moviesData) {
     return (
       <div className="container-cine py-20 text-center">
-        <div className="terminal-box max-w-md mx-auto">
-          <p className="text-destructive text-sm mb-3">
-            Failed to load movies.
-          </p>
-          {moviesError && (
-            <p className="text-muted-foreground text-xs font-mono break-all mb-4">
-              {moviesError}
-            </p>
-          )}
-          {genresError && (
-            <p className="text-muted-foreground text-xs font-mono break-all mb-4">
-              {genresError}
-            </p>
-          )}
-          <button
-            onClick={() => refetchMovies()}
-            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-          >
-            Retry
-          </button>
-        </div>
+        <AlertTriangle className="h-10 w-10 text-destructive mx-auto mb-3" />
+        <p className="text-destructive text-sm mb-3">{error}</p>
+        <button
+          onClick={() => refetch()}
+          className="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium bg-primary text-primary-foreground rounded-md"
+        >
+          Retry
+        </button>
       </div>
     );
   }
@@ -210,37 +294,71 @@ function MoviesClientInner() {
 
   return (
     <div className="container-cine py-8">
-      <div className="mb-6">
+      {/* Header */}
+      <div className="mb-4">
         <h1 className="text-2xl md:text-3xl font-heading font-bold text-foreground mb-2">
           Movies
         </h1>
         <p className="text-sm text-muted-foreground">
-          Browse and stream the latest blockbusters and timeless classics.
+          Browse blockbusters, classics, and hidden gems from around the world.
         </p>
       </div>
 
-      {genres && genres.length > 0 && (
-        <GenreFilter
-          genres={genres}
-          activeGenre={genreParam}
-          baseHref="/movies"
-          currentSort={sortParam}
+      {/* Filters row */}
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <SelectDropdown
+          label="Region"
+          value={region.code}
+          options={REGIONS.map((r) => ({
+            value: r.code,
+            label: `${r.label}`,
+          }))}
+          onChange={(v) => navigate({ region: v })}
         />
+
+        <SelectDropdown
+          label="Year"
+          value={yearParam}
+          options={YEAR_OPTIONS}
+          onChange={(v) => navigate({ year: v })}
+        />
+
+        <SelectDropdown
+          label="Sort"
+          value={sortParam}
+          options={SORT_OPTIONS}
+          onChange={(v) => navigate({ sort: v })}
+        />
+
+        <div className="flex items-center gap-2 ml-auto">
+          <span className="px-1.5 py-0.5 text-[10px] font-bold rounded border border-primary/30 bg-primary/10 text-primary">
+            {region.tag}
+          </span>
+          <p className="text-xs text-muted-foreground whitespace-nowrap">
+            {totalResults.toLocaleString()} movies
+          </p>
+        </div>
+      </div>
+
+      {/* Genre filter */}
+      {genres && genres.length > 0 && (
+        <div className="mb-4">
+          <GenreFilter
+            genres={genres}
+            activeGenre={genreParam}
+            baseHref="/movies"
+            currentSort={
+              sortParam !== "popularity.desc" ? sortParam : undefined
+            }
+            extraParams={{
+              region: region.code !== "US" ? region.code : "",
+              year: yearParam,
+            }}
+          />
+        </div>
       )}
 
-      <div className="flex items-center justify-between py-4 border-b border-border">
-        <p className="text-xs text-muted-foreground">
-          {totalResults.toLocaleString()} movies found
-        </p>
-        <SelectSort
-          options={SORT_OPTIONS}
-          currentSort={sortParam}
-          baseHref="/movies"
-          genre={genreParam}
-          page={currentPage > 1 ? String(currentPage) : undefined}
-        />
-      </div>
-
+      {/* Grid */}
       {movies.length > 0 && (
         <>
           <MediaGrid title="" items={movies} mediaType="movie" />
@@ -251,22 +369,29 @@ function MoviesClientInner() {
               totalPages={totalPages}
               baseHref="/movies"
               searchParams={{
-                genre: genreParam || "",
+                region: region.code !== "US" ? region.code : "",
+                year: yearParam,
                 sort: sortParam !== "popularity.desc" ? sortParam : "",
+                genre: genreParam || "",
               }}
             />
           )}
         </>
       )}
 
-      {movies.length === 0 && !isLoading && (
+      {/* Empty */}
+      {movies.length === 0 && !loading && (
         <div className="py-20 text-center">
-          <p className="text-muted-foreground">No movies found.</p>
+          <p className="text-muted-foreground">
+            No {region.label} movies found
+            {yearParam
+              ? ` for ${YEAR_OPTIONS.find((y) => y.value === yearParam)?.label}`
+              : ""}
+            .
+          </p>
           {genreParam && (
             <button
-              onClick={() => {
-                window.location.href = "/movies";
-              }}
+              onClick={() => navigate({ genre: undefined })}
               className="mt-3 inline-flex items-center gap-2 px-4 py-2 text-xs font-medium border border-border text-muted-foreground hover:text-foreground hover:border-primary/50 rounded-md transition-colors"
             >
               Clear genre filter
@@ -275,23 +400,15 @@ function MoviesClientInner() {
         </div>
       )}
 
-      {/* Background loading indicator for page transitions */}
-      {isLoading && moviesData && (
+      {/* Loading overlay */}
+      {loading && moviesData && (
         <div className="fixed bottom-4 right-4 z-50">
-          <div className="flex items-center gap-2 px-3 py-2 bg-card border border-border rounded-full shadow-lg animate-pulse">
-            <div className="h-2 w-2 bg-primary rounded-full" />
+          <div className="flex items-center gap-2 px-3 py-2 bg-card border border-border rounded-full shadow-lg">
+            <Loader2 className="w-3 h-3 text-primary animate-spin" />
             <span className="text-xs text-muted-foreground">Updating...</span>
           </div>
         </div>
       )}
     </div>
   );
-}
-
-// ---------------------------------------------------------------------------
-// Public component (thin wrapper for clarity)
-// ---------------------------------------------------------------------------
-
-export function MoviesClient() {
-  return <MoviesClientInner />;
 }

@@ -1,41 +1,32 @@
 # ---------------------------------------------------------------------------
 # Mori — Netlify configuration
 # ---------------------------------------------------------------------------
-# Best-practice setup for Next.js 15 ISR on Netlify:
-#  - @netlify/plugin-nextjs handles ISR, image CDN, routing
-#  - stale-while-revalidate lets the CDN serve cached pages while
-#    a background function regenerates them — ZERO bandwidth cost
-#    for most visitors.
-# ---------------------------------------------------------------------------
 
 [build]
-  command = "npm run build"
+  command = "NEXT_EXPORT=true npm run build"
   publish = "out"
 
 [build.environment]
-  # Enable static export for Netlify (zero functions)
-  NEXT_EXPORT = "true"
-  # Belt-and-suspenders: ensure Netlify never wires in the Next.js plugin
   NETLIFY_NEXT_PLUGIN_SKIP = "true"
-  # Not needed on Netlify (unoptimized images bypass sharp),
-  # but kept for local parity.
   NEXT_SHARP_PATH = "node_modules/sharp"
 
-# ---- ISR pages: CDN serves stale, background revalidates ----------------
-# ---- Static assets: immutable long-term cache ----------------------------
+# ---- Cache headers -------------------------------------------------------
 
+# Static assets — immutable long-lived cache
 [[headers]]
   for = "/_next/static/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
-# ---- ISR pages: CDN serves stale, background revalidates ----------------
-# Best practice for Netlify ISR:
-#   max-age=0 → never serve fresh without checking
-#   must-revalidate → always check origin after max-age
-#   stale-while-revalidate=86400 → serve stale up to 1 day while revalidating
-# Netlify-CDN-Cache-Control gives the CDN extra hints.
+# API proxies — cache JSON responses at CDN edge for 5 minutes, stale for 24h
+# This dramatically reduces origin hits for repeated requests (same anime page, etc.)
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Cache-Control = "public, max-age=300, stale-while-revalidate=86400"
+    Netlify-CDN-Cache-Control = "public, durable, max-age=300, stale-while-revalidate=86400"
 
+# Default — validate every time but serve stale for 1 week if origin is down
 [[headers]]
   for = "/*"
   [headers.values]
@@ -48,36 +39,52 @@
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
 
 # ---- Content-Security-Policy --------------------------------------------
-# Split into a separate header block so the CDN can compress it.
-# Sports API domains are included for frame-src, connect-src, and img-src.
+# IMPORTANT: HLS.js uses fetch() for .m3u8 manifests and .ts segments,
+# which hits connect-src (NOT media-src). The stream CDN wildcards
+# (zencloudz.cc, slopnet.site, stronghole.site) MUST be in connect-src
+# for 1Anime playback to work. media-src https: covers direct <video>
+# sources only, which is a fallback for non-HLS streams.
 
 [[headers]]
   for = "/*"
   [headers.values]
-    Content-Security-Policy = """
-      default-src 'self'; \
-      script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.vidking.net https://multiembed.mov https://pl29360734 https://pl29360735.profitablecpmratenetwork.com https://pl29360736.profitablecpmratenetwork.com https://planetsrecipe.com;
-      frame-src https://www.vidking.net https://multiembed.mov https://streamingnow.mov https://www.2embed.cc https://mostream.us https://streamvaultsrc.click https://ezvidapi.com https://player.embed-api.stream https://vidsrc.mov https://cdnlivetv.tv; \
-      img-src 'self' data: https://image.tmdb.org https://api.cdnlivetv.tv https://flagcdn.com https://s4.anilist.co https://*.anilist.co https://cdnlivetv.tv https://api.cdnlivetv.ru https://cdn-eu.1ani.me https://i.ibb.co https://*.ibb.co; \
-      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; \
-      font-src 'self' https://fonts.gstatic.com; \
-      connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com https://api.themoviedb.org https://www.vidking.net https://multiembed.mov https://www.2embed.cc https://mostream.us https://streamvaultsrc.click https://ezvidapi.com https://player.embed-api.stream https://vidsrc.mov https://pl29360734 https://pl29360735.profitablecpmratenetwork.com https://pl29360736.profitablecpmratenetwork.com https://api.cdnlivetv.ru https://cdnlivetv.tv https://planetsrecipe.com https://graphql.anilist.co https://api.consumet.org https://cdn-eu.1ani.me;
-      media-src 'self' https://www.vidking.net https://multiembed.mov https://streamingnow.mov https://www.2embed.cc https://mostream.us https://streamvaultsrc.click https://ezvidapi.com https://player.embed-api.stream https://vidsrc.mov;\
-    """
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.vidking.net https://multiembed.mov https://pl29360734 https://pl29360735.profitablecpmratenetwork.com https://pl29360736.profitablecpmratenetwork.com https://planetsrecipe.com; frame-src https://www.vidking.net https://multiembed.mov https://streamingnow.mov https://www.2embed.cc https://mostream.us https://streamvaultsrc.click https://ezvidapi.com https://player.embed-api.stream https://vidsrc.mov https://cdnlivetv.tv https://flixcloud.cc; img-src 'self' data: https://image.tmdb.org https://api.cdnlivetv.tv https://flagcdn.com https://s4.anilist.co https://*.anilist.co https://cdnlivetv.tv https://api.cdnlivetv.ru https://cdn-eu.1ani.me https://i.ibb.co https://*.ibb.co https://*.flixcloud.cc; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com https://api.themoviedb.org https://www.vidking.net https://multiembed.mov https://www.2embed.cc https://mostream.us https://streamvaultsrc.click https://ezvidapi.com https://player.embed-api.stream https://vidsrc.mov https://pl29360734 https://pl29360735.profitablecpmratenetwork.com https://pl29360736.profitablecpmratenetwork.com https://api.cdnlivetv.ru https://cdnlivetv.tv https://planetsrecipe.com https://*.zencloudz.cc https://*.slopnet.site https://*.stronghole.site; media-src 'self' https:;"
 
 # ---- Redirects -----------------------------------------------------------
 
-# Proxy cdnlivetv API through Netlify CDN to bypass CORS (zero function invocations)
+# Sports API proxy
 [[redirects]]
   from = "/api/sports/*"
   to = "https://api.cdnlivetv.ru/api/v1/:splat"
   status = 200
   force = true
 
+# ---- Anime provider proxies (zero function invocations) -------------------
+
+# AniList GraphQL
 [[redirects]]
-  from = "/pinoy"
-  to = "/movies"
-  status = 301
+  from = "/api/anilist"
+  to = "https://graphql.anilist.co"
+  status = 200
+  force = true
+
+# 1Anime CDN
+[[redirects]]
+  from = "/api/1anime/*"
+  to = "https://cdn-eu.1ani.me/:splat"
+  status = 200
+  force = true
+
+# Re:ANIME / FlixCloud
+[[redirects]]
+  from = "/api/reanime/*"
+  to = "https://reanime.to/api/:splat"
+  status = 200
+  force = true
+
+
+
+# ---- Misc redirects -------------------------------------------------------
 
 [[redirects]]
   from = "/tv-shows"

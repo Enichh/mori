@@ -21,7 +21,7 @@ import type { BaseMedia } from "@/types";
 // Constants
 // ---------------------------------------------------------------------------
 
-const ANILIST_API = "https://graphql.anilist.co";
+const ANILIST_API = "/api/anilist";
 const DETAIL_TTL = 86400000; // 24 hours
 
 // ---------------------------------------------------------------------------

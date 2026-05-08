@@ -16,6 +16,13 @@ interface SearchResultsProps {
   className?: string;
 }
 
+function getDetailUrl(result: SearchResult): string {
+  if (result.mediaType === "person") return "#";
+  if (result.mediaType === "movie") return `/movies/${result.id}`;
+  if (result.mediaType === "anime") return `/anime/${result.id}`;
+  return `/tv/${result.id}`;
+}
+
 function SearchResultCard({ result }: { result: SearchResult }) {
   const isPerson = result.mediaType === "person";
   const imageUrl = isPerson
@@ -27,11 +34,7 @@ function SearchResultCard({ result }: { result: SearchResult }) {
     : result.firstAirDate
       ? new Date(result.firstAirDate).getFullYear()
       : null;
-  const href = isPerson
-    ? "#"
-    : result.mediaType === "movie"
-      ? `/movies/${result.id}`
-      : `/tv/${result.id}`;
+  const href = getDetailUrl(result);
   const rating = result.voteAverage
     ? Math.round(result.voteAverage * 10) / 10
     : null;

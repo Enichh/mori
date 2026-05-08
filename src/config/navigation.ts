@@ -1,7 +1,6 @@
 // ---------------------------------------------------------------------------
 // Mori ― Navigation definition
 // ---------------------------------------------------------------------------
-import { wrapWithSmartlink } from "@/lib/smartlink";
 
 export interface NavItem {
   label: string;
@@ -23,14 +22,8 @@ export const mainNavigation: NavItem[] = [
   { title: "Movies", label: "Movies", href: "/movies", icon: "Film" },
   { title: "TV Shows", label: "TV Shows", href: "/tv", icon: "Tv" },
   { title: "Anime", label: "Anime", href: "/anime", icon: "Swords" },
-  { title: "KDrama", label: "KDrama 🇰🇷", href: "/kdrama", icon: "Drama" },
+  { title: "Drama", label: "Drama", href: "/drama", icon: "Drama" },
   { title: "Sports", label: "Sports 🏀", href: "/sports", icon: "Trophy" },
-  {
-    title: "Pinoy",
-    label: "Pinoy 🇵🇭",
-    href: wrapWithSmartlink("https://pinoymoviepedia.ru/"),
-    icon: "Globe",
-  },
 ];
 
 /** @deprecated Use mainNavigation */
@@ -44,14 +37,8 @@ export const mobileNavigation: NavItem[] = [
   { title: "Movies", label: "Movies", href: "/movies", icon: "Film" },
   { title: "TV", label: "TV", href: "/tv", icon: "Tv" },
   { title: "Anime", label: "Anime", href: "/anime", icon: "Swords" },
-  { title: "KDrama", label: "KDrama 🇰🇷", href: "/kdrama", icon: "Drama" },
+  { title: "Drama", label: "Drama", href: "/drama", icon: "Drama" },
   { title: "Sports", label: "Sports 🏀", href: "/sports", icon: "Trophy" },
-  {
-    title: "Pinoy",
-    label: "Pinoy 🇵🇭",
-    href: wrapWithSmartlink("https://pinoymoviepedia.ru/"),
-    icon: "Globe",
-  },
   { title: "Search", label: "Search", href: "/search", icon: "Search" },
 ];
 
@@ -62,9 +49,8 @@ export const footerLinks: NavItem[] = [
   { label: "Movies", href: "/movies" },
   { label: "TV Shows", href: "/tv" },
   { label: "Anime", href: "/anime" },
-  { label: "KDrama 🇰🇷", href: "/kdrama" },
+  { label: "Drama", href: "/drama" },
   { label: "Sports 🏀", href: "/sports" },
-  { label: "Pinoy 🇵🇭", href: wrapWithSmartlink("https://pinoymoviepedia.ru/") },
 ];
 
 export const footerNav: NavSection[] = [

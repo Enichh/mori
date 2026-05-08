@@ -7,20 +7,12 @@ import { Loader2 } from "lucide-react";
 import type { SportEvent } from "@/types";
 
 // ---------------------------------------------------------------------------
-// Constants (browser fetches cdnlivetv directly — zero Netlify invocations)
+// Constants
 // ---------------------------------------------------------------------------
 
-// Use Netlify CDN proxy in production, direct URL in dev (no proxy available).
-// Resolved at runtime inside the effect to avoid SSR hydration mismatches.
-function getCdnliveBase(): string {
-  if (
-    typeof window !== "undefined" &&
-    window.location.hostname === "localhost"
-  ) {
-    return "https://api.cdnlivetv.ru/api/v1";
-  }
-  return "/api/sports";
-}
+// Always use the Netlify proxy path. In `netlify dev` it proxies locally.
+// In production it's a 200 reverse-proxy redirect. Zero functions either way.
+const CDNLIVE_BASE = "/api/sports";
 
 const CDNLIVE_SPORT_MAP: Record<string, string> = {
   basketball: "nba",
@@ -87,7 +79,7 @@ interface CdnEventDTO {
 }
 
 // ---------------------------------------------------------------------------
-// Mapper (duplicated from server — runs in browser now)
+// Mapper
 // ---------------------------------------------------------------------------
 
 function mapCdnEvent(dto: CdnEventDTO, sport: string): SportEvent {
@@ -148,9 +140,8 @@ function mapCdnEvent(dto: CdnEventDTO, sport: string): SportEvent {
 
 async function fetchSportEvents(sport: string): Promise<SportEvent[]> {
   const cdnSport = CDNLIVE_SPORT_MAP[sport] ?? sport;
-  const base = getCdnliveBase();
   const res = await fetch(
-    `${base}/events/sports/${cdnSport}?user=cdnlivetv&plan=free`,
+    `${CDNLIVE_BASE}/events/sports/${cdnSport}?user=cdnlivetv&plan=free`,
   );
   if (!res.ok) return [];
   const data = await res.json();
@@ -164,6 +155,7 @@ async function fetchSportEvents(sport: string): Promise<SportEvent[]> {
     if (Array.isArray(group)) {
       for (const dto of group as CdnEventDTO[]) {
         if (seen.has(dto.gameID)) continue;
+        if (!dto.channels?.length) continue; // skip events with no streams
         seen.add(dto.gameID);
         events.push(mapCdnEvent(dto, sport));
       }

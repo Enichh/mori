@@ -1,20 +1,10 @@
-import { AD_CONFIG } from "@/config/ads";
-
+// Smartlinks removed — keeping no-op exports for compatibility
 export function getSmartlinkUrl(): string {
-  return AD_CONFIG.smartlink.url;
+  return "#";
 }
-
-/**
- * Wrap any URL with the smartlink for monetization.
- * Use for external links that users click (e.g., stream sources).
- */
-export function wrapWithSmartlink(destinationUrl: string): string {
-  return `${AD_CONFIG.smartlink.url}&url=${encodeURIComponent(destinationUrl)}`;
+export function wrapWithSmartlink(url: string): string {
+  return url; // passthrough — no smartlink
 }
-
-/**
- * Open smartlink in a new tab (for "no stream available" fallback).
- */
 export function openSmartlink() {
-  window.open(AD_CONFIG.smartlink.url, "_blank", "noopener,noreferrer");
+  // no-op
 }

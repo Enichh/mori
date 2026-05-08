@@ -18,7 +18,7 @@ export function AnimeWatchPlayer({
   coverImage,
 }: AnimeWatchPlayerProps) {
   const config: VidkingPlayerConfig = {
-    tmdbId: anilistId, // Repurposed: carries AniList ID
+    tmdbId: anilistId,
     mediaType: "anime" as any,
     season: 1,
     episode,
@@ -28,9 +28,13 @@ export function AnimeWatchPlayer({
 
   return (
     <div className="w-full">
-      <ConsumetPlayer config={config} className="w-full aspect-video" />
+      <ConsumetPlayer
+        config={config}
+        title={title}
+        className="w-full aspect-video"
+      />
       <div className="flex items-center justify-center gap-1.5 mt-2 text-[10px] text-muted-foreground/50 font-mono">
-        <span>Streaming via 1Anime CDN · Powered by AniList</span>
+        <span>Powered by AniList</span>
       </div>
     </div>
   );

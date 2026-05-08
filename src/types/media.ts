@@ -168,7 +168,7 @@ export interface SortItem {
 
 export interface SearchResult {
   id: number;
-  mediaType: "movie" | "tv" | "person";
+  mediaType: "movie" | "tv" | "person" | "anime";
   title?: string;
   name?: string;
   posterPath: string | null;

@@ -5,15 +5,15 @@ import { useSearchParams } from "next/navigation";
 import { MediaGrid } from "@/components/media/media-grid";
 import { GenreFilter } from "@/components/ui/genre-filter";
 import { Pagination } from "@/components/ui/pagination";
-import { SelectSort } from "@/components/ui/select-sort";
-import { Loader2 } from "lucide-react";
+import { Loader2, ChevronDown } from "lucide-react";
 import type { Genre } from "@/types";
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-const ANILIST_API = "https://graphql.anilist.co";
+import { ANILIST_BASE_URL } from "@/lib/constants";
+const ANILIST_API = ANILIST_BASE_URL;
 
 const SORT_OPTIONS = [
   { value: "TRENDING_DESC" as const, label: "Trending" },
@@ -44,6 +44,24 @@ const GENRES: Genre[] = [
 
 const PAGE_SIZE = 18;
 const CACHE_TTL = 3600000; // 1 hour
+
+const SEASON_OPTIONS = [
+  { value: "", label: "All" },
+  { value: "WINTER", label: "Winter" },
+  { value: "SPRING", label: "Spring" },
+  { value: "SUMMER", label: "Summer" },
+  { value: "FALL", label: "Fall" },
+];
+
+function generateYears(): { value: string; label: string }[] {
+  const years = [{ value: "", label: "All Years" }];
+  for (let y = 2026; y >= 1960; y--) {
+    years.push({ value: String(y), label: String(y) });
+  }
+  return years;
+}
+
+const YEAR_OPTIONS = generateYears();
 
 // ---------------------------------------------------------------------------
 // Types
@@ -79,7 +97,11 @@ interface AniListPage {
 }
 
 interface CacheEntry {
-  data: { results: ReturnType<typeof mapMedia>[]; totalResults: number; totalPages: number };
+  data: {
+    results: ReturnType<typeof mapMedia>[];
+    totalResults: number;
+    totalPages: number;
+  };
   timestamp: number;
 }
 
@@ -120,13 +142,25 @@ function mapMedia(a: AniListMedia) {
 // GraphQL query builder & fetcher
 // ---------------------------------------------------------------------------
 
-function buildQuery(hasGenre: boolean): string {
+function buildQuery(
+  hasGenre: boolean,
+  hasSeason: boolean,
+  hasYear: boolean,
+): string {
   const varDecls = ["$page: Int", "$sort: [MediaSort]"];
   let mediaArgs = "type: ANIME, sort: $sort";
 
   if (hasGenre) {
     varDecls.push("$genre: String");
     mediaArgs += ", genre: $genre";
+  }
+  if (hasSeason) {
+    varDecls.push("$season: MediaSeason");
+    mediaArgs += ", season: $season";
+  }
+  if (hasYear) {
+    varDecls.push("$seasonYear: Int");
+    mediaArgs += ", seasonYear: $seasonYear";
   }
 
   return `query (${varDecls.join(", ")}) {
@@ -155,11 +189,21 @@ async function fetchAnime(
   page: number,
   sort: string,
   genreName?: string,
-): Promise<{ results: ReturnType<typeof mapMedia>[]; totalResults: number; totalPages: number }> {
+  season?: string,
+  seasonYear?: string,
+): Promise<{
+  results: ReturnType<typeof mapMedia>[];
+  totalResults: number;
+  totalPages: number;
+}> {
   const hasGenre = Boolean(genreName);
-  const query = buildQuery(hasGenre);
+  const hasSeason = Boolean(season);
+  const hasYear = Boolean(seasonYear);
+  const query = buildQuery(hasGenre, hasSeason, hasYear);
   const variables: Record<string, unknown> = { page, sort };
   if (genreName) variables.genre = genreName;
+  if (season) variables.season = season;
+  if (seasonYear) variables.seasonYear = parseInt(seasonYear, 10);
 
   const res = await fetch(ANILIST_API, {
     method: "POST",
@@ -168,7 +212,9 @@ async function fetchAnime(
   });
 
   if (!res.ok) {
-    throw new Error(`AniList ${res.status}: ${await res.text().then((t) => t.slice(0, 200))}`);
+    throw new Error(
+      `AniList ${res.status}: ${await res.text().then((t) => t.slice(0, 200))}`,
+    );
   }
 
   const json = await res.json();
@@ -184,8 +230,14 @@ async function fetchAnime(
   };
 }
 
-function getCacheKey(page: number, sort: string, genre?: string): string {
-  return `mori:cache:anime:discover:${page}:${genre ?? "all"}:${sort}`;
+function getCacheKey(
+  page: number,
+  sort: string,
+  genre?: string,
+  season?: string,
+  year?: string,
+): string {
+  return `mori:cache:anime:discover:${page}:${genre ?? "all"}:${sort}:${season ?? "all"}:${year ?? "all"}`;
 }
 
 function readCache(key: string): CacheEntry | null {
@@ -204,13 +256,77 @@ function readCache(key: string): CacheEntry | null {
 function writeCache(key: string, data: CacheEntry["data"]): void {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(
-      key,
-      JSON.stringify({ data, timestamp: Date.now() }),
-    );
+    localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
   } catch {
     // localStorage full — silently ignore
   }
+}
+
+// ---------------------------------------------------------------------------
+// Dropdown (reused across sections)
+// ---------------------------------------------------------------------------
+
+function SelectDropdown({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-xs text-muted-foreground whitespace-nowrap">
+        {label}
+      </span>
+      <div className="relative">
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="appearance-none bg-card border border-border rounded-md pl-3 pr-8 py-1.5 text-xs font-medium text-foreground cursor-pointer hover:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary"
+        >
+          {options.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
+      </div>
+    </div>
+  );
+}
+
+function SeasonToggle({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="flex items-center gap-1">
+      <span className="text-xs text-muted-foreground whitespace-nowrap mr-1">
+        Season
+      </span>
+      {SEASON_OPTIONS.map((s) => (
+        <button
+          key={s.value}
+          onClick={() => onChange(s.value)}
+          className={`px-2.5 py-1 text-[11px] font-medium rounded border transition-all ${
+            s.value === value
+              ? "bg-primary/20 text-primary border-primary/40"
+              : "border-white/10 text-white/50 hover:text-white/80 hover:border-white/20 bg-transparent"
+          }`}
+        >
+          {s.label}
+        </button>
+      ))}
+    </div>
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -223,12 +339,14 @@ export function AnimeClient() {
   const page = parseInt(searchParams.get("page") ?? "1", 10) || 1;
   const genre = searchParams.get("genre") ?? undefined;
   const sort = searchParams.get("sort") ?? "TRENDING_DESC";
+  const season = searchParams.get("season") || "";
+  const year = searchParams.get("year") || "";
 
   const genreName = genre
     ? GENRES.find((g) => String(g.id) === genre)?.name
     : undefined;
 
-  const cacheKey = getCacheKey(page, sort, genre);
+  const cacheKey = getCacheKey(page, sort, genre, season, year);
 
   const [data, setData] = React.useState<CacheEntry["data"] | null>(() => {
     const cached = readCache(cacheKey);
@@ -252,13 +370,21 @@ export function AnimeClient() {
       try {
         setLoading(true);
         setError(null);
-        const result = await fetchAnime(page, sort, genreName);
+        const result = await fetchAnime(
+          page,
+          sort,
+          genreName,
+          season || undefined,
+          year || undefined,
+        );
         if (cancelled) return;
         setData(result);
         writeCache(cacheKey, result);
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Failed to fetch anime");
+          setError(
+            err instanceof Error ? err.message : "Failed to fetch anime",
+          );
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -269,11 +395,21 @@ export function AnimeClient() {
     return () => {
       cancelled = true;
     };
-  }, [cacheKey, page, sort, genreName]);
+  }, [cacheKey, page, sort, genreName, season, year]);
 
   const mediaItems = data?.results ?? [];
   const totalPages = data?.totalPages ?? 1;
   const totalResults = data?.totalResults ?? 0;
+
+  const navigate = (updates: Record<string, string | undefined>) => {
+    const sp = new URLSearchParams(searchParams.toString());
+    for (const [k, v] of Object.entries(updates)) {
+      if (v === undefined || v === "") sp.delete(k);
+      else sp.set(k, v);
+    }
+    if (!("page" in updates)) sp.delete("page");
+    window.location.href = `/anime?${sp.toString()}`;
+  };
 
   // ---- Loading ----
   if (loading && mediaItems.length === 0) {
@@ -313,7 +449,7 @@ export function AnimeClient() {
 
   return (
     <div className="container-cine py-8">
-      <div className="mb-6">
+      <div className="mb-4">
         <h1 className="text-2xl md:text-3xl font-heading font-bold text-foreground mb-2">
           Anime
         </h1>
@@ -322,24 +458,41 @@ export function AnimeClient() {
         </p>
       </div>
 
+      {/* Filters row */}
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <SeasonToggle
+          value={season}
+          onChange={(v) => navigate({ season: v })}
+        />
+
+        <SelectDropdown
+          label="Year"
+          value={year}
+          options={YEAR_OPTIONS}
+          onChange={(v) => navigate({ year: v })}
+        />
+
+        <SelectDropdown
+          label="Sort"
+          value={sort}
+          options={SORT_OPTIONS}
+          onChange={(v) => navigate({ sort: v })}
+        />
+
+        <div className="flex items-center gap-2 ml-auto">
+          <p className="text-xs text-muted-foreground whitespace-nowrap">
+            {totalResults.toLocaleString()} anime found
+          </p>
+        </div>
+      </div>
+
       <GenreFilter
         genres={GENRES}
         activeGenre={genre}
         baseHref="/anime"
         currentSort={sort}
+        extraParams={{ season, year }}
       />
-
-      <div className="flex items-center justify-between py-4 border-b border-border">
-        <p className="text-xs text-muted-foreground">
-          {totalResults.toLocaleString()} anime found
-        </p>
-        <SelectSort
-          options={SORT_OPTIONS}
-          currentSort={sort}
-          baseHref="/anime"
-          genre={genre}
-        />
-      </div>
 
       {mediaItems.length > 0 && (
         <MediaGrid title="" items={mediaItems} mediaType="anime" />
@@ -358,6 +511,8 @@ export function AnimeClient() {
           baseHref="/anime"
           searchParams={{
             genre: genre || "",
+            season,
+            year,
             sort: sort !== "TRENDING_DESC" ? sort : "",
           }}
         />

@@ -13,7 +13,7 @@ const TMDB_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY!;
 const TMDB_BASE = "https://api.themoviedb.org/3";
 
 // ---------------------------------------------------------------------------
-// Filter options
+// Country & media options
 // ---------------------------------------------------------------------------
 
 interface CountryOption {
@@ -23,44 +23,26 @@ interface CountryOption {
   language: string;
 }
 
-const REGIONS: CountryOption[] = [
-  { code: "US", label: "American", tag: "US", language: "en" },
-  { code: "GB", label: "British", tag: "GB", language: "en" },
-  { code: "KR", label: "Korean", tag: "KR", language: "ko" },
-  { code: "JP", label: "Japanese", tag: "JP", language: "ja" },
-  { code: "CN", label: "Chinese", tag: "CN", language: "zh" },
-  { code: "FR", label: "French", tag: "FR", language: "fr" },
-  { code: "IN", label: "Indian", tag: "IN", language: "hi" },
+const COUNTRIES: CountryOption[] = [
+  { code: "KR", label: "K-Drama", tag: "KR", language: "ko" },
+  { code: "CN", label: "C-Drama", tag: "CN", language: "zh" },
+  { code: "JP", label: "J-Drama", tag: "JP", language: "ja" },
   { code: "ID", label: "Indonesian", tag: "ID", language: "id" },
   { code: "TH", label: "Thai", tag: "TH", language: "th" },
   { code: "TW", label: "Taiwanese", tag: "TW", language: "zh" },
-  { code: "DE", label: "German", tag: "DE", language: "de" },
-  { code: "ES", label: "Spanish", tag: "ES", language: "es" },
-  { code: "MX", label: "Mexican", tag: "MX", language: "es" },
-  { code: "BR", label: "Brazilian", tag: "BR", language: "pt" },
-  { code: "IT", label: "Italian", tag: "IT", language: "it" },
-  { code: "TR", label: "Turkish", tag: "TR", language: "tr" },
+  { code: "IN", label: "Indian", tag: "IN", language: "hi" },
+];
+
+const MEDIA_OPTIONS = [
+  { value: "tv", label: "TV Shows" },
+  { value: "movie", label: "Movies" },
 ];
 
 const SORT_OPTIONS = [
   { value: "popularity.desc", label: "Most Popular" },
   { value: "vote_average.desc", label: "Highest Rated" },
   { value: "first_air_date.desc", label: "Newest" },
-];
-
-const YEAR_OPTIONS = [
-  { value: "", label: "All Years" },
-  { value: "2026", label: "2026" },
-  { value: "2025", label: "2025" },
-  { value: "2024", label: "2024" },
-  { value: "2023", label: "2023" },
-  { value: "2022", label: "2022" },
-  { value: "2021", label: "2021" },
-  { value: "2020", label: "2020" },
-  { value: "2010-01-01|2019-12-31", label: "2010s" },
-  { value: "2000-01-01|2009-12-31", label: "2000s" },
-  { value: "1990-01-01|1999-12-31", label: "1990s" },
-  { value: "1900-01-01|1989-12-31", label: "Older" },
+  { value: "revenue.desc", label: "Top Grossing" },
 ];
 
 // ---------------------------------------------------------------------------
@@ -71,9 +53,9 @@ function mapTVShow(r: any): TVShow {
   return {
     id: r.id,
     mediaType: "tv" as const,
-    title: r.name,
+    title: r.name ?? r.title,
     name: r.name,
-    originalName: r.original_name,
+    originalName: r.original_name ?? r.original_title,
     overview: r.overview,
     posterPath: r.poster_path,
     backdropPath: r.backdrop_path,
@@ -96,65 +78,84 @@ function mapTVShow(r: any): TVShow {
   } as TVShow;
 }
 
+function mapMovieToTVShow(r: any): TVShow {
+  return {
+    id: r.id,
+    mediaType: "movie" as any,
+    title: r.title,
+    name: r.title,
+    originalName: r.original_title,
+    overview: r.overview,
+    posterPath: r.poster_path,
+    backdropPath: r.backdrop_path,
+    voteAverage: r.vote_average,
+    voteCount: r.vote_count,
+    genreIds: r.genre_ids || [],
+    popularity: r.popularity,
+    originalLanguage: r.original_language,
+    adult: r.adult,
+    firstAirDate: r.release_date,
+    lastAirDate: null,
+    numberOfSeasons: 0,
+    numberOfEpisodes: 0,
+    status: "",
+    seasons: [],
+    credits: { cast: [], crew: [] },
+    similar: { page: 1, results: [], totalPages: 1, totalResults: 0 },
+    videos: { results: [] },
+    nextEpisodeToAir: null,
+  } as unknown as TVShow;
+}
+
 // ---------------------------------------------------------------------------
 // Fetchers
 // ---------------------------------------------------------------------------
 
-interface TVData {
+interface DramaPageData {
   shows: TVShow[];
   totalPages: number;
   totalResults: number;
 }
 
-async function fetchTV(
+async function fetchDrama(
   page: number,
-  region: CountryOption,
+  country: CountryOption,
+  media: string,
   genre?: string,
   sort?: string,
-  year?: string,
-): Promise<TVData> {
+): Promise<DramaPageData> {
+  const isMovie = media === "movie";
+  const endpoint = isMovie ? "discover/movie" : "discover/tv";
   const params = new URLSearchParams();
   params.set("api_key", TMDB_KEY);
   params.set("sort_by", sort || "popularity.desc");
   params.set("page", String(page));
-  params.set("with_original_language", region.language);
-  if (!["US", "GB", "AU"].includes(region.code)) {
-    params.set("with_origin_country", region.code);
-  }
-  if (genre) params.set("with_genres", genre);
+  params.set("with_original_language", country.language);
+  if (country.code !== "IN") params.set("with_origin_country", country.code);
+  // For highly rated, require a minimum vote count
   if (sort === "vote_average.desc") params.set("vote_count.gte", "50");
+  if (genre) params.set("with_genres", genre);
 
-  if (year) {
-    if (year.includes("|")) {
-      const [from, to] = year.split("|");
-      params.set("first_air_date.gte", from);
-      params.set("first_air_date.lte", to);
-    } else {
-      params.set("first_air_date_year", year);
-    }
-  }
-
-  params.set("without_original_language", "tl");
-
-  const res = await fetch(`${TMDB_BASE}/discover/tv?${params.toString()}`);
+  const res = await fetch(`${TMDB_BASE}/${endpoint}?${params.toString()}`);
   if (!res.ok) return { shows: [], totalPages: 0, totalResults: 0 };
   const data = await res.json();
   return {
-    shows: (data.results || []).map(mapTVShow),
+    shows: (data.results || []).map(isMovie ? mapMovieToTVShow : mapTVShow),
     totalPages: Math.min(data.total_pages || 0, 500),
     totalResults: data.total_results || 0,
   };
 }
 
-async function fetchGenres(): Promise<Genre[]> {
-  const res = await fetch(`${TMDB_BASE}/genre/tv/list?api_key=${TMDB_KEY}`);
+async function fetchGenres(media: string): Promise<Genre[]> {
+  const endpoint = media === "movie" ? "genre/movie/list" : "genre/tv/list";
+  const res = await fetch(`${TMDB_BASE}/${endpoint}?api_key=${TMDB_KEY}`);
   if (!res.ok) return [];
   const data = await res.json();
   return data.genres || [];
 }
 
 // ---------------------------------------------------------------------------
-// Dropdown
+// Dropdown component
 // ---------------------------------------------------------------------------
 
 function SelectDropdown({
@@ -195,12 +196,12 @@ function SelectDropdown({
 // Skeleton
 // ---------------------------------------------------------------------------
 
-function TVSkeleton() {
+function DramaSkeleton() {
   return (
     <div className="container-cine py-8">
       <div className="mb-6 animate-pulse">
-        <div className="h-8 w-32 bg-muted rounded mb-2" />
-        <div className="h-4 w-64 bg-muted rounded" />
+        <div className="h-8 w-48 bg-muted rounded mb-2" />
+        <div className="h-4 w-96 bg-muted rounded" />
       </div>
       <div className="flex flex-wrap gap-2 mb-4 animate-pulse">
         {[...Array(8)].map((_, i) => (
@@ -223,35 +224,36 @@ function TVSkeleton() {
 // Main
 // ---------------------------------------------------------------------------
 
-export function TVClient() {
+export function KDramaClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const pageParam = searchParams.get("page") || "1";
-  const regionParam = searchParams.get("region") || "US";
+  const countryParam = searchParams.get("country") || "KR";
+  const mediaParam = searchParams.get("media") || "tv";
   const genreParam = searchParams.get("genre") || undefined;
   const sortParam = searchParams.get("sort") || "popularity.desc";
-  const yearParam = searchParams.get("year") || "";
 
   const currentPage = parseInt(pageParam, 10) || 1;
-  const region = REGIONS.find((r) => r.code === regionParam) ?? REGIONS[0];
+  const country =
+    COUNTRIES.find((c) => c.code === countryParam) ?? COUNTRIES[0];
+  const media = mediaParam === "movie" ? "movie" : "tv";
 
-  const cacheKey = `tv:${currentPage}:${region.code}:${genreParam || "all"}:${sortParam}:${yearParam || "all"}`;
+  const cacheKey = `drama:${currentPage}:${country.code}:${media}:${genreParam || "all"}:${sortParam}`;
 
   const {
-    data: tvData,
+    data: dramaData,
     loading,
     error,
-    refetch,
-  } = useCachedFetch<TVData>(
+  } = useCachedFetch<DramaPageData>(
     cacheKey,
-    () => fetchTV(currentPage, region, genreParam, sortParam, yearParam),
+    () => fetchDrama(currentPage, country, media, genreParam, sortParam),
     3600000,
   );
 
   const { data: genres, loading: genresLoading } = useCachedFetch<Genre[]>(
-    "tv:genres",
-    fetchGenres,
+    `drama:genres:${media}`,
+    () => fetchGenres(media),
     86400000,
   );
 
@@ -261,21 +263,22 @@ export function TVClient() {
       if (v === undefined || v === "") sp.delete(k);
       else sp.set(k, v);
     }
+    // Reset page when changing filters
     if (!("page" in updates)) sp.delete("page");
-    router.push(`/tv?${sp.toString()}`, { scroll: false });
+    router.push(`/drama?${sp.toString()}`, { scroll: false });
   };
 
   // ---- Loading ----
-  if (loading && !tvData) return <TVSkeleton />;
+  if (loading && !dramaData) return <DramaSkeleton />;
 
   // ---- Error ----
-  if (error && !tvData) {
+  if (error && !dramaData) {
     return (
       <div className="container-cine py-20 text-center">
         <AlertTriangle className="h-10 w-10 text-destructive mx-auto mb-3" />
         <p className="text-destructive text-sm mb-3">{error}</p>
         <button
-          onClick={() => refetch()}
+          onClick={() => window.location.reload()}
           className="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium bg-primary text-primary-foreground rounded-md"
         >
           Retry
@@ -284,39 +287,40 @@ export function TVClient() {
     );
   }
 
-  const shows = tvData?.shows || [];
-  const totalPages = tvData?.totalPages || 0;
-  const totalResults = tvData?.totalResults || 0;
+  const shows = dramaData?.shows || [];
+  const totalPages = dramaData?.totalPages || 0;
+  const totalResults = dramaData?.totalResults || 0;
 
   return (
     <div className="container-cine py-8">
       {/* Header */}
       <div className="mb-4">
         <h1 className="text-2xl md:text-3xl font-heading font-bold text-foreground mb-2">
-          TV Shows
+          Drama
         </h1>
         <p className="text-sm text-muted-foreground">
-          Binge-worthy series and trending shows from around the world.
+          Asian dramas & movies from Korea, China, Japan, Indonesia, Thailand &
+          more.
         </p>
       </div>
 
       {/* Filters row */}
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <SelectDropdown
-          label="Region"
-          value={region.code}
-          options={REGIONS.map((r) => ({
-            value: r.code,
-            label: `${r.label}`,
+          label="Country"
+          value={country.code}
+          options={COUNTRIES.map((c) => ({
+            value: c.code,
+            label: `${c.label}`,
           }))}
-          onChange={(v) => navigate({ region: v })}
+          onChange={(v) => navigate({ country: v })}
         />
 
         <SelectDropdown
-          label="Year"
-          value={yearParam}
-          options={YEAR_OPTIONS}
-          onChange={(v) => navigate({ year: v })}
+          label="Type"
+          value={media}
+          options={MEDIA_OPTIONS}
+          onChange={(v) => navigate({ media: v })}
         />
 
         <SelectDropdown
@@ -328,10 +332,10 @@ export function TVClient() {
 
         <div className="flex items-center gap-2 ml-auto">
           <span className="px-1.5 py-0.5 text-[10px] font-bold rounded border border-primary/30 bg-primary/10 text-primary">
-            {region.tag}
+            {country.tag}
           </span>
           <p className="text-xs text-muted-foreground whitespace-nowrap">
-            {totalResults.toLocaleString()} shows
+            {totalResults.toLocaleString()} found
           </p>
         </div>
       </div>
@@ -342,14 +346,11 @@ export function TVClient() {
           <GenreFilter
             genres={genres}
             activeGenre={genreParam}
-            baseHref="/tv"
+            baseHref="/drama"
             currentSort={
               sortParam !== "popularity.desc" ? sortParam : undefined
             }
-            extraParams={{
-              region: region.code !== "US" ? region.code : "",
-              year: yearParam,
-            }}
+            extraParams={{ country: country.code, media }}
           />
         </div>
       )}
@@ -357,16 +358,20 @@ export function TVClient() {
       {/* Grid */}
       {shows.length > 0 && (
         <>
-          <MediaGrid title="" items={shows} mediaType="tv" />
+          <MediaGrid
+            title=""
+            items={shows}
+            mediaType={media === "movie" ? "movie" : "tv"}
+          />
 
           {totalPages > 1 && (
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}
-              baseHref="/tv"
+              baseHref="/drama"
               searchParams={{
-                region: region.code !== "US" ? region.code : "",
-                year: yearParam,
+                country: country.code !== "KR" ? country.code : "",
+                media: media !== "tv" ? media : "",
                 sort: sortParam !== "popularity.desc" ? sortParam : "",
                 genre: genreParam || "",
               }}
@@ -375,15 +380,11 @@ export function TVClient() {
         </>
       )}
 
-      {/* Empty */}
+      {/* Empty state */}
       {shows.length === 0 && !loading && (
         <div className="py-20 text-center">
           <p className="text-muted-foreground">
-            No {region.label} shows found
-            {yearParam
-              ? ` for ${YEAR_OPTIONS.find((y) => y.value === yearParam)?.label}`
-              : ""}
-            .
+            No {country.label} {media === "movie" ? "movies" : "shows"} found.
           </p>
           {genreParam && (
             <button
@@ -397,7 +398,7 @@ export function TVClient() {
       )}
 
       {/* Loading overlay */}
-      {loading && tvData && (
+      {loading && dramaData && (
         <div className="fixed bottom-4 right-4 z-50">
           <div className="flex items-center gap-2 px-3 py-2 bg-card border border-border rounded-full shadow-lg">
             <Loader2 className="w-3 h-3 text-primary animate-spin" />

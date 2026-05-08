@@ -9,7 +9,8 @@ import type { Movie, TVShow } from "@/types";
 
 const TMDB_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY!;
 const TMDB_BASE = "https://api.themoviedb.org/3";
-const ANILIST_URL = "https://graphql.anilist.co";
+import { ANILIST_BASE_URL } from "@/lib/constants";
+const ANILIST_URL = ANILIST_BASE_URL;
 
 // ---------------------------------------------------------------------------
 // Fetchers (run in browser, zero Netlify cost)

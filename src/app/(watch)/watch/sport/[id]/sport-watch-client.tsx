@@ -3,23 +3,15 @@
 import * as React from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import {
-  ChevronLeft,
-  AlertTriangle,
-  Tv,
-  Radio,
-  ExternalLink,
-  Loader2,
-} from "lucide-react";
+import { ChevronLeft, AlertTriangle, Tv, Radio, Loader2 } from "lucide-react";
 import type { SportChannel } from "@/types";
-import { openSmartlink, wrapWithSmartlink } from "@/lib/smartlink";
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
 // Always use the direct API — it's in CSP connect-src, avoids Netlify proxy issues.
-const CDNLIVE_BASE = "https://api.cdnlivetv.ru/api/v1";
+const CDNLIVE_BASE = "/api/sports";
 
 const CDNLIVE_SPORT_MAP: Record<string, string> = {
   basketball: "nba",
@@ -213,20 +205,6 @@ export function SportWatchClient({
             >
               <ChevronLeft className="w-4 h-4" /> Back to Sports
             </Link>
-            <button
-              onClick={openSmartlink}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md border border-muted-foreground/30 text-muted-foreground hover:text-foreground hover:border-foreground/50 font-semibold text-sm transition-colors"
-            >
-              <ExternalLink className="w-4 h-4" /> Watch on external player
-            </button>
-            <a
-              href={wrapWithSmartlink("https://pinoymoviepedia.ru/")}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md border border-primary/30 text-primary hover:bg-primary/10 font-semibold text-sm transition-colors"
-            >
-              <ExternalLink className="w-4 h-4" /> Watch on Pinoy 🇵🇭
-            </a>
           </div>
         </div>
       </div>
@@ -248,86 +226,60 @@ export function SportWatchClient({
         </Link>
       </div>
 
-      {/* Video player */}
-      <section className="w-full bg-black flex-1 flex flex-col">
-        <div className="max-w-[1400px] mx-auto w-full flex-1 flex flex-col">
-          <div className="relative w-full aspect-video bg-black">
-            {primaryChannel ? (
-              <iframe
-                src={primaryChannel.url}
-                title={`${primaryChannel.channel_name} Stream`}
-                className="absolute inset-0 w-full h-full"
-                allowFullScreen
-                allow="autoplay; encrypted-media; picture-in-picture"
-                sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-              />
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center bg-muted">
-                <div className="text-center">
-                  <Tv className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-                  <p className="text-muted-foreground text-sm">
-                    No playable stream available.
-                  </p>
-                </div>
+      {/* Channel list — all open in new tab */}
+      <section className="w-full bg-black flex-1 flex flex-col pt-16">
+        <div className="container-cine flex-1 flex flex-col items-center justify-center text-center py-10">
+          {channels.length > 0 ? (
+            <>
+              <Radio className="w-10 h-10 text-primary animate-pulse mb-4" />
+              <h1 className="text-xl font-heading font-bold text-foreground mb-2">
+                Choose a stream
+              </h1>
+              <p className="text-sm text-muted-foreground mb-8 max-w-md">
+                The streams below open in external players. If one doesn't work,
+                try another.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 w-full max-w-2xl">
+                {channels.map((ch) => (
+                  <a
+                    key={ch.channel_code + ch.channel_name}
+                    href={ch.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 px-4 py-3 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 hover:border-primary/40 transition-all group"
+                  >
+                    <Tv className="w-5 h-5 text-primary shrink-0 group-hover:scale-110 transition-transform" />
+                    <div className="text-left min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {ch.channel_name}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground font-mono">
+                        {ch.viewers > 0
+                          ? `${ch.viewers} watching`
+                          : "Click to watch"}
+                      </p>
+                    </div>
+                  </a>
+                ))}
               </div>
-            )}
-          </div>
+            </>
+          ) : (
+            <>
+              <Tv className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+              <p className="text-muted-foreground text-sm">
+                No playable streams available.
+              </p>
+            </>
+          )}
         </div>
       </section>
 
-      {/* Info bar */}
-      <section className="bg-card border-t border-border py-4">
-        <div className="container-cine">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <h1 className="text-lg font-heading font-bold text-foreground">
-                {primaryChannel
-                  ? `${primaryChannel.channel_name}`
-                  : "Live Sports Event"}
-              </h1>
-              <p className="text-sm text-muted-foreground font-mono">
-                ID: {gameId}
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-3">
-              {channels.length > 0 && (
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Radio className="w-3.5 h-3.5 text-primary animate-pulse" />
-                  <span>
-                    {primaryChannel?.channel_name}
-                    {primaryChannel?.viewers
-                      ? ` (${primaryChannel.viewers} watching)`
-                      : ""}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {channels.length > 1 && (
-            <div className="mt-3 flex flex-wrap gap-2">
-              {channels.map((ch) => (
-                <a
-                  key={ch.channel_code + ch.channel_name}
-                  href={ch.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                    ch === primaryChannel
-                      ? "bg-primary/20 text-primary border border-primary/30"
-                      : "bg-muted text-muted-foreground hover:bg-muted/80 border border-transparent"
-                  }`}
-                >
-                  {ch.channel_name}
-                  {ch.viewers > 0 && (
-                    <span className="text-[10px] opacity-70">
-                      ({ch.viewers})
-                    </span>
-                  )}
-                </a>
-              ))}
-            </div>
-          )}
+      {/* Game ID footer */}
+      <section className="bg-card border-t border-border py-3">
+        <div className="container-cine text-center">
+          <p className="text-xs text-muted-foreground font-mono">
+            ID: {gameId}
+          </p>
         </div>
       </section>
     </div>

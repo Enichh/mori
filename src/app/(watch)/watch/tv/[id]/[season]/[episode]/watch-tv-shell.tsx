@@ -2,24 +2,70 @@
 import { useState, useEffect } from "react";
 import { VideoPlayerWrapper } from "@/app/(watch)/watch/movie/[id]/video-player-wrapper";
 
+interface TVDetail {
+  title: string;
+  posterPath: string | null;
+  backdropPath: string | null;
+  totalSeasons: number;
+  episodesPerSeason: Record<number, number>;
+}
+
+async function fetchTVDetail(tmdbId: number): Promise<TVDetail | null> {
+  const key = process.env.NEXT_PUBLIC_TMDB_API_KEY;
+  if (!key) return null;
+  try {
+    const res = await fetch(
+      `https://api.themoviedb.org/3/tv/${tmdbId}?api_key=${key}`,
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    const eps: Record<number, number> = {};
+    for (const s of data.seasons || []) {
+      if (s.season_number > 0) {
+        eps[s.season_number] = s.episode_count || 0;
+      }
+    }
+    return {
+      title: data.name || "",
+      posterPath: data.poster_path || null,
+      backdropPath: data.backdrop_path || null,
+      totalSeasons: data.number_of_seasons || Object.keys(eps).length,
+      episodesPerSeason: eps,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export function WatchTVShell() {
   const [id, setId] = useState("0");
   const [season, setSeason] = useState("1");
   const [episode, setEpisode] = useState("1");
+  const [detail, setDetail] = useState<TVDetail | null>(null);
+
   useEffect(() => {
     const parts = window.location.pathname.split("/").filter(Boolean);
-    setId(parts[2] || "0");
-    setSeason(parts[3] || "1");
-    setEpisode(parts[4] || "1");
+    const tmdbId = parts[2] || "0";
+    const s = parts[3] || "1";
+    const e = parts[4] || "1";
+    setId(tmdbId);
+    setSeason(s);
+    setEpisode(e);
+    fetchTVDetail(parseInt(tmdbId)).then(setDetail);
   }, []);
+
   return (
     <VideoPlayerWrapper
       tmdbId={parseInt(id) || 0}
       imdbId={null}
       mediaType="tv"
-      title=""
+      title={detail?.title ?? ""}
+      posterPath={detail?.posterPath ?? null}
+      backdropPath={detail?.backdropPath ?? null}
       season={parseInt(season) || 1}
       episode={parseInt(episode) || 1}
+      totalSeasons={detail?.totalSeasons}
+      episodesPerSeason={detail?.episodesPerSeason}
     />
   );
 }

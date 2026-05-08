@@ -10,6 +10,8 @@ interface GenreFilterProps {
   activeGenre?: string;
   baseHref: string;
   currentSort?: string;
+  /** Extra params to preserve when changing genre (e.g. country, media) */
+  extraParams?: Record<string, string>;
 }
 
 export function GenreFilter({
@@ -17,6 +19,7 @@ export function GenreFilter({
   activeGenre,
   baseHref,
   currentSort,
+  extraParams,
 }: GenreFilterProps) {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
@@ -39,6 +42,12 @@ export function GenreFilter({
 
   const navigate = (genreId?: string) => {
     const params = new URLSearchParams();
+    // Preserve extra params (country, media, etc.)
+    if (extraParams) {
+      for (const [k, v] of Object.entries(extraParams)) {
+        if (v) params.set(k, v);
+      }
+    }
     if (genreId) params.set("genre", genreId);
     if (currentSort && currentSort !== "popularity.desc")
       params.set("sort", currentSort);

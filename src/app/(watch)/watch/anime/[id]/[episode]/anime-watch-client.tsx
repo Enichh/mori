@@ -12,15 +12,13 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
-  ExternalLink,
 } from "lucide-react";
-import { wrapWithSmartlink } from "@/lib/smartlink";
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-const ANILIST_API = "https://graphql.anilist.co";
+const ANILIST_API = "/api/anilist";
 const DETAIL_TTL = 86400000; // 24 hours
 
 // ---------------------------------------------------------------------------
@@ -42,29 +40,9 @@ interface AnimeDetail {
   popularity: number;
   genres: string[];
   studios: string[];
-  characters: {
-    id: number;
-    name: string;
-    image: string;
-    role: string;
-    voiceActors: {
-      id: number;
-      name: string;
-      image: string;
-      language: string;
-    }[];
-  }[];
+  characters: any[];
   recommendations: any[];
-  streamingEpisodes: {
-    title: string;
-    thumbnail: string;
-    url: string;
-    site: string;
-  }[];
-}
-
-interface AniListMediaResponse {
-  Media: any;
+  streamingEpisodes: any[];
 }
 
 // ---------------------------------------------------------------------------
@@ -191,7 +169,7 @@ async function fetchAnimeDetail(anilistId: number): Promise<AnimeDetail> {
     throw new Error(json.errors[0]?.message ?? "AniList GraphQL error");
   }
 
-  return mapDetail((json.data as AniListMediaResponse).Media);
+  return mapDetail((json.data as { Media: any }).Media);
 }
 
 // ---------------------------------------------------------------------------
@@ -250,14 +228,6 @@ export function AnimeWatchClient({
           >
             <ChevronLeft className="w-4 h-4" /> Back to Anime
           </Link>
-          <a
-            href={wrapWithSmartlink("https://pinoymoviepedia.ru/")}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md border border-primary/30 text-primary hover:bg-primary/10 font-semibold text-sm transition-colors"
-          >
-            <ExternalLink className="w-4 h-4" /> Watch on Pinoy 🇵🇭
-          </a>
         </div>
       </div>
     );
@@ -265,7 +235,9 @@ export function AnimeWatchClient({
 
   const totalEpisodes = anime.episodes ?? 0;
   const hasPrev = episodeNum > 1;
-  const hasNext = episodeNum < totalEpisodes;
+  const hasNext = totalEpisodes > 0 ? episodeNum < totalEpisodes : true;
+  const maxEpisode =
+    totalEpisodes > 0 ? totalEpisodes : Math.max(episodeNum, 12);
 
   return (
     <div className="min-h-screen bg-background">
@@ -349,23 +321,44 @@ export function AnimeWatchClient({
           </div>
         </div>
 
-        {/* Episode Navigation */}
-        <div className="flex items-center gap-4 mt-6">
+        {/* Episode Navigation with dropdown picker */}
+        <div className="flex items-center justify-center gap-4 mt-6">
           {hasPrev ? (
             <Link
               href={`/watch/anime/${anilistId}/${episodeNum - 1}`}
               className="flex items-center gap-2 px-4 py-2.5 rounded-md border border-border text-sm text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors"
             >
-              <ChevronLeft className="w-4 h-4" /> Previous
+              <ChevronLeft className="w-4 h-4" /> Prev
             </Link>
           ) : (
             <span className="flex items-center gap-2 px-4 py-2.5 rounded-md border border-border text-sm text-muted-foreground/40 cursor-not-allowed">
-              <ChevronLeft className="w-4 h-4" /> Previous
+              <ChevronLeft className="w-4 h-4" /> Prev
             </span>
           )}
-          <div className="flex-1 text-center text-xs text-muted-foreground">
-            Episode {episodeNum} of {totalEpisodes || "?"}
+
+          <div className="flex items-center gap-2">
+            <label className="text-xs text-muted-foreground font-body whitespace-nowrap">
+              Episode
+            </label>
+            <select
+              value={episodeNum}
+              onChange={(e) => {
+                const ep = e.target.value;
+                window.location.href = `/watch/anime/${anilistId}/${ep}`;
+              }}
+              className="h-8 px-2 text-sm font-body bg-muted border border-border text-foreground focus:outline-none focus:border-primary cursor-pointer"
+            >
+              {Array.from({ length: maxEpisode }, (_, i) => i + 1).map((ep) => (
+                <option key={ep} value={ep}>
+                  {ep}
+                </option>
+              ))}
+            </select>
+            <span className="text-xs text-muted-foreground font-mono">
+              / {totalEpisodes || "?"}
+            </span>
           </div>
+
           {hasNext ? (
             <Link
               href={`/watch/anime/${anilistId}/${episodeNum + 1}`}

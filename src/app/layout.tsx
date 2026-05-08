@@ -11,16 +11,14 @@ export const metadata: Metadata = {
     template: "%s",
   },
   description:
-    "Stream free movies, TV shows, anime, Pinoy teleserye & KDrama online in HD. No sign-up. Watch now on Mori.",
+    "Stream free movies, TV shows, anime & drama online in HD. No sign-up. Watch now on Mori.",
   keywords: [
     "free movies",
     "watch online",
     "streaming",
     "TV shows",
     "anime",
-    "pinoy tambayan",
-    "pinoy teleserye",
-    "kdrama",
+    "drama",
     "tagalog dubbed",
     "HD",
     "Mori",
@@ -38,7 +36,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Mori — Watch Free Movies, TV Shows & Anime Online in HD",
     description:
-      "Stream free movies, TV shows, anime, Pinoy teleserye & KDrama online in HD. No sign-up.",
+      "Stream free movies, TV shows, anime & drama online in HD. No sign-up.",
     siteName: "Mori",
     type: "website",
   },
@@ -46,7 +44,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Mori — Watch Free Movies, TV Shows & Anime Online in HD",
     description:
-      "Stream free movies, TV shows, anime, Pinoy teleserye & KDrama online in HD. No sign-up.",
+      "Stream free movies, TV shows, anime & drama online in HD. No sign-up.",
   },
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL || "https://morimovie.netlify.app",

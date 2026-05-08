@@ -136,6 +136,7 @@ export class SportEventsService implements ISportEventsService {
         for (const dto of group) {
           // Skip duplicates — the same event can appear in multiple groups
           if (seen.has(dto.gameID)) continue;
+          if (!dto.channels?.length) continue; // skip events with no streams
           seen.add(dto.gameID);
           events.push(mapCdnEvent(dto, sport));
         }

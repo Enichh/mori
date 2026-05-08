@@ -6,7 +6,7 @@ import { ANILIST_BASE_URL, ANIME_STREAM_BASE_URL } from "@/lib/constants";
 
 describe("AniList & Anime Stream Constants", () => {
   it("ANILIST_BASE_URL should be GraphQL endpoint", () => {
-    expect(ANILIST_BASE_URL).toBe("https://graphql.anilist.co");
+    expect(ANILIST_BASE_URL).toBe("/api/anilist");
   });
 
   it("ANIME_STREAM_BASE_URL should be set", () => {

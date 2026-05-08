@@ -92,7 +92,7 @@ export function SearchPageClient() {
       try {
         if (type === "anime") {
           const gql = `query($q:String,$page:Int){Page(page:$page,perPage:18){pageInfo{total perPage currentPage lastPage hasNextPage}media(search:$q,type:ANIME,sort:SEARCH_MATCH){id title{romaji english native}coverImage{large}format status episodes averageScore popularity genres season seasonYear}}}`;
-          const res = await fetch("https://graphql.anilist.co", {
+          const res = await fetch("/api/anilist", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
