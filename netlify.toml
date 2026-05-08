@@ -54,12 +54,12 @@
   [headers.values]
     Content-Security-Policy = """
       default-src 'self'; \
-      script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.vidking.net https://multiembed.mov https://pl29360734 https://pl29360735.profitablecpmratenetwork.com https://pl29360736.profitablecpmratenetwork.com;
+      script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.vidking.net https://multiembed.mov https://pl29360734 https://pl29360735.profitablecpmratenetwork.com https://pl29360736.profitablecpmratenetwork.com https://planetsrecipe.com;
       frame-src https://www.vidking.net https://multiembed.mov https://streamingnow.mov https://www.2embed.cc https://mostream.us https://streamvaultsrc.click https://ezvidapi.com https://player.embed-api.stream https://vidsrc.mov https://cdnlivetv.tv; \
       img-src 'self' data: https://image.tmdb.org https://api.cdnlivetv.tv https://flagcdn.com; \
       style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; \
       font-src 'self' https://fonts.gstatic.com; \
-      connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com https://api.themoviedb.org https://www.vidking.net https://multiembed.mov https://www.2embed.cc https://mostream.us https://streamvaultsrc.click https://ezvidapi.com https://player.embed-api.stream https://vidsrc.mov https://pl29360734 https://pl29360735.profitablecpmratenetwork.com https://pl29360736.profitablecpmratenetwork.com https://api.cdnlivetv.ru https://cdnlivetv.tv; \
+      connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com https://api.themoviedb.org https://www.vidking.net https://multiembed.mov https://www.2embed.cc https://mostream.us https://streamvaultsrc.click https://ezvidapi.com https://player.embed-api.stream https://vidsrc.mov https://pl29360734 https://pl29360735.profitablecpmratenetwork.com https://pl29360736.profitablecpmratenetwork.com https://api.cdnlivetv.ru https://cdnlivetv.tv https://planetsrecipe.com;
       media-src 'self' https://www.vidking.net https://multiembed.mov https://streamingnow.mov https://www.2embed.cc https://mostream.us https://streamvaultsrc.click https://ezvidapi.com https://player.embed-api.stream https://vidsrc.mov;\
     """
 
