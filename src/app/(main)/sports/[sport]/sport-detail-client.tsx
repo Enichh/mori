@@ -10,7 +10,7 @@ import type { SportEvent } from "@/types";
 // Constants (mirrored from sports-client.tsx for zero-dependency operation)
 // ---------------------------------------------------------------------------
 
-const CDNLIVE_BASE = "https://api.cdnlivetv.ru/api/v1";
+const CDNLIVE_BASE = "/api/sports";
 
 const CDNLIVE_SPORT_MAP: Record<string, string> = {
   basketball: "nba",
@@ -189,10 +189,7 @@ function readCache(key: string): CacheEntry | null {
 function writeCache(key: string, data: SportEvent[]): void {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(
-      key,
-      JSON.stringify({ data, timestamp: Date.now() }),
-    );
+    localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
   } catch {
     // localStorage full
   }

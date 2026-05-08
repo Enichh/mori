@@ -10,7 +10,7 @@ import type { SportEvent } from "@/types";
 // Constants (browser fetches cdnlivetv directly — zero Netlify invocations)
 // ---------------------------------------------------------------------------
 
-const CDNLIVE_BASE = "https://api.cdnlivetv.ru/api/v1";
+const CDNLIVE_BASE = "/api/sports";
 
 const CDNLIVE_SPORT_MAP: Record<string, string> = {
   basketball: "nba",

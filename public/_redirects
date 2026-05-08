@@ -1,0 +1,12 @@
+# CDN rewrites for dynamic routes — serve the shell HTML for all matching paths
+# Static export generates a single .html per route pattern
+
+/movies/*        /movies/[id]                        200
+/tv/*            /tv/[id]                            200
+/anime/*         /anime/[id]                         200
+/sports/*        /sports/[sport]                     200
+/tv/*/season/*/episode/*  /tv/[id]/season/[season]/episode/[episode]  200
+/watch/movie/*   /watch/movie/[id]                   200
+/watch/tv/*/*/*  /watch/tv/[id]/[season]/[episode]   200
+/watch/anime/*/* /watch/anime/[id]/[episode]         200
+/watch/sport/*   /watch/sport/[id]                   200

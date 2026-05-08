@@ -10,18 +10,16 @@
 
 [build]
   command = "npm run build"
-  publish = ".next"
+  publish = "out"
 
 [build.environment]
+  # Belt-and-suspenders: ensure Netlify never wires in the Next.js plugin
+  NETLIFY_NEXT_PLUGIN_SKIP = "true"
   # Not needed on Netlify (unoptimized images bypass sharp),
   # but kept for local parity.
   NEXT_SHARP_PATH = "node_modules/sharp"
 
-# ---- Netlify Next.js plugin (ISR, image CDN, routing) -------------------
-
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
-
+# ---- ISR pages: CDN serves stale, background revalidates ----------------
 # ---- Static assets: immutable long-term cache ----------------------------
 
 [[headers]]
@@ -66,6 +64,13 @@
     """
 
 # ---- Redirects -----------------------------------------------------------
+
+# Proxy cdnlivetv API through Netlify CDN to bypass CORS (zero function invocations)
+[[redirects]]
+  from = "/api/sports/*"
+  to = "https://api.cdnlivetv.ru/api/v1/:splat"
+  status = 200
+  force = true
 
 [[redirects]]
   from = "/pinoy"

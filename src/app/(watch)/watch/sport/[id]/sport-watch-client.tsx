@@ -18,7 +18,7 @@ import { openSmartlink } from "@/lib/smartlink";
 // Constants (mirrored from server — no Netlify function needed)
 // ---------------------------------------------------------------------------
 
-const CDNLIVE_BASE = "https://api.cdnlivetv.ru/api/v1";
+const CDNLIVE_BASE = "/api/sports";
 
 const CDNLIVE_SPORT_MAP: Record<string, string> = {
   basketball: "nba",
