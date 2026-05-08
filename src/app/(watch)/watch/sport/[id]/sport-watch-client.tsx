@@ -15,14 +15,11 @@ import type { SportChannel } from "@/types";
 import { openSmartlink, wrapWithSmartlink } from "@/lib/smartlink";
 
 // ---------------------------------------------------------------------------
-// Constants (mirrored from server — no Netlify function needed)
+// Constants
 // ---------------------------------------------------------------------------
 
-// Use Netlify CDN proxy in production, direct URL in dev (no proxy available)
-const CDNLIVE_BASE =
-  typeof window !== "undefined" && window.location.hostname === "localhost"
-    ? "https://api.cdnlivetv.ru/api/v1"
-    : "/api/sports";
+// Always use the direct API — it's in CSP connect-src, avoids Netlify proxy issues.
+const CDNLIVE_BASE = "https://api.cdnlivetv.ru/api/v1";
 
 const CDNLIVE_SPORT_MAP: Record<string, string> = {
   basketball: "nba",
@@ -37,6 +34,9 @@ const CDNLIVE_SPORT_MAP: Record<string, string> = {
   golf: "golf",
   cricket: "cricket",
 };
+
+// All sports to try if we can't guess from the ID
+const ALL_CDN_SPORTS = Object.keys(CDNLIVE_SPORT_MAP);
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -69,32 +69,9 @@ interface CdnEventDTO {
 
 function guessSportFromId(id: string): string | null {
   const lower = id.toLowerCase();
-  if (lower.includes("basketball") || lower.includes("nba"))
-    return "basketball";
-  if (lower.includes("football") || lower.includes("soccer")) return "football";
-  if (lower.includes("baseball") || lower.includes("mlb")) return "baseball";
-  if (lower.includes("hockey") || lower.includes("nhl")) return "hockey";
-  if (lower.includes("american-football") || lower.includes("nfl"))
-    return "american-football";
-  if (
-    lower.includes("fight") ||
-    lower.includes("ufc") ||
-    lower.includes("boxing") ||
-    lower.includes("wwe") ||
-    lower.includes("mma")
-  )
-    return "fight";
-  if (lower.includes("tennis")) return "tennis";
-  if (lower.includes("golf")) return "golf";
-  if (lower.includes("cricket")) return "cricket";
-  if (lower.includes("rugby")) return "rugby";
-  if (
-    lower.includes("motor") ||
-    lower.includes("f1") ||
-    lower.includes("nascar") ||
-    lower.includes("moto")
-  )
-    return "motor-sports";
+  // These IDs are opaque — they don't contain sport names.
+  // The reference site (streamsports99.su) uses URL prefix like /player/motorsport-32xYWr9s
+  // but we don't have that prefix. So we try all sports.
   return null;
 }
 
@@ -123,45 +100,52 @@ export function SportWatchClient({
         setLoading(true);
         setError(null);
 
-        const sportGuess = guessSportFromId(gameId);
-        const sportsToTry = sportGuess
-          ? [sportGuess]
-          : Object.keys(CDNLIVE_SPORT_MAP);
-
         let found: SportChannel[] = [];
         const seen = new Set<string>();
 
-        for (const sport of sportsToTry) {
+        for (const sport of ALL_CDN_SPORTS) {
           if (cancelled) break;
 
           const cdnSport = CDNLIVE_SPORT_MAP[sport] ?? sport;
-          const res = await fetch(
-            `${CDNLIVE_BASE}/events/sports/${cdnSport}?user=cdnlivetv&plan=free`,
-          );
+          const url = `${CDNLIVE_BASE}/events/sports/${cdnSport}?user=cdnlivetv&plan=free`;
+
+          let res: Response;
+          try {
+            res = await fetch(url);
+          } catch {
+            // Network error — skip this sport
+            continue;
+          }
 
           if (!res.ok) continue;
 
-          const data = await res.json();
-          const grouped = data["cdn-live-tv"];
-          if (!grouped) continue;
+          let data: any;
+          try {
+            data = await res.json();
+          } catch {
+            continue;
+          }
+
+          const grouped = data?.["cdn-live-tv"];
+          if (!grouped || typeof grouped !== "object") continue;
 
           for (const key of Object.keys(grouped)) {
             const group = grouped[key];
-            if (Array.isArray(group)) {
-              for (const dto of group as CdnEventDTO[]) {
-                if (dto.gameID === gameId) {
-                  for (const ch of dto.channels) {
-                    const channelKey = ch.channel_code + ch.channel_name;
-                    if (!seen.has(channelKey)) {
-                      seen.add(channelKey);
-                      found.push({
-                        channel_name: ch.channel_name,
-                        channel_code: ch.channel_code,
-                        url: ch.url,
-                        image: ch.image ?? null,
-                        viewers: ch.viewers ?? 0,
-                      });
-                    }
+            if (!Array.isArray(group)) continue;
+
+            for (const dto of group as CdnEventDTO[]) {
+              if (dto.gameID === gameId) {
+                for (const ch of dto.channels) {
+                  const channelKey = ch.channel_code + ch.channel_name;
+                  if (!seen.has(channelKey)) {
+                    seen.add(channelKey);
+                    found.push({
+                      channel_name: ch.channel_name,
+                      channel_code: ch.channel_code,
+                      url: ch.url,
+                      image: ch.image ?? null,
+                      viewers: ch.viewers ?? 0,
+                    });
                   }
                 }
               }
@@ -175,7 +159,7 @@ export function SportWatchClient({
           setChannels(found);
           if (found.length === 0) {
             setError(
-              "No streams found for this event. The match may not have started yet or is no longer available.",
+              "No streams found for this event. The match may have ended or is no longer available.",
             );
           }
         }

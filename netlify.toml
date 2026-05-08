@@ -58,10 +58,10 @@
       default-src 'self'; \
       script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.vidking.net https://multiembed.mov https://pl29360734 https://pl29360735.profitablecpmratenetwork.com https://pl29360736.profitablecpmratenetwork.com https://planetsrecipe.com;
       frame-src https://www.vidking.net https://multiembed.mov https://streamingnow.mov https://www.2embed.cc https://mostream.us https://streamvaultsrc.click https://ezvidapi.com https://player.embed-api.stream https://vidsrc.mov https://cdnlivetv.tv; \
-      img-src 'self' data: https://image.tmdb.org https://api.cdnlivetv.tv https://flagcdn.com; \
+      img-src 'self' data: https://image.tmdb.org https://api.cdnlivetv.tv https://flagcdn.com https://s4.anilist.co https://*.anilist.co https://cdnlivetv.tv https://api.cdnlivetv.ru https://cdn-eu.1ani.me https://i.ibb.co https://*.ibb.co; \
       style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; \
       font-src 'self' https://fonts.gstatic.com; \
-      connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com https://api.themoviedb.org https://www.vidking.net https://multiembed.mov https://www.2embed.cc https://mostream.us https://streamvaultsrc.click https://ezvidapi.com https://player.embed-api.stream https://vidsrc.mov https://pl29360734 https://pl29360735.profitablecpmratenetwork.com https://pl29360736.profitablecpmratenetwork.com https://api.cdnlivetv.ru https://cdnlivetv.tv https://planetsrecipe.com https://graphql.anilist.co https://api.consumet.org;
+      connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com https://api.themoviedb.org https://www.vidking.net https://multiembed.mov https://www.2embed.cc https://mostream.us https://streamvaultsrc.click https://ezvidapi.com https://player.embed-api.stream https://vidsrc.mov https://pl29360734 https://pl29360735.profitablecpmratenetwork.com https://pl29360736.profitablecpmratenetwork.com https://api.cdnlivetv.ru https://cdnlivetv.tv https://planetsrecipe.com https://graphql.anilist.co https://api.consumet.org https://cdn-eu.1ani.me;
       media-src 'self' https://www.vidking.net https://multiembed.mov https://streamingnow.mov https://www.2embed.cc https://mostream.us https://streamvaultsrc.click https://ezvidapi.com https://player.embed-api.stream https://vidsrc.mov;\
     """
 

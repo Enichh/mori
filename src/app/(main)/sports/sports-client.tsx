@@ -10,11 +10,17 @@ import type { SportEvent } from "@/types";
 // Constants (browser fetches cdnlivetv directly — zero Netlify invocations)
 // ---------------------------------------------------------------------------
 
-// Use Netlify CDN proxy in production, direct URL in dev (no proxy available)
-const CDNLIVE_BASE =
-  typeof window !== "undefined" && window.location.hostname === "localhost"
-    ? "https://api.cdnlivetv.ru/api/v1"
-    : "/api/sports";
+// Use Netlify CDN proxy in production, direct URL in dev (no proxy available).
+// Resolved at runtime inside the effect to avoid SSR hydration mismatches.
+function getCdnliveBase(): string {
+  if (
+    typeof window !== "undefined" &&
+    window.location.hostname === "localhost"
+  ) {
+    return "https://api.cdnlivetv.ru/api/v1";
+  }
+  return "/api/sports";
+}
 
 const CDNLIVE_SPORT_MAP: Record<string, string> = {
   basketball: "nba",
@@ -142,8 +148,9 @@ function mapCdnEvent(dto: CdnEventDTO, sport: string): SportEvent {
 
 async function fetchSportEvents(sport: string): Promise<SportEvent[]> {
   const cdnSport = CDNLIVE_SPORT_MAP[sport] ?? sport;
+  const base = getCdnliveBase();
   const res = await fetch(
-    `${CDNLIVE_BASE}/events/sports/${cdnSport}?user=cdnlivetv&plan=free`,
+    `${base}/events/sports/${cdnSport}?user=cdnlivetv&plan=free`,
   );
   if (!res.ok) return [];
   const data = await res.json();

@@ -37,16 +37,17 @@ function writeCache<T>(key: string, data: T, ttlMs: number): void {
 
 /**
  * Client-side fetch with localStorage caching.
- * - Reads cache instantly on mount and on every key change
- * - Fetches from network if cache miss or expired
- * - Refetches on key change
+ * - Always starts with null data to avoid hydration mismatch (server never has cache).
+ * - Reads cache on mount via useEffect (client-only), then fetches if miss/expired.
+ * - Refetches on key change.
  */
 export function useCachedFetch<T>(
   key: string,
   fetcher: () => Promise<T>,
   ttlMs: number = 3600000,
 ) {
-  const [data, setData] = useState<T | null>(() => readCache<T>(key));
+  // Always init as null — server never has localStorage, so this matches SSR output
+  const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const fetcherRef = useRef(fetcher);
