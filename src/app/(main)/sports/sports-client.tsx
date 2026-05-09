@@ -110,6 +110,13 @@ function mapCdnEvent(dto: CdnEventDTO, sport: string): SportEvent {
     (dto.homeTeam && dto.homeTeam.trim().length > 0) ||
     (dto.awayTeam && dto.awayTeam.trim().length > 0);
 
+  // Override status: if the event has channels (streams) it can't be "finished"
+  let status: SportEvent["status"] =
+    (dto.status as SportEvent["status"]) ?? "finished";
+  if (dto.channels && dto.channels.length > 0 && status === "finished") {
+    status = "live";
+  }
+
   return {
     id: dto.gameID,
     title,
@@ -123,7 +130,7 @@ function mapCdnEvent(dto: CdnEventDTO, sport: string): SportEvent {
           away: { name: dto.awayTeam || "", badge: dto.awayTeamIMG ?? null },
         }
       : undefined,
-    status: (dto.status as SportEvent["status"]) ?? "finished",
+    status,
     tournament: dto.tournament,
     country: dto.country,
     countryIMG: dto.countryIMG,
