@@ -54,14 +54,6 @@ function mapCdnEvent(dto: CdnEventDTO, sport: string): SportEvent {
     (dto.homeTeam && dto.homeTeam.trim().length > 0) ||
     (dto.awayTeam && dto.awayTeam.trim().length > 0);
 
-  // Override status: if the event has channels (streams) it can't be "finished" —
-  // the cdnlivetv API sometimes returns "finished" for events that still have
-  // active streams and viewers. When channels exist, treat as live.
-  let status: SportEvent["status"] = dto.status;
-  if (dto.channels && dto.channels.length > 0 && status === "finished") {
-    status = "live";
-  }
-
   return {
     id: dto.gameID,
     title,
@@ -81,7 +73,7 @@ function mapCdnEvent(dto: CdnEventDTO, sport: string): SportEvent {
           },
         }
       : undefined,
-    status,
+    status: dto.status,
     tournament: dto.tournament,
     country: dto.country,
     countryIMG: dto.countryIMG,
