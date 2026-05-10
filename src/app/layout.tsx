@@ -153,11 +153,6 @@ export default function RootLayout({
       </head>
       <body className="font-body bg-background text-foreground min-h-screen">
         <script async data-cfasync="false" src={AD_CONFIG.popunder.scriptSrc} />
-        <script
-          async
-          data-cfasync="false"
-          src={AD_CONFIG.socialBar.scriptSrc}
-        />
         {children}
       </body>
       <GoogleAnalytics gaId={GA_ID} />

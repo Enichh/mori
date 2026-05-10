@@ -4,7 +4,6 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { NativeBanner, CONTAINER_ID } from "@/components/ads/native-banner";
 
 export default function WatchLayout({
   children,
@@ -80,14 +79,6 @@ export default function WatchLayout({
       </div>
 
       <div className="flex-1 flex flex-col">{children}</div>
-
-      {/* Subtle ad below the watch experience — uses its own container ID */}
-      <NativeBanner
-        containerId={CONTAINER_ID}
-        variant="compact"
-        label=""
-        className="bg-black/80 border-t border-white/5 py-3 sm:py-4"
-      />
     </div>
   );
 }
