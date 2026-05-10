@@ -27,7 +27,9 @@ export async function generateStaticParams() {
     const json = await res.json();
     const media: { id: number }[] = json.data?.Page?.media ?? [];
     if (!media.length) return [{ id: "placeholder" }];
-    return media.map((a) => ({ id: String(a.id) }));
+    const ids = media.map((a) => ({ id: String(a.id) }));
+    ids.push({ id: "placeholder" }); // Always keep fallback for non-pre-rendered pages
+    return ids;
   } catch {
     return [{ id: "placeholder" }];
   }

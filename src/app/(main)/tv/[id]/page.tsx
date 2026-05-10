@@ -14,9 +14,11 @@ export async function generateStaticParams() {
     );
     if (!res.ok) return [{ id: "placeholder" }];
     const data = await res.json();
-    return (data.results || []).slice(0, 50).map((t: { id: number }) => ({
+    const ids = (data.results || []).slice(0, 50).map((t: { id: number }) => ({
       id: String(t.id),
     }));
+    ids.push({ id: "placeholder" }); // Always keep fallback for non-pre-rendered pages
+    return ids;
   } catch {
     return [{ id: "placeholder" }];
   }
