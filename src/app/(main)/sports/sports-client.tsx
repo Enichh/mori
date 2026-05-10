@@ -253,7 +253,7 @@ export function SportsClient() {
   if (loading) {
     return (
       <div>
-        <section className="min-h-[40vh] flex items-center justify-center bg-gradient-to-br from-card via-background to-card">
+        <section className="min-h-[40vh] flex items-center justify-center bg-gradient-to-br from-card via-background to-card pt-16">
           <div className="container-cine text-center py-16">
             <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto mb-4" />
             <h1 className="text-3xl md:text-5xl font-heading font-bold text-foreground">
@@ -270,7 +270,7 @@ export function SportsClient() {
   if (error && allEvents.length === 0) {
     return (
       <div>
-        <section className="min-h-[40vh] flex items-center justify-center bg-gradient-to-br from-card via-background to-card">
+        <section className="min-h-[40vh] flex items-center justify-center bg-gradient-to-br from-card via-background to-card pt-16">
           <div className="container-cine text-center py-16">
             <h1 className="text-3xl md:text-5xl font-heading font-bold text-foreground">
               Live Sports
@@ -290,7 +290,7 @@ export function SportsClient() {
       {featured ? (
         <SportHero event={featured} />
       ) : (
-        <section className="min-h-[40vh] flex items-center justify-center bg-gradient-to-br from-card via-background to-card">
+        <section className="min-h-[40vh] flex items-center justify-center bg-gradient-to-br from-card via-background to-card pt-16">
           <div className="container-cine text-center py-16">
             <h1 className="text-3xl md:text-5xl font-heading font-bold text-foreground">
               Live Sports
@@ -302,21 +302,24 @@ export function SportsClient() {
         </section>
       )}
 
-      {/* ---- Marquee Ticker ---- */}
-      <section className="marquee-ticker">
-        <div className="marquee-ticker-content">
+      {/* ---- Sport count strip ---- */}
+      <div className="w-full overflow-hidden border-y border-border/40 bg-card/40 py-2">
+        <div className="flex flex-wrap justify-center gap-x-6 gap-y-1 px-4">
           {ALL_SPORTS.map((sport) => (
-            <span key={sport} className="inline-flex items-center gap-7 pr-7">
+            <span
+              key={sport}
+              className="inline-flex items-center gap-2 shrink-0"
+            >
               <span className="text-[11px] tracking-[0.18em] text-primary uppercase font-body">
                 {SPORT_LABELS[sport] ?? sport}
               </span>
               <span className="text-[rgb(61,61,61)] text-xs">
-                {sportCounts[sport] ?? 0} events
+                {sportCounts[sport] ?? 0}
               </span>
             </span>
           ))}
         </div>
-      </section>
+      </div>
 
       {/* ---- Live-status banner ---- */}
       <div className="container-cine pt-8 pb-2">
@@ -351,25 +354,6 @@ export function SportsClient() {
           allEvents={allEvents}
         />
       </div>
-
-      {/* ---- Footer ASCII Art ---- */}
-      <section className="py-12">
-        <div className="container-cine">
-          <div className="terminal-box text-center">
-            <pre className="ascii-art text-primary/25 pointer-events-none">
-              {`  ╔══════════════════════════════════════════════╗
-  ║    ███╗   ███╗ ██████╗ ██████╗ ██╗          ║
-  ║    ████╗ ████║██╔═══██╗██╔══██╗██║          ║
-  ║    ██╔████╔██║██║   ██║██████╔╝██║          ║
-  ║    ██║╚██╔╝██║██║   ██║██╔══██╗██║          ║
-  ║    ██║ ╚═╝ ██║╚██████╔╝██║  ██║██║          ║
-  ║    ╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝          ║
-  ║      cdnlivetv · Live Sports · Mori          ║
-  ╚══════════════════════════════════════════════╝`}
-            </pre>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }

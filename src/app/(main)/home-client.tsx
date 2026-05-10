@@ -176,7 +176,7 @@ export function HomeClient() {
       {featuredMovie && <MediaHero media={featuredMovie} mediaType="movie" />}
 
       {!featuredMovie && (
-        <section className="relative w-full min-h-[60vh] flex items-center justify-center bg-gradient-to-br from-card via-background to-card">
+        <section className="relative w-full min-h-[60vh] flex items-center justify-center bg-gradient-to-br from-card via-background to-card pt-16">
           <div className="container-cine text-center py-20">
             <h1 className="text-3xl md:text-5xl font-heading font-bold text-foreground mb-4">
               Welcome to <span className="text-primary">Mori</span>
@@ -190,19 +190,6 @@ export function HomeClient() {
           </div>
         </section>
       )}
-
-      <section className="marquee-ticker">
-        <div className="marquee-ticker-content">
-          {[...Array(8)].map((_, i) => (
-            <span key={i} className="inline-flex items-center gap-7 pr-7">
-              <span className="text-[11px] tracking-[0.18em] text-primary uppercase font-body">
-                {i % 2 === 0 ? "Trending Now" : "New Releases"}
-              </span>
-              <span className="text-[rgb(61,61,61)] text-xs">✕</span>
-            </span>
-          ))}
-        </div>
-      </section>
 
       <WatchHistory maxItems={8} />
 
@@ -234,24 +221,6 @@ export function HomeClient() {
           />
         )}
       </div>
-
-      <section className="py-12">
-        <div className="container-cine">
-          <div className="terminal-box text-center">
-            <pre className="ascii-art text-primary/25 pointer-events-none">
-              {`  ╔══════════════════════════════════════════════╗
-  ║    ███╗   ███╗ ██████╗ ██████╗ ██╗          ║
-  ║    ████╗ ████║██╔═══██╗██╔══██╗██║          ║
-  ║    ██╔████╔██║██║   ██║██████╔╝██║          ║
-  ║    ██║╚██╔╝██║██║   ██║██╔══██╗██║          ║
-  ║    ██║ ╚═╝ ██║╚██████╔╝██║  ██║██║          ║
-  ║    ╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝          ║
-  ║  zkPass-inspired · TMDB · Vidking · Vidhide  ║
-  ╚══════════════════════════════════════════════╝`}
-            </pre>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }

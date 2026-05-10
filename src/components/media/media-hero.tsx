@@ -61,7 +61,10 @@ export function MediaHero({
 
   return (
     <section
-      className={cn("relative w-full overflow-hidden bg-black", className)}
+      className={cn(
+        "relative w-full overflow-hidden bg-black pt-16",
+        className,
+      )}
     >
       <div className="relative aspect-[16/9] md:aspect-[21/9] w-full scanlines">
         {/* Backdrop image */}
@@ -142,7 +145,7 @@ export function MediaHero({
           )}
 
           {/* CTAs */}
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <Link href={watchHref}>
               <Button
                 variant="primary"

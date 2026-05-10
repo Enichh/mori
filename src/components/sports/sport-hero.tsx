@@ -83,7 +83,10 @@ export function SportHero({
 
   return (
     <section
-      className={cn("relative w-full overflow-hidden bg-black", className)}
+      className={cn(
+        "relative w-full overflow-hidden bg-black pt-16",
+        className,
+      )}
     >
       <div className="relative aspect-[16/9] md:aspect-[21/9] w-full scanlines">
         {/* Backdrop image */}
@@ -104,7 +107,7 @@ export function SportHero({
         <div className="absolute inset-0 bg-gradient-to-r from-background/70 via-background/20 to-transparent" />
 
         {/* Content */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10 lg:p-12 max-w-3xl z-10">
+        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10 lg:p-12 max-w-3xl z-10 mt-16">
           {/* Meta row */}
           <div className="flex flex-wrap items-center gap-3 mb-4">
             {event.status && (

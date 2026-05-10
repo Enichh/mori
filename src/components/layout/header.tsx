@@ -29,7 +29,7 @@ export function Header() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-40 bg-background/85 backdrop-blur-xl border-b-[1.5px] border-[rgba(61,61,61,0.6)]">
+    <header className="fixed top-0 left-0 right-0 z-40 bg-background border-b-[1.5px] border-[rgba(61,61,61,0.6)]">
       <div className="max-w-[1496px] mx-auto px-4 h-12 flex items-center justify-between gap-3">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 shrink-0">

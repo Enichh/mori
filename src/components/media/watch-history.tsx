@@ -77,7 +77,7 @@ export function WatchHistory({ maxItems = 8, className }: WatchHistoryProps) {
           </div>
         </div>
 
-        <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 scrollbar-none -mx-1 px-1">
+        <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 scrollbar-none">
           {history.map((item) => {
             const href =
               item.mediaType === "movie"

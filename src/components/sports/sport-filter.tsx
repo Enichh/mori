@@ -30,7 +30,7 @@ export function SportFilter({
   return (
     <div className={cn("", className)}>
       {/* Filter pills */}
-      <div className="flex flex-nowrap sm:flex-wrap items-center gap-2 pb-3 mb-6 overflow-x-auto scrollbar-none -mx-1 px-1">
+      <div className="flex flex-nowrap sm:flex-wrap items-center gap-2 pb-3 mb-6 overflow-x-auto scrollbar-none">
         <button
           onClick={() => setActive("all")}
           className={cn(
