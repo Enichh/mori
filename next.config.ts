@@ -13,9 +13,19 @@ const nextConfig: NextConfig = {
         hostname: "image.tmdb.org",
         pathname: "/t/p/**",
       },
+      {
+        protocol: "https",
+        hostname: "*.anilist.co",
+      },
+      {
+        protocol: "https",
+        hostname: "i.ibb.co",
+      },
     ],
     unoptimized: true,
     minimumCacheTTL: 86400,
+    deviceSizes: [640, 750, 828, 1080, 1200, 1440, 1920, 2048],
+    imageSizes: [16, 32, 48, 64, 96, 128, 200, 256, 384],
   },
   // Proxy anime APIs locally (Netlify handles this in prod via redirects)
   rewrites: async () => [

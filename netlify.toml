@@ -18,6 +18,34 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
+# Local images — long-lived cache, safe because deploys auto-invalidate
+[[headers]]
+  for = "/images/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+    Netlify-CDN-Cache-Control = "public, durable, max-age=31536000"
+
+# AniList GraphQL proxy — anime metadata changes slowly, 1h CDN cache
+[[headers]]
+  for = "/api/anilist"
+  [headers.values]
+    Cache-Control = "public, max-age=3600, stale-while-revalidate=86400"
+    Netlify-CDN-Cache-Control = "public, durable, max-age=3600, stale-while-revalidate=86400"
+
+# 1Anime CDN proxy — anime data changes slowly, 1h CDN cache
+[[headers]]
+  for = "/api/1anime/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600, stale-while-revalidate=86400"
+    Netlify-CDN-Cache-Control = "public, durable, max-age=3600, stale-while-revalidate=86400"
+
+# Re:ANIME proxy — anime data changes slowly, 1h CDN cache
+[[headers]]
+  for = "/api/reanime/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600, stale-while-revalidate=86400"
+    Netlify-CDN-Cache-Control = "public, durable, max-age=3600, stale-while-revalidate=86400"
+
 # API proxies — cache JSON responses at CDN edge for 5 minutes, stale for 24h
 # This dramatically reduces origin hits for repeated requests (same anime page, etc.)
 [[headers]]
@@ -26,19 +54,19 @@
     Cache-Control = "public, max-age=300, stale-while-revalidate=86400"
     Netlify-CDN-Cache-Control = "public, durable, max-age=300, stale-while-revalidate=86400"
 
-# Sports API — never cache, live data must be fresh
+# Sports API — 5s CDN cache to absorb traffic spikes, stale for 60s
 [[headers]]
   for = "/api/sports/*"
   [headers.values]
-    Cache-Control = "public, max-age=0, must-revalidate"
-    Netlify-CDN-Cache-Control = "public, max-age=0, must-revalidate"
+    Cache-Control = "public, max-age=5, stale-while-revalidate=60"
+    Netlify-CDN-Cache-Control = "public, durable, max-age=5, stale-while-revalidate=60"
 
-# Default — validate every time but serve stale for 1 week if origin is down
+# Default — HTML pages cached 60s at CDN, browsers revalidate every time
 [[headers]]
   for = "/*"
   [headers.values]
     Cache-Control = "public, max-age=0, must-revalidate, stale-while-revalidate=604800"
-    Netlify-CDN-Cache-Control = "public, durable, max-age=0, stale-while-revalidate=604800"
+    Netlify-CDN-Cache-Control = "public, durable, max-age=60, stale-while-revalidate=86400"
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
@@ -55,7 +83,7 @@
 [[headers]]
   for = "/*"
   [headers.values]
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.vidking.net https://multiembed.mov https://pl29360734 https://pl29360735.profitablecpmratenetwork.com https://pl29360736.profitablecpmratenetwork.com https://planetsrecipe.com; frame-src https://www.vidking.net https://multiembed.mov https://streamingnow.mov https://www.2embed.cc https://mostream.us https://streamvaultsrc.click https://ezvidapi.com https://player.embed-api.stream https://vidsrc.mov https://cdnlivetv.tv https://flixcloud.cc; img-src 'self' data: https://image.tmdb.org https://api.cdnlivetv.tv https://flagcdn.com https://s4.anilist.co https://*.anilist.co https://cdnlivetv.tv https://api.cdnlivetv.ru https://cdn-eu.1ani.me https://i.ibb.co https://*.ibb.co https://*.flixcloud.cc; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com https://api.themoviedb.org https://www.vidking.net https://multiembed.mov https://www.2embed.cc https://mostream.us https://streamvaultsrc.click https://ezvidapi.com https://player.embed-api.stream https://vidsrc.mov https://pl29360734 https://pl29360735.profitablecpmratenetwork.com https://pl29360736.profitablecpmratenetwork.com https://api.cdnlivetv.ru https://cdnlivetv.tv https://planetsrecipe.com https://*.zencloudz.cc https://*.slopnet.site https://*.stronghole.site; media-src 'self' https:;"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.vidking.net https://multiembed.mov https://pl29360734 https://pl29360735.profitablecpmratenetwork.com https://pl29360736.profitablecpmratenetwork.com https://planetsrecipe.com; frame-src https://www.vidking.net https://multiembed.mov https://streamingnow.mov https://www.2embed.cc https://mostream.us https://streamvaultsrc.click https://ezvidapi.com https://player.embed-api.stream https://vidsrc.mov https://cdnlivetv.tv https://flixcloud.cc https://vidhidepro.com https://*.vidhidepro.com https://vidhidefast.com https://*.vidhidefast.com https://vidhidevip.com https://*.vidhidevip.com; img-src 'self' data: https://image.tmdb.org https://api.cdnlivetv.tv https://flagcdn.com https://s4.anilist.co https://*.anilist.co https://cdnlivetv.tv https://api.cdnlivetv.ru https://cdn-eu.1ani.me https://i.ibb.co https://*.ibb.co https://*.flixcloud.cc; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com https://api.themoviedb.org https://www.vidking.net https://multiembed.mov https://www.2embed.cc https://mostream.us https://streamvaultsrc.click https://ezvidapi.com https://player.embed-api.stream https://vidsrc.mov https://pl29360734 https://pl29360735.profitablecpmratenetwork.com https://pl29360736.profitablecpmratenetwork.com https://api.cdnlivetv.ru https://cdnlivetv.tv https://planetsrecipe.com https://*.zencloudz.cc https://*.slopnet.site https://*.stronghole.site; media-src 'self' https:;"
 
 # ---- Redirects -----------------------------------------------------------
 

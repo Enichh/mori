@@ -1,7 +1,31 @@
 import type { Metadata } from "next";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { AD_CONFIG } from "@/config/ads";
+import { Inter_Tight, JetBrains_Mono, PT_Serif } from "next/font/google";
 import "./globals.css";
+
+const interTight = Inter_Tight({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800"],
+  style: ["normal", "italic"],
+  display: "swap",
+  variable: "--font-body",
+});
+
+const ptSerif = PT_Serif({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  style: ["normal", "italic"],
+  display: "swap",
+  variable: "--font-heading",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+  variable: "--font-mono",
+});
 
 const GA_ID = "G-C6KT3V4GW5";
 
@@ -57,7 +81,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark" data-scroll-behavior="smooth">
+    <html
+      lang="en"
+      className={`dark ${interTight.variable} ${ptSerif.variable} ${jetbrainsMono.variable}`}
+      data-scroll-behavior="smooth"
+    >
       <head>
         <meta
           name="google-site-verification"

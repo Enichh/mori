@@ -36,10 +36,10 @@ const config: Config = {
         },
       },
       fontFamily: {
-        heading: ["PT Serif", "Georgia", "Times New Roman", "serif"],
-        body: ["Inter Tight", "Inter", "system-ui", "sans-serif"],
-        mono: ["JetBrains Mono", "Fira Code", "monospace"],
-        terminal: ["JetBrains Mono", "Courier New", "monospace"],
+        heading: ["var(--font-heading)", "Georgia", "Times New Roman", "serif"],
+        body: ["var(--font-body)", "Inter", "system-ui", "sans-serif"],
+        mono: ["var(--font-mono)", "Fira Code", "monospace"],
+        terminal: ["var(--font-mono)", "Courier New", "monospace"],
       },
       fontSize: {
         "display-xl": [
