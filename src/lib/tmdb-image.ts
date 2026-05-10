@@ -45,12 +45,14 @@ export function getBackdropUrl(
   return `${TMDB_IMAGE_BASE_URL}/${size}${path}`;
 }
 
-/** Build a profile photo URL. Returns an inline SVG placeholder when `path` is null. */
+/** Build a profile photo URL. Returns an inline SVG placeholder when `path` is null.
+ *  If `path` is already an absolute URL (e.g. AniList), returns it as-is. */
 export function getProfileUrl(
   path: string | null,
   size: string = IMAGE_SIZES.profile.w185,
 ): string {
   if (!path) return PLACEHOLDER_PROFILE;
+  if (path.startsWith("http")) return path;
   return `${TMDB_IMAGE_BASE_URL}/${size}${path}`;
 }
 
