@@ -336,7 +336,7 @@ export function AnimeClient() {
 
   const page = parseInt(searchParams.get("page") ?? "1", 10) || 1;
   const genre = searchParams.get("genre") ?? undefined;
-  const sort = searchParams.get("sort") ?? "TRENDING_DESC";
+  const sort = searchParams.get("sort") || "TRENDING_DESC";
   const season = searchParams.get("season") || "";
   const year = searchParams.get("year") || "";
 
