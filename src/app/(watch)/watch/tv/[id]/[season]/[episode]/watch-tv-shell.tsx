@@ -51,7 +51,12 @@ export function WatchTVShell() {
     setId(tmdbId);
     setSeason(s);
     setEpisode(e);
-    fetchTVDetail(parseInt(tmdbId)).then(setDetail);
+    fetchTVDetail(parseInt(tmdbId)).then((d) => {
+      if (d) {
+        setDetail(d);
+        document.title = `Watch ${d.title} S${s}E${e} — Mori`;
+      }
+    });
   }, []);
 
   return (

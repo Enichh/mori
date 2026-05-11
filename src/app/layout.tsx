@@ -121,7 +121,12 @@ export default function RootLayout({
         />
         <link
           rel="preconnect"
-          href="https://mostream.us"
+          href="https://111movies.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="preconnect"
+          href="https://player.videasy.net"
           crossOrigin="anonymous"
         />
         <link
@@ -137,6 +142,26 @@ export default function RootLayout({
         <link
           rel="preconnect"
           href="https://vidsrc.mov"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="preconnect"
+          href="https://vidlink.pro"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="preconnect"
+          href="https://vidsrc.icu"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="preconnect"
+          href="https://vidsrc.cc"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="preconnect"
+          href="https://embedmaster.com"
           crossOrigin="anonymous"
         />
         <link

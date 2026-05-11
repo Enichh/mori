@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SearchInput } from "@/components/search/search-input";
 import { MediaGrid } from "@/components/media/media-grid";
@@ -67,17 +67,17 @@ export function SearchPageClient() {
   const sp = useSearchParams();
   const urlQ = useMemo(() => sp.get("q") || "", [sp]);
   const urlType = useMemo(() => sp.get("type") || "all", [sp]);
+  const urlPage = useMemo(() => parseInt(sp.get("page") || "1", 10) || 1, [sp]);
 
   const [query, setQuery] = useState(urlQ);
   const [activeType, setActiveType] = useState(urlType);
   const [results, setResults] = useState<(Movie | TVShow)[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(urlPage);
   const [totalPages, setTotalPages] = useState(1);
   const [totalResults, setTotalResults] = useState(0);
   const [hasSearched, setHasSearched] = useState(false);
-  const didInit = useRef(false);
 
   const performSearch = useCallback(
     async (searchQuery: string, searchPage = 1, type: string) => {
@@ -182,15 +182,15 @@ export function SearchPageClient() {
     [],
   );
 
-  // Auto-search on URL params (only once per unique urlQ+urlType)
+  // Auto-search whenever URL params (q, type, page) change
   useEffect(() => {
-    if (urlQ && !didInit.current) {
-      didInit.current = true;
+    if (urlQ) {
       setQuery(urlQ);
       setActiveType(urlType);
-      performSearch(urlQ, 1, urlType);
+      setPage(urlPage);
+      performSearch(urlQ, urlPage, urlType);
     }
-  }, [urlQ, urlType, performSearch]);
+  }, [urlQ, urlType, urlPage, performSearch]);
 
   const handleSearch = useCallback(
     (e: React.FormEvent) => {
@@ -199,23 +199,20 @@ export function SearchPageClient() {
         router.push(
           `/search?q=${encodeURIComponent(query.trim())}&type=${activeType}`,
         );
-        performSearch(query.trim(), 1, activeType);
       }
     },
-    [query, activeType, router, performSearch],
+    [query, activeType, router],
   );
 
   const handleTypeChange = useCallback(
     (type: string) => {
-      setActiveType(type);
       if (query.trim()) {
         router.push(
           `/search?q=${encodeURIComponent(query.trim())}&type=${type}`,
         );
-        performSearch(query.trim(), 1, type);
       }
     },
-    [query, router, performSearch],
+    [query, router],
   );
 
   return (

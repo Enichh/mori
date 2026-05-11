@@ -195,6 +195,12 @@ export function AnimeWatchClient({
     DETAIL_TTL,
   );
 
+  React.useEffect(() => {
+    if (anime) {
+      document.title = `Watch ${anime.title} E${episodeNum} — Mori`;
+    }
+  }, [anime, episodeNum]);
+
   // ---- Loading ----
   if (loading) {
     return (

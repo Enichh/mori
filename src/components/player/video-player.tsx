@@ -13,7 +13,8 @@ import { cn } from "@/lib/utils";
 import { VidkingPlayer } from "@/components/player/vidking-player";
 import { SuperEmbedPlayer } from "@/components/player/superembed-player";
 import { EmbedAPIPlayer } from "@/components/player/embedapi-player";
-import { MoStreamPlayer } from "@/components/player/mostream-player";
+import { VideasyPlayer } from "@/components/player/videasy-player";
+import { OneElevenMoviesPlayer } from "@/components/player/111movies-player";
 import { TwoEmbedPlayer } from "@/components/player/twoembed-player";
 import { StreamVaultPlayer } from "@/components/player/streamvault-player";
 import { EzVidApiPlayer } from "@/components/player/ezvidapi-player";
@@ -31,7 +32,8 @@ type PlayerServer =
   | "superembed"
   | "superembed-vip"
   | "embedapi"
-  | "mostream"
+  | "videasy"
+  | "111movies"
   | "twoembed"
   | "streamvault"
   | "ezvidapi"
@@ -47,7 +49,8 @@ const SERVERS: { id: PlayerServer; label: string; tags?: string[] }[] = [
   { id: "embedapi", label: "EmbedAPI" },
   { id: "vidking", label: "Vidking" },
   { id: "twoembed", label: "2Embed" },
-  { id: "mostream", label: "MoStream", tags: ["Asian"] },
+  { id: "111movies", label: "111Movies" },
+  { id: "videasy", label: "Videasy" },
   { id: "superembed-vip", label: "SuperEmbed VIP" },
   { id: "streamvault", label: "StreamVault" },
   { id: "ezvidapi", label: "vid.api" },
@@ -66,7 +69,8 @@ const AUTO_FAILOVER_ORDER: PlayerServer[] = [
   "vidplay",
   "twoembed",
   "embedapi",
-  "mostream",
+  "111movies",
+  "videasy",
   "vidking",
   "streamvault",
   "ezvidapi",
@@ -134,7 +138,8 @@ export function VideoPlayer({
       "https://multiembed.mov",
       "https://player.embed-api.stream",
       "https://www.2embed.cc",
-      "https://mostream.us",
+      "https://111movies.com",
+      "https://player.videasy.net",
       "https://streamvaultsrc.click",
       "https://ezvidapi.com",
       "https://embedmaster.com",
@@ -348,8 +353,15 @@ export function VideoPlayer({
             onError={handleError}
           />
         )}
-        {activated && server === "mostream" && (
-          <MoStreamPlayer
+        {activated && server === "111movies" && (
+          <OneElevenMoviesPlayer
+            config={config}
+            onLoad={handleLoad}
+            onError={handleError}
+          />
+        )}
+        {activated && server === "videasy" && (
+          <VideasyPlayer
             config={config}
             onLoad={handleLoad}
             onError={handleError}

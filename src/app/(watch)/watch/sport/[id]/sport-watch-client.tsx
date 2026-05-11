@@ -85,7 +85,9 @@ export function SportWatchClient({
   // Extract the real ID from the URL pathname instead.
   const pathId = pathname ? pathname.split("/").filter(Boolean).pop() : null;
   const gameId = (propGameId ?? pathId ?? params?.id ?? "") as string;
+
   const [channels, setChannels] = React.useState<SportChannel[]>([]);
+  const [eventTitle, setEventTitle] = React.useState<string>("");
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -131,6 +133,19 @@ export function SportWatchClient({
 
             for (const dto of group as CdnEventDTO[]) {
               if (dto.gameID === gameId) {
+                // Capture event title for GA tracking
+                let title = "";
+                if (dto.homeTeam && dto.awayTeam) {
+                  title = `${dto.homeTeam} vs ${dto.awayTeam}`;
+                } else if (dto.event) {
+                  title = dto.event;
+                } else {
+                  title = dto.tournament || "Live Sport";
+                }
+                if (!cancelled) {
+                  setEventTitle(title);
+                  document.title = `Watch ${title} — Mori`;
+                }
                 for (const ch of dto.channels) {
                   const channelKey = ch.channel_code + ch.channel_name;
                   if (!seen.has(channelKey)) {
@@ -237,7 +252,7 @@ export function SportWatchClient({
             <>
               <Radio className="w-10 h-10 text-primary animate-pulse mb-4" />
               <h1 className="text-xl font-heading font-bold text-foreground mb-2">
-                Choose a stream
+                {eventTitle || "Choose a stream"}
               </h1>
               <p className="text-sm text-muted-foreground mb-8 max-w-md">
                 The streams below open in external players. If one doesn't work,
