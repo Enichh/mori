@@ -41,7 +41,7 @@ export function MediaCard({
 }: MediaCardProps) {
   // Prefer each item's own mediaType (from search results), fall back to grid prop
   const resolvedType: string = (media as any).mediaType || mediaType || "movie";
-  const posterUrl = getPosterUrl(media.posterPath, "w500");
+  const posterUrl = getPosterUrl(media.posterPath, "w342");
   const title =
     "title" in media
       ? (media as any).title

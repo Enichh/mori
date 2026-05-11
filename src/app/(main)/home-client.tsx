@@ -39,7 +39,6 @@ async function fetchPopularAnime(): Promise<TVShow[]> {
         id
         title { english romaji native }
         coverImage { large }
-        bannerImage
         format
         status
         episodes
@@ -48,7 +47,6 @@ async function fetchPopularAnime(): Promise<TVShow[]> {
         genres
         season
         seasonYear
-        description
       }
     }
   }`;

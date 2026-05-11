@@ -170,7 +170,6 @@ function buildQuery(
         id
         title { romaji english native }
         coverImage { large }
-        bannerImage
         format
         status
         episodes
@@ -179,7 +178,6 @@ function buildQuery(
         genres
         season
         seasonYear
-        description
       }
     }
   }`;

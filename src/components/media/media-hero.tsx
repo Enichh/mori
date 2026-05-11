@@ -36,7 +36,7 @@ export function MediaHero({
     return <SkeletonHero />;
   }
 
-  const backdropUrl = getBackdropUrl(media.backdropPath, "w1280");
+  const backdropUrl = getBackdropUrl(media.backdropPath, "w780");
   const title = getTitle(media);
   const year = getYear(media);
   const rating = media.voteAverage
