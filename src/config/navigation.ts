@@ -9,6 +9,7 @@ export interface NavItem {
   icon?: string;
   description?: string;
   children?: NavItem[];
+  external?: boolean;
 }
 
 export interface NavSection {
@@ -24,6 +25,13 @@ export const mainNavigation: NavItem[] = [
   { title: "Anime", label: "Anime", href: "/anime", icon: "Swords" },
   { title: "Drama", label: "Drama", href: "/drama", icon: "Drama" },
   { title: "Sports", label: "Sports 🏀", href: "/sports", icon: "Trophy" },
+  {
+    title: "Silip",
+    label: "Silip",
+    href: "https://silip.pages.dev",
+    icon: "Globe",
+    external: true,
+  },
 ];
 
 /** @deprecated Use mainNavigation */
@@ -39,6 +47,13 @@ export const mobileNavigation: NavItem[] = [
   { title: "Anime", label: "Anime", href: "/anime", icon: "Swords" },
   { title: "Drama", label: "Drama", href: "/drama", icon: "Drama" },
   { title: "Sports", label: "Sports 🏀", href: "/sports", icon: "Trophy" },
+  {
+    title: "Silip",
+    label: "Silip",
+    href: "https://silip.pages.dev",
+    icon: "Globe",
+    external: true,
+  },
   { title: "Search", label: "Search", href: "/search", icon: "Search" },
 ];
 
@@ -51,6 +66,7 @@ export const footerLinks: NavItem[] = [
   { label: "Anime", href: "/anime" },
   { label: "Drama", href: "/drama" },
   { label: "Sports 🏀", href: "/sports" },
+  { label: "Silip", href: "https://silip.pages.dev", external: true },
 ];
 
 export const footerNav: NavSection[] = [

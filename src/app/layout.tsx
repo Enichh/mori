@@ -96,6 +96,16 @@ export default function RootLayout({
         />
         <link
           rel="preconnect"
+          href="https://111movies.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="preconnect"
+          href="https://111movies.net"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="preconnect"
           href="https://www.vidking.net"
           crossOrigin="anonymous"
         />

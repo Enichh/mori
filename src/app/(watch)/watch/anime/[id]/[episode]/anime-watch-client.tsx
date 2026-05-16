@@ -42,7 +42,6 @@ interface AnimeDetail {
   studios: string[];
   characters: any[];
   recommendations: any[];
-  streamingEpisodes: any[];
 }
 
 // ---------------------------------------------------------------------------
@@ -65,7 +64,6 @@ const DETAIL_QUERY = `query ($id: Int) {
     popularity
     genres
     studios { nodes { name } }
-    streamingEpisodes { title thumbnail url site }
     characters(sort: ROLE, perPage: 20) {
       edges {
         role
@@ -147,7 +145,6 @@ function mapDetail(raw: any): AnimeDetail {
         coverImage: e.node.mediaRecommendation.coverImage?.large ?? "",
         rating: e.node.rating ?? 0,
       })) ?? [],
-    streamingEpisodes: raw.streamingEpisodes ?? [],
   };
 }
 
@@ -259,6 +256,39 @@ export function AnimeWatchClient({
         </div>
       </section>
 
+      {/* ── Mobile Episode Navigation (below player) ── */}
+      <div className="flex items-center justify-between px-4 py-3 bg-card border-y border-border sm:hidden">
+        {hasPrev ? (
+          <Link
+            href={`/watch/anime/${anilistId}/${episodeNum - 1}`}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-md border border-border text-xs font-medium text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors"
+          >
+            <ChevronLeft className="w-3.5 h-3.5" /> Prev
+          </Link>
+        ) : (
+          <span className="flex items-center gap-1 px-3 py-1.5 rounded-md border border-border text-xs font-medium text-muted-foreground/30 cursor-not-allowed">
+            <ChevronLeft className="w-3.5 h-3.5" /> Prev
+          </span>
+        )}
+
+        <span className="text-xs font-mono text-muted-foreground">
+          E{episodeNum} / {totalEpisodes || "?"}
+        </span>
+
+        {hasNext ? (
+          <Link
+            href={`/watch/anime/${anilistId}/${episodeNum + 1}`}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-md border border-border text-xs font-medium text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors"
+          >
+            Next <ChevronRight className="w-3.5 h-3.5" />
+          </Link>
+        ) : (
+          <span className="flex items-center gap-1 px-3 py-1.5 rounded-md border border-border text-xs font-medium text-muted-foreground/30 cursor-not-allowed">
+            Next <ChevronRight className="w-3.5 h-3.5" />
+          </span>
+        )}
+      </div>
+
       {/* Episode Info */}
       <section className="container-cine py-6">
         <Link
@@ -282,7 +312,7 @@ export function AnimeWatchClient({
             <p className="text-xs font-mono text-primary mb-1">
               Episode {episodeNum}
             </p>
-            <h1 className="text-xl md:text-2xl font-heading font-bold text-foreground mb-2">
+            <h1 className="text-xl md:text-2xl font-heading font-bold text-foreground mb-2 break-words">
               {anime.title}
             </h1>
             <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mb-3">
@@ -327,20 +357,24 @@ export function AnimeWatchClient({
           </div>
         </div>
 
-        {/* Episode Navigation with dropdown picker */}
+        {/* ── Desktop Episode Navigation (full with dropdown) ── */}
+        {/* Mobile: dropdown only (prev/next are above player) */}
         <div className="flex items-center justify-center gap-4 mt-6">
-          {hasPrev ? (
-            <Link
-              href={`/watch/anime/${anilistId}/${episodeNum - 1}`}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-md border border-border text-sm text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors"
-            >
-              <ChevronLeft className="w-4 h-4" /> Prev
-            </Link>
-          ) : (
-            <span className="flex items-center gap-2 px-4 py-2.5 rounded-md border border-border text-sm text-muted-foreground/40 cursor-not-allowed">
-              <ChevronLeft className="w-4 h-4" /> Prev
-            </span>
-          )}
+          {/* Prev — hidden on mobile */}
+          <div className="hidden sm:block">
+            {hasPrev ? (
+              <Link
+                href={`/watch/anime/${anilistId}/${episodeNum - 1}`}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-md border border-border text-sm text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4" /> Prev
+              </Link>
+            ) : (
+              <span className="flex items-center gap-2 px-4 py-2.5 rounded-md border border-border text-sm text-muted-foreground/40 cursor-not-allowed">
+                <ChevronLeft className="w-4 h-4" /> Prev
+              </span>
+            )}
+          </div>
 
           <div className="flex items-center gap-2">
             <label className="text-xs text-muted-foreground font-body whitespace-nowrap">
@@ -365,18 +399,21 @@ export function AnimeWatchClient({
             </span>
           </div>
 
-          {hasNext ? (
-            <Link
-              href={`/watch/anime/${anilistId}/${episodeNum + 1}`}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-md border border-border text-sm text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors"
-            >
-              Next <ChevronRight className="w-4 h-4" />
-            </Link>
-          ) : (
-            <span className="flex items-center gap-2 px-4 py-2.5 rounded-md border border-border text-sm text-muted-foreground/40 cursor-not-allowed">
-              Next <ChevronRight className="w-4 h-4" />
-            </span>
-          )}
+          {/* Next — hidden on mobile */}
+          <div className="hidden sm:block">
+            {hasNext ? (
+              <Link
+                href={`/watch/anime/${anilistId}/${episodeNum + 1}`}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-md border border-border text-sm text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors"
+              >
+                Next <ChevronRight className="w-4 h-4" />
+              </Link>
+            ) : (
+              <span className="flex items-center gap-2 px-4 py-2.5 rounded-md border border-border text-sm text-muted-foreground/40 cursor-not-allowed">
+                Next <ChevronRight className="w-4 h-4" />
+              </span>
+            )}
+          </div>
         </div>
       </section>
     </div>

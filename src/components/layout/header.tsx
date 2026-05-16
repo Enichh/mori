@@ -48,18 +48,30 @@ export function Header() {
               item.href === "/"
                 ? pathname === "/"
                 : pathname.startsWith(item.href);
+            const linkClass = cn(
+              "px-3 py-1 text-[11px] tracking-[0.22em] uppercase font-body font-medium transition-colors duration-200",
+              "hover:text-primary",
+              isActive
+                ? "text-primary border-l-2 border-primary pl-2"
+                : "text-muted-foreground",
+            );
+
+            if (item.external) {
+              return (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={linkClass}
+                >
+                  {item.label}
+                </a>
+              );
+            }
+
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "px-3 py-1 text-[11px] tracking-[0.22em] uppercase font-body font-medium transition-colors duration-200",
-                  "hover:text-primary",
-                  isActive
-                    ? "text-primary border-l-2 border-primary pl-2"
-                    : "text-muted-foreground",
-                )}
-              >
+              <Link key={item.href} href={item.href} className={linkClass}>
                 {item.label}
               </Link>
             );
@@ -140,17 +152,29 @@ export function Header() {
                 item.href === "/"
                   ? pathname === "/"
                   : pathname.startsWith(item.href);
+              const linkClass = cn(
+                "block px-4 py-3 text-xs tracking-[0.18em] uppercase font-body font-medium transition-colors rounded",
+                isActive
+                  ? "text-primary bg-primary/5 border-l-2 border-primary"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted",
+              );
+
+              if (item.external) {
+                return (
+                  <a
+                    key={item.href}
+                    href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={linkClass}
+                  >
+                    {item.label}
+                  </a>
+                );
+              }
+
               return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "block px-4 py-3 text-xs tracking-[0.18em] uppercase font-body font-medium transition-colors rounded",
-                    isActive
-                      ? "text-primary bg-primary/5 border-l-2 border-primary"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted",
-                  )}
-                >
+                <Link key={item.href} href={item.href} className={linkClass}>
                   {item.label}
                 </Link>
               );

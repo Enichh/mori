@@ -22,7 +22,6 @@ import { VidSrcPlayer } from "@/components/player/vidsrc-player";
 import { VidLinkPlayer } from "@/components/player/vidlink-player";
 import { VidStreamPlayer } from "@/components/player/vidstream-player";
 import { VidPlayPlayer } from "@/components/player/vidplay-player";
-import { VidhidePlayer } from "@/components/player/vidhide-player";
 import { ConsumetPlayer } from "@/components/player/consumet-player";
 import { EpisodeNavigator } from "@/components/player/episode-navigator";
 import type { VidkingPlayerConfig, EpisodeNavData } from "@/types";
@@ -41,7 +40,6 @@ type PlayerServer =
   | "vidlink"
   | "vidstream"
   | "vidplay"
-  | "vidhide"
   | "consumet";
 
 const SERVERS: { id: PlayerServer; label: string; tags?: string[] }[] = [
@@ -58,7 +56,6 @@ const SERVERS: { id: PlayerServer; label: string; tags?: string[] }[] = [
   { id: "vidlink", label: "VidLink" },
   { id: "vidstream", label: "VidStream" },
   { id: "vidplay", label: "VidPlay" },
-  { id: "vidhide", label: "VidhidePro" },
   { id: "consumet", label: "1Anime", tags: ["Anime"] },
 ];
 
@@ -74,7 +71,6 @@ const AUTO_FAILOVER_ORDER: PlayerServer[] = [
   "vidking",
   "streamvault",
   "ezvidapi",
-  "vidhide",
   "superembed",
   "consumet",
 ];
@@ -139,6 +135,7 @@ export function VideoPlayer({
       "https://player.embed-api.stream",
       "https://www.2embed.cc",
       "https://111movies.com",
+      "https://111movies.net",
       "https://player.videasy.net",
       "https://streamvaultsrc.click",
       "https://ezvidapi.com",
@@ -146,7 +143,6 @@ export function VideoPlayer({
       "https://vidlink.pro",
       "https://vidsrc.icu",
       "https://vidsrc.cc",
-      "https://vidhidepro.com",
       "https://cdn-eu.1ani.me",
     ];
     for (const origin of origins) {
@@ -411,13 +407,6 @@ export function VideoPlayer({
         )}
         {activated && server === "vidplay" && (
           <VidPlayPlayer
-            config={config}
-            onLoad={handleLoad}
-            onError={handleError}
-          />
-        )}
-        {activated && server === "vidhide" && (
-          <VidhidePlayer
             config={config}
             onLoad={handleLoad}
             onError={handleError}

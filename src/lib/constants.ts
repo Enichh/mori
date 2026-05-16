@@ -38,7 +38,6 @@ export const IMAGE_SIZES = {
 // ---- Player --------------------------------------------------------------
 export const VIDEO_SERVERS = {
   vidking: "Vidking",
-  vidhide: "VidhidePro",
   vidlink: "VidLink",
   vidstream: "VidStream",
   vidplay: "VidPlay",
@@ -65,9 +64,6 @@ export const ANILIST_BASE_URL = "/api/anilist";
 
 // ---- Vidking -------------------------------------------------------------
 export const VIDKING_BASE_URL = "https://www.vidking.net";
-
-// ---- Vidhide -------------------------------------------------------------
-export const VIDHIDE_BASE_URL = "https://vidhidepro.com";
 
 // ---- Anime Stream (1Anime CDN) -------------------------------------------
 export const ANIME_STREAM_BASE_URL = "/api/1anime";

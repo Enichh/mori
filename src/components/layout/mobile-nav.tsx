@@ -10,7 +10,7 @@ const items = [
   { label: "Movies", href: "/movies" },
   { label: "TV", href: "/tv" },
   { label: "Anime", href: "/anime" },
-  { label: "Search", href: "/search" },
+  { label: "Silip", href: "https://silip.pages.dev", external: true },
 ] as const;
 
 export function MobileNav() {
@@ -28,18 +28,32 @@ export function MobileNav() {
               ? pathname === "/"
               : pathname.startsWith(item.href);
 
+          const linkClass = cn(
+            "relative flex items-center justify-center min-w-0 flex-1 py-3",
+            "transition-colors duration-200",
+            isActive
+              ? "text-primary"
+              : "text-muted-foreground hover:text-foreground",
+          );
+
+          if ("external" in item && item.external) {
+            return (
+              <a
+                key={item.href}
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={linkClass}
+              >
+                <span className="text-xs font-body font-medium tracking-wider uppercase">
+                  {item.label}
+                </span>
+              </a>
+            );
+          }
+
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "relative flex items-center justify-center min-w-0 flex-1 py-3",
-                "transition-colors duration-200",
-                isActive
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
+            <Link key={item.href} href={item.href} className={linkClass}>
               <span className="text-xs font-body font-medium tracking-wider uppercase">
                 {item.label}
               </span>

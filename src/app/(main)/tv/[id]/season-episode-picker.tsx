@@ -162,14 +162,14 @@ export function SeasonEpisodePicker({
                   {/* Episode info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start gap-2">
-                      <span className="text-xs text-primary font-mono mt-0.5">
+                      <span className="text-xs text-primary font-mono mt-0.5 shrink-0">
                         E{ep.episodeNumber.toString().padStart(2, "0")}
                       </span>
-                      <div>
+                      <div className="min-w-0 flex-1">
                         <h4 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">
                           {ep.name}
                         </h4>
-                        <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                        <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-1 text-xs text-muted-foreground">
                           {ep.runtime && <span>{ep.runtime} min</span>}
                           {ep.voteAverage > 0 && (
                             <span className="text-primary">

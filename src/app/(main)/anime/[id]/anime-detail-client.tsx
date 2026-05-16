@@ -44,7 +44,6 @@ const DETAIL_QUERY = `query ($id: Int) {
     popularity
     genres
     studios { nodes { name } }
-    streamingEpisodes { title thumbnail url site }
     characters(sort: ROLE, perPage: 20) {
       edges {
         role
@@ -107,7 +106,6 @@ interface MappedAnime {
   studios: string[];
   characters: MappedCharacter[];
   recommendations: MappedRecommendation[];
-  streamingEpisodes: MappedStreamingEpisode[];
 }
 
 interface MappedCharacter {
@@ -131,13 +129,6 @@ interface MappedRecommendation {
   genres: string[];
   season: string | null;
   seasonYear: number | null;
-}
-
-interface MappedStreamingEpisode {
-  title: string;
-  thumbnail: string;
-  url: string;
-  site: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -194,7 +185,6 @@ function mapAnime(raw: any): MappedAnime {
         season: e.node.mediaRecommendation.season ?? null,
         seasonYear: e.node.mediaRecommendation.seasonYear ?? null,
       })) ?? [],
-    streamingEpisodes: raw.streamingEpisodes ?? [],
   };
 }
 
@@ -491,31 +481,72 @@ export function AnimeDetailClient({ anilistId }: AnimeDetailClientProps) {
         </div>
       </section>
 
-      {/* ── Streaming Episodes ── */}
-      {anime.streamingEpisodes.length > 0 && (
+      {/* ── Episodes Grid ── */}
+      {anime.episodes != null && anime.episodes > 0 && (
         <section className="py-10">
           <div className="container-cine">
             <h2 className="text-xl md:text-2xl font-heading font-bold text-foreground mb-6">
-              Streaming Episodes
+              Episodes
             </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-              {anime.streamingEpisodes.map((ep, i: number) => (
-                <a
-                  key={i}
-                  href={ep.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="p-3 rounded-lg bg-card border border-border hover:border-primary/50 transition-all text-sm"
-                >
-                  <span className="text-xs text-muted-foreground">
-                    {ep.site}
-                  </span>
-                  <p className="font-medium text-foreground line-clamp-2 mt-1">
-                    {ep.title}
-                  </p>
-                </a>
-              ))}
+            <p className="text-xs text-muted-foreground font-mono mb-4">
+              {anime.episodes} episodes
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {Array.from({ length: anime.episodes }, (_, i) => i + 1).map(
+                (epNum) => (
+                  <Link
+                    key={epNum}
+                    href={`/watch/anime/${anilistId}/${epNum}`}
+                    className="flex flex-col rounded-sm bg-card border border-border hover:border-primary/30 hover:bg-card-hover transition-all group"
+                  >
+                    {/* Thumbnail */}
+                    <div className="relative aspect-video bg-muted overflow-hidden rounded-t-sm">
+                      {anime.coverImage ? (
+                        <Image
+                          src={anime.coverImage}
+                          alt={`Episode ${epNum}`}
+                          fill
+                          sizes="200px"
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-3xl font-bold text-muted-foreground/25 font-mono">
+                            {epNum}
+                          </span>
+                        </div>
+                      )}
+                      {/* Play overlay */}
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                        <Play
+                          className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                          fill="white"
+                        />
+                      </div>
+                    </div>
+                    {/* Episode label */}
+                    <div className="p-2.5">
+                      <span className="text-xs text-primary font-mono">
+                        E{epNum.toString().padStart(2, "0")}
+                      </span>
+                    </div>
+                  </Link>
+                ),
+              )}
             </div>
+          </div>
+        </section>
+      )}
+
+      {/* ── No episodes (ongoing / unknown) ── */}
+      {(anime.episodes == null || anime.episodes === 0) && (
+        <section className="py-10">
+          <div className="container-cine text-center">
+            <p className="text-sm text-muted-foreground">
+              {anime.status === "RELEASING"
+                ? "This anime is currently airing. Episodes will be available as they release."
+                : "Episode count not available."}
+            </p>
           </div>
         </section>
       )}

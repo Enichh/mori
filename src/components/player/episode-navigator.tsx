@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import * as React from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface EpisodeNavigatorProps {
   currentSeason: number;
@@ -41,34 +41,42 @@ export function EpisodeNavigator({
   };
 
   const canGoPrevious = currentEpisode > 1 || currentSeason > 1;
-  const canGoNext = currentEpisode < totalEpisodes || currentSeason < totalSeasons;
+  const canGoNext =
+    currentEpisode < totalEpisodes || currentSeason < totalSeasons;
 
   return (
-    <div className={cn('flex items-center justify-between gap-4', className)}>
+    <div
+      className={cn(
+        "flex items-center justify-center flex-wrap gap-x-2 gap-y-3",
+        className,
+      )}
+    >
       <button
         onClick={goToPrevious}
         disabled={!canGoPrevious}
         className={cn(
-          'flex items-center gap-2 px-3 py-2 text-sm font-body transition-colors',
-          'disabled:opacity-30 disabled:pointer-events-none',
-          'text-muted-foreground hover:text-foreground'
+          "flex items-center gap-1 px-2.5 py-2 text-xs sm:text-sm font-body transition-colors shrink-0",
+          "disabled:opacity-30 disabled:pointer-events-none",
+          "text-muted-foreground hover:text-foreground border border-border rounded-md hover:border-primary/50",
         )}
       >
         <ChevronLeft className="h-4 w-4" />
         <span className="hidden sm:inline">Prev</span>
       </button>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-center">
         {/* Season selector */}
-        <div className="flex items-center gap-2">
-          <label className="text-xs text-muted-foreground font-body">Season</label>
+        <div className="flex items-center gap-1.5">
+          <label className="text-[10px] sm:text-xs text-muted-foreground font-body whitespace-nowrap">
+            Season
+          </label>
           <select
             value={currentSeason}
             onChange={(e) => onNavigate(Number(e.target.value), 1)}
             className={cn(
-              'h-8 px-2 text-sm font-body bg-muted border border-border text-foreground',
-              'focus:outline-none focus:border-primary',
-              'appearance-none cursor-pointer'
+              "h-7 sm:h-8 px-1.5 sm:px-2 text-xs sm:text-sm font-body bg-muted border border-border text-foreground",
+              "focus:outline-none focus:border-primary",
+              "appearance-none cursor-pointer",
             )}
           >
             {Array.from({ length: totalSeasons }, (_, i) => i + 1).map((s) => (
@@ -80,22 +88,26 @@ export function EpisodeNavigator({
         </div>
 
         {/* Episode selector */}
-        <div className="flex items-center gap-2">
-          <label className="text-xs text-muted-foreground font-body">Episode</label>
+        <div className="flex items-center gap-1.5">
+          <label className="text-[10px] sm:text-xs text-muted-foreground font-body whitespace-nowrap">
+            Episode
+          </label>
           <select
             value={currentEpisode}
             onChange={(e) => onNavigate(currentSeason, Number(e.target.value))}
             className={cn(
-              'h-8 px-2 text-sm font-body bg-muted border border-border text-foreground',
-              'focus:outline-none focus:border-primary',
-              'appearance-none cursor-pointer'
+              "h-7 sm:h-8 px-1.5 sm:px-2 text-xs sm:text-sm font-body bg-muted border border-border text-foreground",
+              "focus:outline-none focus:border-primary",
+              "appearance-none cursor-pointer",
             )}
           >
-            {Array.from({ length: totalEpisodes }, (_, i) => i + 1).map((ep) => (
-              <option key={ep} value={ep}>
-                {ep}
-              </option>
-            ))}
+            {Array.from({ length: totalEpisodes }, (_, i) => i + 1).map(
+              (ep) => (
+                <option key={ep} value={ep}>
+                  {ep}
+                </option>
+              ),
+            )}
           </select>
         </div>
       </div>
@@ -104,9 +116,9 @@ export function EpisodeNavigator({
         onClick={goToNext}
         disabled={!canGoNext}
         className={cn(
-          'flex items-center gap-2 px-3 py-2 text-sm font-body transition-colors',
-          'disabled:opacity-30 disabled:pointer-events-none',
-          'text-muted-foreground hover:text-foreground'
+          "flex items-center gap-1 px-2.5 py-2 text-xs sm:text-sm font-body transition-colors shrink-0",
+          "disabled:opacity-30 disabled:pointer-events-none",
+          "text-muted-foreground hover:text-foreground border border-border rounded-md hover:border-primary/50",
         )}
       >
         <span className="hidden sm:inline">Next</span>

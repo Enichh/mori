@@ -227,14 +227,14 @@ export function ConsumetPlayer({
 
   // Shared control bar rendered below the player
   const controlBar = (
-    <div className="flex items-center justify-between gap-2 mt-2 px-1">
-      <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mt-2 px-1">
+      <div className="flex items-center gap-2 flex-shrink-0">
         <Server className="w-3 h-3 text-white/30 shrink-0" />
         {providerBtns}
       </div>
       {/* Re:ANIME sub-server selector (HD-1 / HD-2) */}
       {provider === "reanime" && reanimeServers.length > 1 && (
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 flex-wrap overflow-x-auto max-w-full">
           {reanimeServers.map((s, i) => (
             <button
               key={s.$id}

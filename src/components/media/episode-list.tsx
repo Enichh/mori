@@ -79,7 +79,7 @@ export function EpisodeList({
             {/* Info */}
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2 mb-1">
-                <h4 className="text-sm font-body font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">
+                <h4 className="text-sm font-body font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1 min-w-0">
                   <span className="text-muted-foreground font-mono mr-2">
                     {episode.episodeNumber.toString().padStart(2, "0")}.
                   </span>

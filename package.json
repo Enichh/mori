@@ -2,7 +2,7 @@
   "name": "mori",
   "version": "1.0.0",
   "private": true,
-  "description": "Movie streaming site powered by TMDB, Vidking, and Vidhide",
+  "description": "Movie streaming site powered by TMDB and Vidking",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

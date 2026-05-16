@@ -57,14 +57,6 @@ export interface WatchProgress {
   title?: string;
 }
 
-/** A single video source returned by the Vidhide API. */
-export interface VidhideSource {
-  url: string;
-  quality: string;
-  size: string;
-  type: string;
-}
-
 export type PlayerServer =
   | "vidking"
   | "vidlink"
