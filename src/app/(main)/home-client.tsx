@@ -205,12 +205,13 @@ export function HomeClient() {
                   Looking for Pinoy Movies?
                 </p>
                 <p className="text-xs text-muted-foreground line-clamp-1">
-                  Try Silip — free Filipino movies &amp; Tagalog-dubbed content
+                  Try Pinoy Movies — free Filipino movies &amp; Tagalog-dubbed
+                  content
                 </p>
               </div>
             </div>
             <span className="shrink-0 px-4 py-2 text-xs font-semibold rounded-md bg-amber-500/15 text-amber-400 border border-amber-500/30 group-hover:bg-amber-500/25 transition-colors">
-              Visit Silip →
+              Visit Pinoy Movies →
             </span>
           </a>
         </div>

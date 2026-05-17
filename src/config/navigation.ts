@@ -26,8 +26,8 @@ export const mainNavigation: NavItem[] = [
   { title: "Drama", label: "Drama", href: "/drama", icon: "Drama" },
   { title: "Sports", label: "Sports 🏀", href: "/sports", icon: "Trophy" },
   {
-    title: "Silip",
-    label: "Silip",
+    title: "Pinoy Movies",
+    label: "Pinoy Movies",
     href: "https://silip.pages.dev",
     icon: "Globe",
     external: true,
@@ -48,8 +48,8 @@ export const mobileNavigation: NavItem[] = [
   { title: "Drama", label: "Drama", href: "/drama", icon: "Drama" },
   { title: "Sports", label: "Sports 🏀", href: "/sports", icon: "Trophy" },
   {
-    title: "Silip",
-    label: "Silip",
+    title: "Pinoy Movies",
+    label: "Pinoy Movies",
     href: "https://silip.pages.dev",
     icon: "Globe",
     external: true,
@@ -66,7 +66,7 @@ export const footerLinks: NavItem[] = [
   { label: "Anime", href: "/anime" },
   { label: "Drama", href: "/drama" },
   { label: "Sports 🏀", href: "/sports" },
-  { label: "Silip", href: "https://silip.pages.dev", external: true },
+  { label: "Pinoy Movies", href: "https://silip.pages.dev", external: true },
 ];
 
 export const footerNav: NavSection[] = [

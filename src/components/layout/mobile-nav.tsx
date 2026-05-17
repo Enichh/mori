@@ -10,7 +10,7 @@ const items = [
   { label: "Movies", href: "/movies" },
   { label: "TV", href: "/tv" },
   { label: "Anime", href: "/anime" },
-  { label: "Silip", href: "https://silip.pages.dev", external: true },
+  { label: "Pinoy Movies", href: "https://silip.pages.dev", external: true },
 ] as const;
 
 export function MobileNav() {
