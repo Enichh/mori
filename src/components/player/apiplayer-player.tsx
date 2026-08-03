@@ -4,32 +4,31 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 import type { VidkingPlayerConfig } from "@/types";
 
-interface VidStreamPlayerProps {
+interface ApiPlayerProps {
   config: VidkingPlayerConfig;
   onLoad?: () => void;
   onError?: (message: string) => void;
   className?: string;
 }
 
-function buildVidStreamUrl(config: VidkingPlayerConfig): string {
-  const { tmdbId, imdbId, mediaType, season, episode } = config;
-  const id = imdbId ?? tmdbId;
+function buildApiPlayerUrl(config: VidkingPlayerConfig): string {
+  const { tmdbId, mediaType, season, episode } = config;
 
   if (mediaType === "tv" && season !== undefined && episode !== undefined) {
-    return `https://vidsrc.icu/embed/tv/${id}/${season}/${episode}`;
+    return `https://apiplayer.ru/embed/tv/${tmdbId}/${season}/${episode}`;
   }
 
-  return `https://vidsrc.icu/embed/movie/${id}`;
+  return `https://apiplayer.ru/embed/movie/${tmdbId}`;
 }
 
-export function VidStreamPlayer({
+export function ApiPlayer({
   config,
   onLoad,
   onError,
   className,
-}: VidStreamPlayerProps) {
+}: ApiPlayerProps) {
   const [loaded, setLoaded] = React.useState(false);
-  const embedUrl = buildVidStreamUrl(config);
+  const embedUrl = buildApiPlayerUrl(config);
 
   return (
     <iframe
@@ -37,9 +36,14 @@ export function VidStreamPlayer({
       className={cn("w-full h-full", !loaded && "invisible", className)}
       allow="autoplay; fullscreen; picture-in-picture"
       allowFullScreen
-      title="Video Player (VidStream)"
-      onLoad={() => { setLoaded(true); onLoad?.(); }}
-      onError={() => onError?.("Failed to load VidStream player. Please try another server.")}
+      title="Video Player"
+      onLoad={() => {
+        setLoaded(true);
+        onLoad?.();
+      }}
+      onError={() =>
+        onError?.("Failed to load player. Please try another server.")
+      }
     />
   );
 }

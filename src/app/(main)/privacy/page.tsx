@@ -11,10 +11,11 @@ const PROVIDERS = [
   { name: "EmbedAPI", url: "https://embed-api.stream" },
   { name: "Vidking", url: "https://www.vidking.net" },
   { name: "2Embed", url: "https://www.2embed.cc" },
-  { name: "MoStream", url: "https://mostream.us" },
   { name: "VidSrc", url: "https://vidsrc.mov" },
+  { name: "VidLink", url: "https://vidlink.pro" },
   { name: "StreamVault", url: "https://streamvaultsrc.click" },
-  { name: "vid.api", url: "https://ezvidapi.com" },
+  { name: "YapGrid", url: "https://yapgrid.com" },
+  { name: "apiplayer", url: "https://apiplayer.ru" },
 ];
 
 export default function PrivacyPage() {

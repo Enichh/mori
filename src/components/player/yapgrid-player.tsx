@@ -4,32 +4,31 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 import type { VidkingPlayerConfig } from "@/types";
 
-interface VidPlayPlayerProps {
+interface YapGridPlayerProps {
   config: VidkingPlayerConfig;
   onLoad?: () => void;
   onError?: (message: string) => void;
   className?: string;
 }
 
-function buildVidPlayUrl(config: VidkingPlayerConfig): string {
-  const { tmdbId, imdbId, mediaType, season, episode } = config;
-  const id = imdbId ?? tmdbId;
+function buildYapGridUrl(config: VidkingPlayerConfig): string {
+  const { tmdbId, mediaType, season, episode } = config;
 
   if (mediaType === "tv" && season !== undefined && episode !== undefined) {
-    return `https://vidsrc.cc/v2/embed/tv/${id}/${season}/${episode}?autoPlay=false`;
+    return `https://yapgrid.com/embed/tv/${tmdbId}/${season}/${episode}`;
   }
 
-  return `https://vidsrc.cc/v2/embed/movie/${id}?autoPlay=false`;
+  return `https://yapgrid.com/embed/movie/${tmdbId}`;
 }
 
-export function VidPlayPlayer({
+export function YapGridPlayer({
   config,
   onLoad,
   onError,
   className,
-}: VidPlayPlayerProps) {
+}: YapGridPlayerProps) {
   const [loaded, setLoaded] = React.useState(false);
-  const embedUrl = buildVidPlayUrl(config);
+  const embedUrl = buildYapGridUrl(config);
 
   return (
     <iframe
@@ -37,9 +36,14 @@ export function VidPlayPlayer({
       className={cn("w-full h-full", !loaded && "invisible", className)}
       allow="autoplay; fullscreen; picture-in-picture"
       allowFullScreen
-      title="Video Player (VidPlay)"
-      onLoad={() => { setLoaded(true); onLoad?.(); }}
-      onError={() => onError?.("Failed to load VidPlay player. Please try another server.")}
+      title="Video Player"
+      onLoad={() => {
+        setLoaded(true);
+        onLoad?.();
+      }}
+      onError={() =>
+        onError?.("Failed to load player. Please try another server.")
+      }
     />
   );
 }

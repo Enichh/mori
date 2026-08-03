@@ -17,11 +17,10 @@ import { VideasyPlayer } from "@/components/player/videasy-player";
 import { OneElevenMoviesPlayer } from "@/components/player/111movies-player";
 import { TwoEmbedPlayer } from "@/components/player/twoembed-player";
 import { StreamVaultPlayer } from "@/components/player/streamvault-player";
-import { EzVidApiPlayer } from "@/components/player/ezvidapi-player";
 import { VidSrcPlayer } from "@/components/player/vidsrc-player";
 import { VidLinkPlayer } from "@/components/player/vidlink-player";
-import { VidStreamPlayer } from "@/components/player/vidstream-player";
-import { VidPlayPlayer } from "@/components/player/vidplay-player";
+import { YapGridPlayer } from "@/components/player/yapgrid-player";
+import { ApiPlayer } from "@/components/player/apiplayer-player";
 import { ConsumetPlayer } from "@/components/player/consumet-player";
 import { EpisodeNavigator } from "@/components/player/episode-navigator";
 import type { VidkingPlayerConfig, EpisodeNavData } from "@/types";
@@ -29,48 +28,43 @@ import type { VidkingPlayerConfig, EpisodeNavData } from "@/types";
 type PlayerServer =
   | "vidking"
   | "superembed"
-  | "superembed-vip"
   | "embedapi"
   | "videasy"
   | "111movies"
   | "twoembed"
   | "streamvault"
-  | "ezvidapi"
   | "vidsrc"
   | "vidlink"
-  | "vidstream"
-  | "vidplay"
+  | "yapgrid"
+  | "apiplayer"
   | "consumet";
 
 const SERVERS: { id: PlayerServer; label: string; tags?: string[] }[] = [
-  { id: "superembed", label: "SuperEmbed" },
-  { id: "embedapi", label: "EmbedAPI" },
-  { id: "vidking", label: "Vidking" },
-  { id: "twoembed", label: "2Embed" },
-  { id: "111movies", label: "111Movies" },
-  { id: "videasy", label: "Videasy" },
-  { id: "superembed-vip", label: "SuperEmbed VIP" },
-  { id: "streamvault", label: "StreamVault" },
-  { id: "ezvidapi", label: "vid.api" },
-  { id: "vidsrc", label: "VidSrc" },
-  { id: "vidlink", label: "VidLink" },
-  { id: "vidstream", label: "VidStream" },
-  { id: "vidplay", label: "VidPlay" },
+  { id: "vidsrc", label: "Nova" },
+  { id: "vidlink", label: "Luna" },
+  { id: "embedapi", label: "Zara" },
+  { id: "twoembed", label: "Maya" },
+  { id: "111movies", label: "Cleo" },
+  { id: "videasy", label: "Rosa" },
+  { id: "vidking", label: "Faye" },
+  { id: "streamvault", label: "Iris" },
+  { id: "superembed", label: "Eden" },
+  { id: "yapgrid", label: "Thea" },
+  { id: "apiplayer", label: "Nala" },
   { id: "consumet", label: "1Anime", tags: ["Anime"] },
 ];
 
 const AUTO_FAILOVER_ORDER: PlayerServer[] = [
   "vidsrc",
   "vidlink",
-  "vidstream",
-  "vidplay",
-  "twoembed",
+  "yapgrid",
+  "apiplayer",
   "embedapi",
+  "twoembed",
   "111movies",
   "videasy",
   "vidking",
   "streamvault",
-  "ezvidapi",
   "superembed",
   "consumet",
 ];
@@ -138,11 +132,11 @@ export function VideoPlayer({
       "https://111movies.net",
       "https://player.videasy.net",
       "https://streamvaultsrc.click",
-      "https://ezvidapi.com",
       "https://embedmaster.com",
       "https://vidlink.pro",
-      "https://vidsrc.icu",
-      "https://vidsrc.cc",
+      "https://vidsrc.mov",
+      "https://yapgrid.com",
+      "https://apiplayer.ru",
       "https://cdn-eu.1ani.me",
     ];
     for (const origin of origins) {
@@ -154,7 +148,7 @@ export function VideoPlayer({
     const warmUrl =
       server === "vidking"
         ? `https://www.vidking.net/embed/movie/${config.tmdbId}?color=C5FF4A`
-        : `https://multiembed.mov/directstream.php?video_id=${config.tmdbId}&tmdb=1`;
+        : `https://multiembed.mov/?video_id=${config.tmdbId}&tmdb=1`;
 
     const warmFrame = document.createElement("iframe");
     warmFrame.src = warmUrl;
@@ -329,15 +323,6 @@ export function VideoPlayer({
         {activated && server === "superembed" && (
           <SuperEmbedPlayer
             config={config}
-            useVip={false}
-            onLoad={handleLoad}
-            onError={handleError}
-          />
-        )}
-        {activated && server === "superembed-vip" && (
-          <SuperEmbedPlayer
-            config={config}
-            useVip={true}
             onLoad={handleLoad}
             onError={handleError}
           />
@@ -377,13 +362,6 @@ export function VideoPlayer({
             onError={handleError}
           />
         )}
-        {activated && server === "ezvidapi" && (
-          <EzVidApiPlayer
-            config={config}
-            onLoad={handleLoad}
-            onError={handleError}
-          />
-        )}
         {activated && server === "vidsrc" && (
           <VidSrcPlayer
             config={config}
@@ -398,15 +376,15 @@ export function VideoPlayer({
             onError={handleError}
           />
         )}
-        {activated && server === "vidstream" && (
-          <VidStreamPlayer
+        {activated && server === "yapgrid" && (
+          <YapGridPlayer
             config={config}
             onLoad={handleLoad}
             onError={handleError}
           />
         )}
-        {activated && server === "vidplay" && (
-          <VidPlayPlayer
+        {activated && server === "apiplayer" && (
+          <ApiPlayer
             config={config}
             onLoad={handleLoad}
             onError={handleError}

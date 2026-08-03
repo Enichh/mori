@@ -37,12 +37,9 @@ export const IMAGE_SIZES = {
 
 // ---- Player --------------------------------------------------------------
 export const VIDEO_SERVERS = {
-  vidking: "Vidking",
-  vidlink: "VidLink",
-  vidstream: "VidStream",
-  vidplay: "VidPlay",
-  superembed: "SuperEmbed",
-  "superembed-vip": "SuperEmbed VIP",
+  vidking: "Faye",
+  vidlink: "Luna",
+  superembed: "Eden",
   consumet: "1Anime",
 } as const;
 
@@ -70,12 +67,6 @@ export const ANIME_STREAM_BASE_URL = "/api/1anime";
 
 // ---- VidLink -------------------------------------------------------------
 export const VIDLINK_BASE_URL = "https://vidlink.pro";
-
-// ---- VidStream -----------------------------------------------------------
-export const VIDSTREAM_BASE_URL = "https://vidsrc.icu";
-
-// ---- VidPlay -------------------------------------------------------------
-export const VIDPLAY_BASE_URL = "https://vidsrc.cc";
 
 // ---- Sports API ----------------------------------------------------------
 export const SPORTS_CDNLIVE_BASE_URL = "/api/sports";

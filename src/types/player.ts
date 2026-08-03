@@ -60,14 +60,12 @@ export interface WatchProgress {
 export type PlayerServer =
   | "vidking"
   | "vidlink"
-  | "vidstream"
-  | "vidplay"
   | "superembed"
-  | "superembed-vip"
   | "embedapi"
   | "mostream"
   | "twoembed"
   | "streamvault"
-  | "ezvidapi"
   | "embedmaster"
+  | "yapgrid"
+  | "apiplayer"
   | "consumet";

@@ -146,7 +146,7 @@ export default function RootLayout({
         />
         <link
           rel="preconnect"
-          href="https://ezvidapi.com"
+          href="https://yapgrid.com"
           crossOrigin="anonymous"
         />
         <link
@@ -161,13 +161,11 @@ export default function RootLayout({
         />
         <link
           rel="preconnect"
-          href="https://vidsrc.icu"
+          href="https://apiplayer.ru"
           crossOrigin="anonymous"
         />
         <link
           rel="preconnect"
-          href="https://vidsrc.cc"
-          crossOrigin="anonymous"
         />
         <link
           rel="preconnect"

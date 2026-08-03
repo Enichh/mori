@@ -5,8 +5,8 @@
 //         npm run test:providers
 // ---------------------------------------------------------------------------
 
-const MOVIE_ID = 550;   // Fight Club (well-known, available everywhere)
-const TV_ID = 1399;      // Game of Thrones
+const MOVIE_ID = 687163; // Project Hail Mary (2026)
+const TV_ID = 2288;      // Desperate Housewives
 const TV_SEASON = 1;
 const TV_EPISODE = 1;
 
@@ -16,7 +16,7 @@ const UA =
 const TIMEOUT_MS = 10_000;
 
 // ---------------------------------------------------------------------------
-// Provider definitions — must match video-player.tsx SERVERS order
+// Provider definitions — matches video-player.tsx SERVERS
 // ---------------------------------------------------------------------------
 
 /** @typedef {{ id: string, label: string, movieUrl: string, tvUrl: string }} Provider */
@@ -24,82 +24,70 @@ const TIMEOUT_MS = 10_000;
 /** @type {Provider[]} */
 const PROVIDERS = [
   {
-    id: "superembed",
-    label: "SuperEmbed",
-    movieUrl: `https://multiembed.mov/?video_id=${MOVIE_ID}&tmdb=1`,
-    tvUrl: `https://multiembed.mov/?video_id=${TV_ID}&tmdb=1&s=${TV_SEASON}&e=${TV_EPISODE}`,
-  },
-  {
-    id: "superembed-vip",
-    label: "SuperEmbed VIP",
-    movieUrl: `https://multiembed.mov/directstream.php?video_id=${MOVIE_ID}&tmdb=1`,
-    tvUrl: `https://multiembed.mov/directstream.php?video_id=${TV_ID}&tmdb=1&s=${TV_SEASON}&e=${TV_EPISODE}`,
-  },
-  {
-    id: "embedapi",
-    label: "EmbedAPI",
-    movieUrl: `https://player.embed-api.stream/?id=${MOVIE_ID}`,
-    tvUrl: `https://player.embed-api.stream/?id=${TV_ID}&s=${TV_SEASON}&e=${TV_EPISODE}`,
-  },
-  {
-    id: "vidking",
-    label: "Vidking",
-    movieUrl: `https://www.vidking.net/embed/movie/${MOVIE_ID}?color=C5FF4A`,
-    tvUrl: `https://www.vidking.net/embed/tv/${TV_ID}/${TV_SEASON}/${TV_EPISODE}?color=C5FF4A`,
-  },
-  {
-    id: "twoembed",
-    label: "2Embed",
-    movieUrl: `https://www.2embed.cc/embed/${MOVIE_ID}`,
-    tvUrl: `https://www.2embed.cc/embedtv/${TV_ID}&s=${TV_SEASON}&e=${TV_EPISODE}`,
-  },
-  {
-    id: "111movies",
-    label: "111Movies",
-    movieUrl: `https://111movies.com/movie/${MOVIE_ID}`,
-    tvUrl: `https://111movies.com/tv/${TV_ID}/${TV_SEASON}/${TV_EPISODE}`,
-  },
-  {
-    id: "videasy",
-    label: "Videasy",
-    movieUrl: `https://player.videasy.net/movie/${MOVIE_ID}`,
-    tvUrl: `https://player.videasy.net/tv/${TV_ID}/${TV_SEASON}/${TV_EPISODE}`,
-  },
-  {
-    id: "streamvault",
-    label: "StreamVault",
-    movieUrl: `https://streamvaultsrc.click/embed/movie/${MOVIE_ID}`,
-    tvUrl: `https://streamvaultsrc.click/embed/tv/${TV_ID}/${TV_SEASON}/${TV_EPISODE}`,
-  },
-  {
-    id: "ezvidapi",
-    label: "vid.api",
-    movieUrl: `https://ezvidapi.com/embed/movie/${MOVIE_ID}`,
-    tvUrl: `https://ezvidapi.com/embed/tv/${TV_ID}/${TV_SEASON}/${TV_EPISODE}`,
-  },
-  {
     id: "vidsrc",
-    label: "VidSrc",
+    label: "Nova",
     movieUrl: `https://vidsrc.mov/embed/movie/${MOVIE_ID}`,
     tvUrl: `https://vidsrc.mov/embed/tv/${TV_ID}/${TV_SEASON}/${TV_EPISODE}`,
   },
   {
     id: "vidlink",
-    label: "VidLink",
+    label: "Luna",
     movieUrl: `https://vidlink.pro/movie/${MOVIE_ID}`,
     tvUrl: `https://vidlink.pro/tv/${TV_ID}/${TV_SEASON}/${TV_EPISODE}`,
   },
   {
-    id: "vidstream",
-    label: "VidStream",
-    movieUrl: `https://vidsrc.icu/embed/movie/${MOVIE_ID}`,
-    tvUrl: `https://vidsrc.icu/embed/tv/${TV_ID}/${TV_SEASON}/${TV_EPISODE}`,
+    id: "yapgrid",
+    label: "Thea",
+    movieUrl: `https://yapgrid.com/embed/movie/${MOVIE_ID}`,
+    tvUrl: `https://yapgrid.com/embed/tv/${TV_ID}/${TV_SEASON}/${TV_EPISODE}`,
   },
   {
-    id: "vidplay",
-    label: "VidPlay",
-    movieUrl: `https://vidsrc.cc/v2/embed/movie/${MOVIE_ID}?autoPlay=false`,
-    tvUrl: `https://vidsrc.cc/v2/embed/tv/${TV_ID}/${TV_SEASON}/${TV_EPISODE}?autoPlay=false`,
+    id: "apiplayer",
+    label: "Nala",
+    movieUrl: `https://apiplayer.ru/embed/movie/${MOVIE_ID}`,
+    tvUrl: `https://apiplayer.ru/embed/tv/${TV_ID}/${TV_SEASON}/${TV_EPISODE}`,
+  },
+  {
+    id: "embedapi",
+    label: "Zara",
+    movieUrl: `https://player.embed-api.stream/?id=${MOVIE_ID}`,
+    tvUrl: `https://player.embed-api.stream/?id=${TV_ID}&s=${TV_SEASON}&e=${TV_EPISODE}`,
+  },
+  {
+    id: "twoembed",
+    label: "Maya",
+    movieUrl: `https://www.2embed.cc/embed/${MOVIE_ID}`,
+    tvUrl: `https://www.2embed.cc/embedtv/${TV_ID}&s=${TV_SEASON}&e=${TV_EPISODE}`,
+  },
+  {
+    id: "111movies",
+    label: "Cleo",
+    movieUrl: `https://111movies.com/movie/${MOVIE_ID}`,
+    tvUrl: `https://111movies.com/tv/${TV_ID}/${TV_SEASON}/${TV_EPISODE}`,
+  },
+  {
+    id: "videasy",
+    label: "Rosa",
+    movieUrl: `https://player.videasy.net/movie/${MOVIE_ID}`,
+    tvUrl: `https://player.videasy.net/tv/${TV_ID}/${TV_SEASON}/${TV_EPISODE}`,
+  },
+  {
+    id: "vidking",
+    label: "Faye",
+    movieUrl: `https://www.vidking.net/embed/movie/${MOVIE_ID}?color=C5FF4A`,
+    tvUrl: `https://www.vidking.net/embed/tv/${TV_ID}/${TV_SEASON}/${TV_EPISODE}?color=C5FF4A`,
+  },
+  {
+    id: "streamvault",
+    label: "Iris",
+    movieUrl: `https://streamvaultsrc.click/embed/movie/${MOVIE_ID}`,
+    tvUrl: `https://streamvaultsrc.click/embed/tv/${TV_ID}/${TV_SEASON}/${TV_EPISODE}`,
+  },
+  {
+    id: "superembed",
+    label: "Eden",
+    movieUrl: `https://multiembed.mov/?video_id=${MOVIE_ID}&tmdb=1`,
+    tvUrl: `https://multiembed.mov/?video_id=${TV_ID}&tmdb=1&s=${TV_SEASON}&e=${TV_EPISODE}`,
   },
 ];
 
@@ -144,7 +132,6 @@ async function probe(url) {
     const ms = Date.now() - t0;
     clearTimeout(timer);
 
-    // Collect relevant headers
     const xfo = (res.headers.get("x-frame-options") || "").toLowerCase();
     const csp = (res.headers.get("content-security-policy") || "").toLowerCase();
 
@@ -173,6 +160,7 @@ function check(status, xfo, csp, reason) {
   if (status === 0 && reason && reason !== "timeout") return "warn";
   // Timeout
   if (status === 0) return "warn";
+  // Transient: these often come and go
   if (status === 403) return "warn";
   if (status === 522) return "warn";
   if (status === 503) return "warn";
@@ -224,10 +212,10 @@ function explain(status, xfo, csp, reason) {
 let hardFailures = 0;
 
 console.log(`${BOLD}Embed Provider Health Check${RESET}`);
-console.log(`Movie: TMDB ${MOVIE_ID}  |  TV: TMDB ${TV_ID} S${TV_SEASON}E${TV_EPISODE}\n`);
+console.log(`Movie: Project Hail Mary (${MOVIE_ID})  |  TV: Desperate Housewives (${TV_ID}) S${TV_SEASON}E${TV_EPISODE}\n`);
 
 for (const p of PROVIDERS) {
-  const label = `${p.label.padEnd(14)}`;
+  const label = `${p.label.padEnd(6)}`;
 
   // --- movie ---
   const mr = await probe(p.movieUrl);
