@@ -38,9 +38,9 @@ async function fetchTVDetail(tmdbId: number): Promise<TVDetail | null> {
 }
 
 export function WatchTVShell() {
-  const [id, setId] = useState("0");
-  const [season, setSeason] = useState("1");
-  const [episode, setEpisode] = useState("1");
+  const [id, setId] = useState<string | null>(null);
+  const [season, setSeason] = useState<string | null>(null);
+  const [episode, setEpisode] = useState<string | null>(null);
   const [detail, setDetail] = useState<TVDetail | null>(null);
 
   useEffect(() => {
@@ -59,18 +59,22 @@ export function WatchTVShell() {
     });
   }, []);
 
+  // Don't render VideoPlayerWrapper until we have all real values.
+  // This prevents a ghost id=0 / season=1 / episode=1 entry in watch history.
+  if (!id || !season || !episode || !detail) return null;
+
   return (
     <VideoPlayerWrapper
       tmdbId={parseInt(id) || 0}
       imdbId={null}
       mediaType="tv"
-      title={detail?.title ?? ""}
-      posterPath={detail?.posterPath ?? null}
-      backdropPath={detail?.backdropPath ?? null}
+      title={detail.title}
+      posterPath={detail.posterPath}
+      backdropPath={detail.backdropPath}
       season={parseInt(season) || 1}
       episode={parseInt(episode) || 1}
-      totalSeasons={detail?.totalSeasons}
-      episodesPerSeason={detail?.episodesPerSeason}
+      totalSeasons={detail.totalSeasons}
+      episodesPerSeason={detail.episodesPerSeason}
     />
   );
 }

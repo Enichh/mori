@@ -34,6 +34,9 @@ export function getWatchHistory(): WatchProgress[] {
 export function saveWatchHistory(entry: WatchProgress): void {
   if (!isBrowser()) return;
 
+  // Guard: reject entries with invalid ids (e.g. the ghost 0 from SSR)
+  if (!entry.id || entry.id <= 0) return;
+
   const history = getWatchHistory();
   const existing = history.findIndex(
     (h) => h.id === entry.id && h.mediaType === entry.mediaType,
@@ -58,8 +61,10 @@ export function saveWatchHistory(entry: WatchProgress): void {
 
   history.unshift(updated);
 
-  // Keep only the most recent MAX_ENTRIES
-  const trimmed = history.slice(0, MAX_ENTRIES);
+  // Keep only the most recent MAX_ENTRIES, and strip any stale invalid entries
+  const trimmed = history
+    .filter((h) => h.id > 0)
+    .slice(0, MAX_ENTRIES);
 
   try {
     localStorage.setItem(HISTORY_KEY, JSON.stringify(trimmed));
