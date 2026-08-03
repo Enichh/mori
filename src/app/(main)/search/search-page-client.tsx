@@ -6,7 +6,7 @@ import { SearchInput } from "@/components/search/search-input";
 import { MediaGrid } from "@/components/media/media-grid";
 import { Pagination } from "@/components/ui/pagination";
 import type { Movie, TVShow } from "@/types";
-import { LoaderCircle, Film, Tv, Swords, Grid3X3 } from "lucide-react";
+import { LoaderCircle, Film, Tv, Grid3X3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TMDB_BASE_URL } from "@/lib/constants";
 
@@ -59,7 +59,6 @@ const TYPE_FILTERS = [
   { value: "all", label: "All", icon: Grid3X3 },
   { value: "movie", label: "Movies", icon: Film },
   { value: "tv", label: "TV Shows", icon: Tv },
-  { value: "anime", label: "Anime", icon: Swords },
 ];
 
 export function SearchPageClient() {
@@ -90,55 +89,7 @@ export function SearchPageClient() {
       setError(null);
       setHasSearched(true);
       try {
-        if (type === "anime") {
-          const gql = `query($q:String,$page:Int){Page(page:$page,perPage:18){pageInfo{total perPage currentPage lastPage hasNextPage}media(search:$q,type:ANIME,sort:SEARCH_MATCH){id title{romaji english native}coverImage{large}format status episodes averageScore popularity genres season seasonYear}}}`;
-          const res = await fetch("/api/anilist", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
-            body: JSON.stringify({
-              query: gql,
-              variables: { q: searchQuery.trim(), page: searchPage },
-            }),
-          });
-          if (!res.ok) throw new Error("Search failed");
-          const json = await res.json();
-          if (json.errors)
-            throw new Error(json.errors[0]?.message ?? "AniList error");
-          const pd = json.data.Page;
-          setResults(
-            pd.media.map((m: any) => ({
-              id: m.id,
-              title:
-                m.title?.english ?? m.title?.romaji ?? m.title?.native ?? "",
-              name: m.title?.english ?? m.title?.romaji ?? "",
-              mediaType: "anime" as const,
-              posterPath: m.coverImage?.large ?? "",
-              backdropPath: null,
-              overview: "",
-              voteAverage: m.averageScore ? m.averageScore / 10 : 0,
-              voteCount: m.popularity ?? 0,
-              genreIds: [],
-              releaseDate: m.seasonYear ? `${m.seasonYear}-01-01` : "",
-              firstAirDate: m.seasonYear ? `${m.seasonYear}-01-01` : "",
-              originalLanguage: "ja",
-              popularity: m.popularity ?? 0,
-              adult: false,
-              runtime: null,
-              numberOfSeasons: 1,
-              numberOfEpisodes: m.episodes ?? 0,
-              status: m.status ?? "NOT_YET_RELEASED",
-              tagline: null,
-              credits: { cast: [], crew: [] },
-              similar: { page: 1, results: [], totalPages: 1, totalResults: 0 },
-              videos: { results: [] },
-            })),
-          );
-          setTotalPages(pd.pageInfo.lastPage || 1);
-          setTotalResults(pd.pageInfo.total || 0);
-        } else if (type === "all") {
+        if (type === "all") {
           const data = await tmdbFetch(
             "search/multi",
             searchQuery.trim(),
@@ -221,7 +172,7 @@ export function SearchPageClient() {
         <div className="flex items-center gap-3">
           <SearchInput
             className="flex-1"
-            placeholder="Search movies, TV shows, anime..."
+            placeholder="Search movies, TV shows..."
             autoFocus={!urlQ}
             initialValue={query}
           />
@@ -284,11 +235,9 @@ export function SearchPageClient() {
             title=""
             items={results as any}
             mediaType={
-              activeType === "anime"
-                ? "anime"
-                : activeType === "tv"
-                  ? "tv"
-                  : "movie"
+              activeType === "tv"
+                ? "tv"
+                : "movie"
             }
           />
           {totalPages > 1 && (
@@ -307,7 +256,7 @@ export function SearchPageClient() {
       {!isLoading && !error && !hasSearched && (
         <div className="py-20 text-center">
           <p className="text-muted-foreground">
-            Start typing to search for movies, TV shows, and anime.
+            Start typing to search for movies and TV shows.
           </p>
         </div>
       )}

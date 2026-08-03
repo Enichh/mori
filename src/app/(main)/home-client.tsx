@@ -9,9 +9,6 @@ import type { Movie, TVShow } from "@/types";
 
 const TMDB_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY!;
 const TMDB_BASE = "https://api.themoviedb.org/3";
-import { ANILIST_BASE_URL } from "@/lib/constants";
-const ANILIST_URL = ANILIST_BASE_URL;
-
 // ---------------------------------------------------------------------------
 // Fetchers (run in browser, zero Netlify cost)
 // ---------------------------------------------------------------------------
@@ -30,59 +27,6 @@ async function fetchTrendingTV(): Promise<TVShow[]> {
   if (!res.ok) return [];
   const data = await res.json();
   return (data.results || []).slice(0, 12).map(mapTV);
-}
-
-async function fetchPopularAnime(): Promise<TVShow[]> {
-  const query = `query {
-    Page(page: 1, perPage: 12) {
-      media(type: ANIME, sort: TRENDING_DESC) {
-        id
-        title { english romaji native }
-        coverImage { large }
-        format
-        status
-        episodes
-        averageScore
-        popularity
-        genres
-        season
-        seasonYear
-      }
-    }
-  }`;
-  const res = await fetch(ANILIST_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query }),
-  });
-  if (!res.ok) return [];
-  const json = await res.json();
-  return (json.data?.Page?.media || []).map((a: any) => ({
-    id: a.id,
-    mediaType: "anime" as const,
-    title: a.title?.english ?? a.title?.romaji ?? a.title?.native ?? "",
-    name: a.title?.english ?? a.title?.romaji ?? "",
-    originalName: a.title?.native ?? "",
-    overview: a.description ?? "",
-    posterPath: a.coverImage?.large ?? "",
-    backdropPath: a.bannerImage ?? null,
-    voteAverage: a.averageScore ? a.averageScore / 10 : 0,
-    voteCount: a.popularity ?? 0,
-    genreIds: [],
-    popularity: a.popularity ?? 0,
-    originalLanguage: "ja",
-    adult: false,
-    firstAirDate: a.seasonYear ? `${a.seasonYear}-01-01` : "",
-    lastAirDate: "",
-    numberOfSeasons: 1,
-    numberOfEpisodes: a.episodes ?? 0,
-    status: a.status ?? "",
-    seasons: [],
-    credits: { cast: [], crew: [] },
-    similar: { page: 1, results: [], totalPages: 1, totalResults: 0 },
-    videos: { results: [] },
-    nextEpisodeToAir: null,
-  })) as any;
 }
 
 // ---- Mappers ----
@@ -159,15 +103,9 @@ export function HomeClient() {
     3600000,
   );
 
-  const { data: popularAnime, loading: animeLoading } = useCachedFetch(
-    "home:popular-anime",
-    fetchPopularAnime,
-    3600000,
-  );
-
   const featuredMovie = trendingMovies?.[0] || null;
 
-  const isLoading = moviesLoading || tvLoading || animeLoading;
+  const isLoading = moviesLoading || tvLoading;
 
   return (
     <div>
@@ -180,7 +118,7 @@ export function HomeClient() {
               Welcome to <span className="text-primary">Mori</span>
             </h1>
             <p className="text-muted-foreground max-w-md mx-auto">
-              Stream the latest Movies, TV Shows, and Anime in stunning quality.
+              Stream the latest Movies and TV Shows in stunning quality.
             </p>
             {isLoading && (
               <p className="text-xs text-muted-foreground mt-4">Loading...</p>
@@ -235,15 +173,6 @@ export function HomeClient() {
             items={trendingTV}
             mediaType="tv"
             viewAllHref="/tv"
-          />
-        )}
-
-        {popularAnime && popularAnime.length > 0 && (
-          <MediaGrid
-            title="Popular Anime"
-            items={popularAnime}
-            mediaType="anime"
-            viewAllHref="/anime"
           />
         )}
       </div>
