@@ -127,112 +127,74 @@ export function HomeClient() {
         </section>
       )}
 
-      {/* ── Silip Promo Banner ── */}
+      {/* ── Sister Sites (2×2 compact grid) ── */}
       <section className="border-b border-border">
-        <div className="container-cine py-5">
-          <a
-            href="https://silip.pages.dev"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group flex items-center justify-between gap-4 px-5 py-4 rounded-lg bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-rose-500/10 border border-amber-500/20 hover:border-amber-500/40 transition-all duration-300"
-          >
-            <div className="flex items-center gap-3 min-w-0">
-              <span className="text-2xl shrink-0">🇵🇭</span>
-              <div className="min-w-0">
-                <p className="text-sm font-heading font-bold text-foreground group-hover:text-amber-400 transition-colors">
-                  Looking for Pinoy Movies?
+        <div className="container-cine py-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {/* Silip */}
+            <a
+              href="https://silip.pages.dev"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex items-center gap-2 px-3 py-2.5 rounded-lg bg-amber-500/5 border border-amber-500/15 hover:border-amber-500/40 hover:bg-amber-500/10 transition-all duration-200"
+            >
+              <span className="text-lg shrink-0">🇵🇭</span>
+              <div className="min-w-0 leading-tight">
+                <p className="text-[11px] font-heading font-bold text-foreground group-hover:text-amber-400 transition-colors">
+                  Pinoy Movies
                 </p>
-                <p className="text-xs text-muted-foreground line-clamp-1">
-                  Try Pinoy Movies — free Filipino movies &amp; Tagalog-dubbed
-                  content
-                </p>
+                <p className="text-[9px] text-muted-foreground">silip.pages.dev</p>
               </div>
-            </div>
-            <span className="shrink-0 px-4 py-2 text-xs font-semibold rounded-md bg-amber-500/15 text-amber-400 border border-amber-500/30 group-hover:bg-amber-500/25 transition-colors">
-              Visit Pinoy Movies →
-            </span>
-          </a>
-        </div>
-      </section>
+            </a>
 
-      {/* ── Follen Promo Banner ── */}
-      <section className="border-b border-border">
-        <div className="container-cine py-5">
-          <a
-            href="https://follen.pages.dev"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group flex items-center justify-between gap-4 px-5 py-4 rounded-lg bg-gradient-to-r from-violet-500/10 via-purple-500/5 to-fuchsia-500/10 border border-violet-500/20 hover:border-violet-500/40 transition-all duration-300"
-          >
-            <div className="flex items-center gap-3 min-w-0">
-              <span className="text-2xl shrink-0">🌸</span>
-              <div className="min-w-0">
-                <p className="text-sm font-heading font-bold text-foreground group-hover:text-violet-400 transition-colors">
-                  Visit our sister site — Follen
+            {/* Follen */}
+            <a
+              href="https://follen.pages.dev"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex items-center gap-2 px-3 py-2.5 rounded-lg bg-violet-500/5 border border-violet-500/15 hover:border-violet-500/40 hover:bg-violet-500/10 transition-all duration-200"
+            >
+              <span className="text-lg shrink-0">🌸</span>
+              <div className="min-w-0 leading-tight">
+                <p className="text-[11px] font-heading font-bold text-foreground group-hover:text-violet-400 transition-colors">
+                  Follen
                 </p>
-                <p className="text-xs text-muted-foreground line-clamp-1">
-                  Even more free movies &amp; TV shows, same great experience
-                </p>
+                <p className="text-[9px] text-muted-foreground">Movies &amp; TV</p>
               </div>
-            </div>
-            <span className="shrink-0 px-4 py-2 text-xs font-semibold rounded-md bg-violet-500/15 text-violet-400 border border-violet-500/30 group-hover:bg-violet-500/25 transition-colors">
-              Watch on Follen →
-            </span>
-          </a>
-        </div>
-      </section>
+            </a>
 
-      {/* ── Necros Promo Banner ── */}
-      <section className="border-b border-border">
-        <div className="container-cine py-5">
-          <a
-            href="https://necros.pages.dev"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group flex items-center justify-between gap-4 px-5 py-4 rounded-lg bg-gradient-to-r from-rose-500/10 via-red-500/5 to-pink-500/10 border border-rose-500/20 hover:border-rose-500/40 transition-all duration-300"
-          >
-            <div className="flex items-center gap-3 min-w-0">
-              <span className="text-2xl shrink-0">⚔️</span>
-              <div className="min-w-0">
-                <p className="text-sm font-heading font-bold text-foreground group-hover:text-rose-400 transition-colors">
-                  Into anime? Try Necros
+            {/* Necros */}
+            <a
+              href="https://necros.pages.dev"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex items-center gap-2 px-3 py-2.5 rounded-lg bg-rose-500/5 border border-rose-500/15 hover:border-rose-500/40 hover:bg-rose-500/10 transition-all duration-200"
+            >
+              <span className="text-lg shrink-0">⚔️</span>
+              <div className="min-w-0 leading-tight">
+                <p className="text-[11px] font-heading font-bold text-foreground group-hover:text-rose-400 transition-colors">
+                  Necros
                 </p>
-                <p className="text-xs text-muted-foreground line-clamp-1">
-                  Made for anime fans worldwide — free HD streaming
-                </p>
+                <p className="text-[9px] text-muted-foreground">Anime</p>
               </div>
-            </div>
-            <span className="shrink-0 px-4 py-2 text-xs font-semibold rounded-md bg-rose-500/15 text-rose-400 border border-rose-500/30 group-hover:bg-rose-500/25 transition-colors">
-              Watch on Necros →
-            </span>
-          </a>
-        </div>
-      </section>
+            </a>
 
-      {/* ── KaTalk Promo Banner ── */}
-      <section className="border-b border-border">
-        <div className="container-cine py-5">
-          <a
-            href="https://katalk.pages.dev"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group flex items-center justify-between gap-4 px-5 py-4 rounded-lg bg-gradient-to-r from-teal-500/10 via-cyan-500/5 to-emerald-500/10 border border-teal-500/20 hover:border-teal-500/40 transition-all duration-300"
-          >
-            <div className="flex items-center gap-3 min-w-0">
-              <span className="text-2xl shrink-0">💬</span>
-              <div className="min-w-0">
-                <p className="text-sm font-heading font-bold text-foreground group-hover:text-teal-400 transition-colors">
-                  Bored? Talk to someone — KaTalk
+            {/* KaTalk */}
+            <a
+              href="https://katalk.pages.dev"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex items-center gap-2 px-3 py-2.5 rounded-lg bg-teal-500/5 border border-teal-500/15 hover:border-teal-500/40 hover:bg-teal-500/10 transition-all duration-200"
+            >
+              <span className="text-lg shrink-0">💬</span>
+              <div className="min-w-0 leading-tight">
+                <p className="text-[11px] font-heading font-bold text-foreground group-hover:text-teal-400 transition-colors">
+                  KaTalk
                 </p>
-                <p className="text-xs text-muted-foreground line-clamp-1">
-                  Anonymous real-time chat, no accounts needed · 18+
-                </p>
+                <p className="text-[9px] text-muted-foreground">Chat · 18+</p>
               </div>
-            </div>
-            <span className="shrink-0 px-4 py-2 text-xs font-semibold rounded-md bg-teal-500/15 text-teal-400 border border-teal-500/30 group-hover:bg-teal-500/25 transition-colors">
-              Start Chatting →
-            </span>
-          </a>
+            </a>
+          </div>
         </div>
       </section>
 
