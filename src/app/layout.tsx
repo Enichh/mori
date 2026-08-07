@@ -188,8 +188,19 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://api.cdnlivetv.ru" />
       </head>
       <body className="font-body bg-background text-foreground min-h-screen">
+        {/* ── Leaderboard (728×90, desktop) ── */}
+        <script
+          async
+          data-cfasync="false"
+          src={AD_CONFIG.leaderboard.scriptSrc}
+        />
+        {/* ── Popunder ── */}
         <script async data-cfasync="false" src={AD_CONFIG.popunder.scriptSrc} />
         {children}
+        {/* ── Social Bar ── */}
+        <script async data-cfasync="false" src={AD_CONFIG.socialBar.scriptSrc} />
+        {/* ── Mobile Banner (320×50) ── */}
+        <script async data-cfasync="false" src={AD_CONFIG.mobileBanner.scriptSrc} />
       </body>
       <GoogleAnalytics gaId={GA_ID} />
     </html>
