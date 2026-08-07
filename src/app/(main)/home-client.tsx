@@ -155,6 +155,33 @@ export function HomeClient() {
         </div>
       </section>
 
+      {/* ── Follen Promo Banner ── */}
+      <section className="border-b border-border">
+        <div className="container-cine py-5">
+          <a
+            href="https://follen.pages.dev"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center justify-between gap-4 px-5 py-4 rounded-lg bg-gradient-to-r from-violet-500/10 via-purple-500/5 to-fuchsia-500/10 border border-violet-500/20 hover:border-violet-500/40 transition-all duration-300"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <span className="text-2xl shrink-0">🌸</span>
+              <div className="min-w-0">
+                <p className="text-sm font-heading font-bold text-foreground group-hover:text-violet-400 transition-colors">
+                  Visit our sister site — Follen
+                </p>
+                <p className="text-xs text-muted-foreground line-clamp-1">
+                  Even more free movies &amp; shows, curated with care
+                </p>
+              </div>
+            </div>
+            <span className="shrink-0 px-4 py-2 text-xs font-semibold rounded-md bg-violet-500/15 text-violet-400 border border-violet-500/30 group-hover:bg-violet-500/25 transition-colors">
+              Check out Follen →
+            </span>
+          </a>
+        </div>
+      </section>
+
       <WatchHistory maxItems={8} />
 
       <div className="container-cine space-y-12 py-10">
