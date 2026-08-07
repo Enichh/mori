@@ -171,12 +171,66 @@ export function HomeClient() {
                   Visit our sister site — Follen
                 </p>
                 <p className="text-xs text-muted-foreground line-clamp-1">
-                  Even more free movies &amp; shows, curated with care
+                  Even more free movies &amp; TV shows, same great experience
                 </p>
               </div>
             </div>
             <span className="shrink-0 px-4 py-2 text-xs font-semibold rounded-md bg-violet-500/15 text-violet-400 border border-violet-500/30 group-hover:bg-violet-500/25 transition-colors">
-              Check out Follen →
+              Watch on Follen →
+            </span>
+          </a>
+        </div>
+      </section>
+
+      {/* ── Necros Promo Banner ── */}
+      <section className="border-b border-border">
+        <div className="container-cine py-5">
+          <a
+            href="https://necros.pages.dev"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center justify-between gap-4 px-5 py-4 rounded-lg bg-gradient-to-r from-rose-500/10 via-red-500/5 to-pink-500/10 border border-rose-500/20 hover:border-rose-500/40 transition-all duration-300"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <span className="text-2xl shrink-0">⚔️</span>
+              <div className="min-w-0">
+                <p className="text-sm font-heading font-bold text-foreground group-hover:text-rose-400 transition-colors">
+                  Into anime? Try Necros
+                </p>
+                <p className="text-xs text-muted-foreground line-clamp-1">
+                  Made for anime fans worldwide — free HD streaming
+                </p>
+              </div>
+            </div>
+            <span className="shrink-0 px-4 py-2 text-xs font-semibold rounded-md bg-rose-500/15 text-rose-400 border border-rose-500/30 group-hover:bg-rose-500/25 transition-colors">
+              Watch on Necros →
+            </span>
+          </a>
+        </div>
+      </section>
+
+      {/* ── KaTalk Promo Banner ── */}
+      <section className="border-b border-border">
+        <div className="container-cine py-5">
+          <a
+            href="https://katalk.pages.dev"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center justify-between gap-4 px-5 py-4 rounded-lg bg-gradient-to-r from-teal-500/10 via-cyan-500/5 to-emerald-500/10 border border-teal-500/20 hover:border-teal-500/40 transition-all duration-300"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <span className="text-2xl shrink-0">💬</span>
+              <div className="min-w-0">
+                <p className="text-sm font-heading font-bold text-foreground group-hover:text-teal-400 transition-colors">
+                  Bored? Talk to someone — KaTalk
+                </p>
+                <p className="text-xs text-muted-foreground line-clamp-1">
+                  Anonymous real-time chat, no accounts needed · 18+
+                </p>
+              </div>
+            </div>
+            <span className="shrink-0 px-4 py-2 text-xs font-semibold rounded-md bg-teal-500/15 text-teal-400 border border-teal-500/30 group-hover:bg-teal-500/25 transition-colors">
+              Start Chatting →
             </span>
           </a>
         </div>
