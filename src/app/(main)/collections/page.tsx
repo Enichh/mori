@@ -11,12 +11,15 @@ const TMDB_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY!;
 const TMDB_BASE = "https://api.themoviedb.org/3";
 
 // ---- Static MCU chronological order (TMDB IDs) ----
+// Source: Rotten Tomatoes MCU timeline — movies only
 const MCU_IDS = [
   1771,  // Captain America: The First Avenger
   299537,// Captain Marvel
+  617126,// The Fantastic Four: First Steps
   1726,  // Iron Man
   10138, // Iron Man 2
-  1724,  // Thor
+  1724,  // The Incredible Hulk
+  10195, // Thor
   24428, // The Avengers
   68721, // Iron Man 3
   76338, // Thor: The Dark World
@@ -34,8 +37,9 @@ const MCU_IDS = [
   363088,// Ant-Man and the Wasp
   299536,// Avengers: Infinity War
   299534,// Avengers: Endgame
+  533535,// Deadpool & Wolverine
+  566525,// Shang-Chi and the Legend of the Ten Rings
   429617,// Spider-Man: Far From Home
-  566525,// Shang-Chi
   524434,// Eternals
   634649,// Spider-Man: No Way Home
   453395,// Doctor Strange in the Multiverse of Madness
@@ -44,7 +48,9 @@ const MCU_IDS = [
   640146,// Ant-Man and the Wasp: Quantumania
   447365,// Guardians of the Galaxy Vol. 3
   609681,// The Marvels
-  533535,// Deadpool & Wolverine
+  822119,// Captain America: Brave New World
+  986056,// Thunderbolts*
+  969681,// Spider-Man: Brand New Day
 ];
 
 interface CollectionDef {
