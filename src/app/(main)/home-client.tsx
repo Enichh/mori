@@ -203,7 +203,7 @@ export function HomeClient() {
 
       <Recommendations />
 
-      <div className="container-cine space-y-12 py-10">
+      <div className="container-cine space-y-8 py-6">
         {trendingMovies && trendingMovies.length > 0 && (
           <MediaGrid
             title="Trending Movies"

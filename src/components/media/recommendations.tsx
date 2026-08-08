@@ -133,7 +133,7 @@ export function Recommendations() {
 
   if (loading) {
     return (
-      <section className="py-8">
+      <section className="py-4">
         <div className="container-cine">
           <div className="flex items-center gap-3 mb-4">
             <Sparkles className="w-5 h-5 text-primary" />
@@ -150,7 +150,7 @@ export function Recommendations() {
   if (!recs || recs.length === 0) return null;
 
   return (
-    <section className="py-8">
+    <section className="py-4">
       <div className="container-cine">
         <div className="flex items-center gap-3 mb-4">
           <Sparkles className="w-5 h-5 text-primary" />

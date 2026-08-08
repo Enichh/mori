@@ -63,9 +63,9 @@ export function WatchHistory({ maxItems = 8, className }: WatchHistoryProps) {
   if (!mounted || history.length === 0) return null;
 
   return (
-    <section className={cn("py-10", className)}>
+    <section className={cn("py-6", className)}>
       <div className="container-cine">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <History className="w-5 h-5 text-primary" />
             <h2 className="text-xl md:text-2xl font-heading font-bold text-foreground">

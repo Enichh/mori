@@ -12,28 +12,31 @@ const TMDB_BASE = "https://api.themoviedb.org/3";
 
 // ---- Static MCU chronological order (TMDB IDs) ----
 const MCU_IDS = [
+  1771,  // Captain America: The First Avenger
+  299537,// Captain Marvel
   1726,  // Iron Man
   10138, // Iron Man 2
   1724,  // Thor
-  1771,  // Captain America: The First Avenger
   24428, // The Avengers
   68721, // Iron Man 3
   76338, // Thor: The Dark World
   100402,// Captain America: The Winter Soldier
   118340,// Guardians of the Galaxy
+  283995,// Guardians of the Galaxy Vol. 2
   99861, // Avengers: Age of Ultron
   102899,// Ant-Man
   271110,// Captain America: Civil War
-  284052,// Doctor Strange
-  283995,// Guardians of the Galaxy Vol. 2
-  315635,// Spider-Man: Homecoming
-  284053,// Thor: Ragnarok
+  497698,// Black Widow
   284054,// Black Panther
-  299536,// Avengers: Infinity War
+  315635,// Spider-Man: Homecoming
+  284052,// Doctor Strange
+  284053,// Thor: Ragnarok
   363088,// Ant-Man and the Wasp
-  299537,// Captain Marvel
+  299536,// Avengers: Infinity War
   299534,// Avengers: Endgame
   429617,// Spider-Man: Far From Home
+  566525,// Shang-Chi
+  524434,// Eternals
   634649,// Spider-Man: No Way Home
   453395,// Doctor Strange in the Multiverse of Madness
   616037,// Thor: Love and Thunder
@@ -41,7 +44,7 @@ const MCU_IDS = [
   640146,// Ant-Man and the Wasp: Quantumania
   447365,// Guardians of the Galaxy Vol. 3
   609681,// The Marvels
-  617127,// Deadpool & Wolverine
+  533535,// Deadpool & Wolverine
 ];
 
 interface CollectionDef {
@@ -74,7 +77,7 @@ const COLLECTIONS: CollectionDef[] = [
   {
     slug: "lotr",
     name: "Lord of the Rings",
-    description: "Middle-earth in all its glory — LOTR & The Hobbit trilogies",
+    description: "Middle-earth — all 3 Lord of the Rings films",
     tmdbCollectionId: 119,
   },
   {
@@ -86,7 +89,7 @@ const COLLECTIONS: CollectionDef[] = [
   {
     slug: "jurassic",
     name: "Jurassic Park",
-    description: "The complete dinosaur saga — 6 films",
+    description: "The complete saga — 8 films",
     tmdbCollectionId: 328,
   },
   {
@@ -104,13 +107,13 @@ const COLLECTIONS: CollectionDef[] = [
   {
     slug: "hunger-games",
     name: "The Hunger Games",
-    description: "The complete saga including prequel",
+    description: "The original trilogy and prequels",
     tmdbCollectionId: 131635,
   },
   {
     slug: "mission-impossible",
     name: "Mission: Impossible",
-    description: "Ethan Hunt's impossible missions — 7 films",
+    description: "Ethan Hunt's impossible missions — 8 films",
     tmdbCollectionId: 87359,
   },
 ];
