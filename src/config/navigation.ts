@@ -22,9 +22,9 @@ export const mainNavigation: NavItem[] = [
   { title: "Home", label: "Home", href: "/", icon: "House" },
   { title: "Movies", label: "Movies", href: "/movies", icon: "Film" },
   { title: "TV Shows", label: "TV Shows", href: "/tv", icon: "Tv" },
+  { title: "Collections", label: "Collections", href: "/collections", icon: "Library" },
   { title: "Anime", label: "Anime", href: "https://necros.pages.dev", icon: "Swords", external: true },
   { title: "Drama", label: "Drama", href: "/drama", icon: "Drama" },
-  { title: "Sports", label: "Sports 🏀", href: "/sports", icon: "Trophy" },
   {
     title: "Pinoy Movies",
     label: "Pinoy Movies",
@@ -44,9 +44,9 @@ export const mobileNavigation: NavItem[] = [
   { title: "Home", label: "Home", href: "/", icon: "House" },
   { title: "Movies", label: "Movies", href: "/movies", icon: "Film" },
   { title: "TV", label: "TV", href: "/tv", icon: "Tv" },
+  { title: "Collections", label: "Collections", href: "/collections", icon: "Library" },
   { title: "Anime", label: "Anime", href: "https://necros.pages.dev", icon: "Swords", external: true },
   { title: "Drama", label: "Drama", href: "/drama", icon: "Drama" },
-  { title: "Sports", label: "Sports 🏀", href: "/sports", icon: "Trophy" },
   {
     title: "Pinoy Movies",
     label: "Pinoy Movies",
@@ -63,9 +63,9 @@ export const mobileNavItems = mobileNavigation;
 export const footerLinks: NavItem[] = [
   { label: "Movies", href: "/movies" },
   { label: "TV Shows", href: "/tv" },
+  { label: "Collections", href: "/collections" },
   { label: "Anime", href: "https://necros.pages.dev", external: true },
   { label: "Drama", href: "/drama" },
-  { label: "Sports 🏀", href: "/sports" },
   { label: "Pinoy Movies", href: "https://silip.pages.dev", external: true },
 ];
 
@@ -85,13 +85,13 @@ export const footerNav: NavSection[] = [
     ],
   },
   {
-    title: "Sports",
+    title: "Collections",
     items: [
-      { label: "Basketball", href: "/sports/basketball" },
-      { label: "Football", href: "/sports/football" },
-      { label: "Baseball", href: "/sports/baseball" },
-      { label: "Hockey", href: "/sports/hockey" },
-      { label: "UFC/Boxing", href: "/sports/fight" },
+      { label: "Marvel (MCU)", href: "/collections?q=mcu" },
+      { label: "Harry Potter", href: "/collections?q=harry-potter" },
+      { label: "Star Wars", href: "/collections?q=star-wars" },
+      { label: "Lord of the Rings", href: "/collections?q=lotr" },
+      { label: "Fast & Furious", href: "/collections?q=fast" },
     ],
   },
 ];
