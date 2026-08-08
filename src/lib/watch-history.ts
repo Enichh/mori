@@ -88,6 +88,10 @@ export function removeWatchHistory(id: number, mediaType: string): void {
   );
   try {
     localStorage.setItem(HISTORY_KEY, JSON.stringify(filtered));
+    // Notify components so recommendations / watch history refresh
+    if (isBrowser()) {
+      window.dispatchEvent(new CustomEvent("mori:history-updated"));
+    }
   } catch {
     // ignore
   }
