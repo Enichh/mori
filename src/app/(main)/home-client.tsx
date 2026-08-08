@@ -4,6 +4,7 @@ import * as React from "react";
 import { MediaHero } from "@/components/media/media-hero";
 import { MediaGrid } from "@/components/media/media-grid";
 import { WatchHistory } from "@/components/media/watch-history";
+import { Recommendations } from "@/components/media/recommendations";
 import { useCachedFetch } from "@/hooks/use-cached-fetch";
 import type { Movie, TVShow } from "@/types";
 
@@ -199,6 +200,8 @@ export function HomeClient() {
       </section>
 
       <WatchHistory maxItems={8} />
+
+      <Recommendations />
 
       <div className="container-cine space-y-12 py-10">
         {trendingMovies && trendingMovies.length > 0 && (
