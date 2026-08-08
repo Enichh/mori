@@ -20,7 +20,7 @@ import { StreamVaultPlayer } from "@/components/player/streamvault-player";
 import { VidSrcPlayer } from "@/components/player/vidsrc-player";
 import { VidLinkPlayer } from "@/components/player/vidlink-player";
 import { YapGridPlayer } from "@/components/player/yapgrid-player";
-import { ApiPlayer } from "@/components/player/apiplayer-player";
+import { RinPlayer } from "@/components/player/rin-player";
 import { ConsumetPlayer } from "@/components/player/consumet-player";
 import { EpisodeNavigator } from "@/components/player/episode-navigator";
 import type { VidkingPlayerConfig, EpisodeNavData } from "@/types";
@@ -36,7 +36,7 @@ type PlayerServer =
   | "vidsrc"
   | "vidlink"
   | "yapgrid"
-  | "apiplayer"
+  | "rin"
   | "consumet";
 
 const SERVERS: { id: PlayerServer; label: string; tags?: string[] }[] = [
@@ -50,7 +50,7 @@ const SERVERS: { id: PlayerServer; label: string; tags?: string[] }[] = [
   { id: "streamvault", label: "Iris" },
   { id: "superembed", label: "Eden" },
   { id: "yapgrid", label: "Thea" },
-  { id: "apiplayer", label: "Nala" },
+  { id: "rin", label: "Rin" },
   { id: "consumet", label: "1Anime", tags: ["Anime"] },
 ];
 
@@ -58,7 +58,7 @@ const AUTO_FAILOVER_ORDER: PlayerServer[] = [
   "vidsrc",
   "vidlink",
   "yapgrid",
-  "apiplayer",
+  "rin",
   "embedapi",
   "twoembed",
   "111movies",
@@ -136,7 +136,7 @@ export function VideoPlayer({
       "https://vidlink.pro",
       "https://vidsrc.mov",
       "https://yapgrid.com",
-      "https://apiplayer.ru",
+      "https://vidsrc.to",
       "https://cdn-eu.1ani.me",
     ];
     for (const origin of origins) {
@@ -383,8 +383,8 @@ export function VideoPlayer({
             onError={handleError}
           />
         )}
-        {activated && server === "apiplayer" && (
-          <ApiPlayer
+        {activated && server === "rin" && (
+          <RinPlayer
             config={config}
             onLoad={handleLoad}
             onError={handleError}

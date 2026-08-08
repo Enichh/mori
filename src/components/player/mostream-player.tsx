@@ -38,7 +38,7 @@ export function MoStreamPlayer({
     <iframe
       src={embedUrl}
       className={cn("w-full h-full", !loaded && "invisible", className)}
-      allow="autoplay; fullscreen; picture-in-picture"
+      allow="autoplay *; fullscreen *; picture-in-picture *"
       allowFullScreen
       title="Video Player (MoStream)"
       onLoad={() => {

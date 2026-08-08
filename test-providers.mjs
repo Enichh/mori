@@ -42,10 +42,10 @@ const PROVIDERS = [
     tvUrl: `https://yapgrid.com/embed/tv/${TV_ID}/${TV_SEASON}/${TV_EPISODE}`,
   },
   {
-    id: "apiplayer",
-    label: "Nala",
-    movieUrl: `https://apiplayer.ru/embed/movie/${MOVIE_ID}`,
-    tvUrl: `https://apiplayer.ru/embed/tv/${TV_ID}/${TV_SEASON}/${TV_EPISODE}`,
+    id: "rin",
+    label: "Rin",
+    movieUrl: `https://vidsrc.to/embed/movie/${MOVIE_ID}`,
+    tvUrl: `https://vidsrc.to/embed/tv/${TV_ID}/${TV_SEASON}/${TV_EPISODE}`,
   },
   {
     id: "embedapi",

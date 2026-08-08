@@ -67,5 +67,5 @@ export type PlayerServer =
   | "streamvault"
   | "embedmaster"
   | "yapgrid"
-  | "apiplayer"
+  | "rin"
   | "consumet";

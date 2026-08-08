@@ -96,7 +96,7 @@ export function VidkingPlayer({
       ref={iframeRef}
       src={vidkingUrl}
       className={cn("w-full h-full", !loaded && "invisible", className)}
-      allow="autoplay; fullscreen; picture-in-picture"
+      allow="autoplay *; fullscreen *; picture-in-picture *"
       allowFullScreen
       title="Video Player"
       onLoad={handleIframeLoad}

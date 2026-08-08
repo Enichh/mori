@@ -34,7 +34,7 @@ export function VideasyPlayer({
     <iframe
       src={embedUrl}
       className={cn("w-full h-full", !loaded && "invisible", className)}
-      allow="autoplay; fullscreen; picture-in-picture"
+      allow="autoplay *; fullscreen *; picture-in-picture *"
       allowFullScreen
       title="Video Player (Videasy)"
       onLoad={() => { setLoaded(true); onLoad?.(); }}

@@ -161,7 +161,7 @@ export default function RootLayout({
         />
         <link
           rel="preconnect"
-          href="https://apiplayer.ru"
+          href="https://vidsrc.to"
           crossOrigin="anonymous"
         />
         <link

@@ -15,7 +15,7 @@ const PROVIDERS = [
   { name: "VidLink", url: "https://vidlink.pro" },
   { name: "StreamVault", url: "https://streamvaultsrc.click" },
   { name: "YapGrid", url: "https://yapgrid.com" },
-  { name: "apiplayer", url: "https://apiplayer.ru" },
+  { name: "VidSrc", url: "https://vidsrc.to" },
 ];
 
 export default function PrivacyPage() {

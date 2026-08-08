@@ -34,7 +34,7 @@ export function OneElevenMoviesPlayer({
     <iframe
       src={embedUrl}
       className={cn("w-full h-full", !loaded && "invisible", className)}
-      allow="autoplay; fullscreen; picture-in-picture"
+      allow="autoplay *; fullscreen *; picture-in-picture *"
       allowFullScreen
       title="Video Player (111Movies)"
       onLoad={() => { setLoaded(true); onLoad?.(); }}

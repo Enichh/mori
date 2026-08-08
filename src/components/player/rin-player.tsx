@@ -4,37 +4,37 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 import type { VidkingPlayerConfig } from "@/types";
 
-interface ApiPlayerProps {
+interface RinPlayerProps {
   config: VidkingPlayerConfig;
   onLoad?: () => void;
   onError?: (message: string) => void;
   className?: string;
 }
 
-function buildApiPlayerUrl(config: VidkingPlayerConfig): string {
+function buildRinUrl(config: VidkingPlayerConfig): string {
   const { tmdbId, mediaType, season, episode } = config;
 
   if (mediaType === "tv" && season !== undefined && episode !== undefined) {
-    return `https://apiplayer.ru/embed/tv/${tmdbId}/${season}/${episode}`;
+    return `https://vidsrc.to/embed/tv/${tmdbId}/${season}/${episode}`;
   }
 
-  return `https://apiplayer.ru/embed/movie/${tmdbId}`;
+  return `https://vidsrc.to/embed/movie/${tmdbId}`;
 }
 
-export function ApiPlayer({
+export function RinPlayer({
   config,
   onLoad,
   onError,
   className,
-}: ApiPlayerProps) {
+}: RinPlayerProps) {
   const [loaded, setLoaded] = React.useState(false);
-  const embedUrl = buildApiPlayerUrl(config);
+  const embedUrl = buildRinUrl(config);
 
   return (
     <iframe
       src={embedUrl}
       className={cn("w-full h-full", !loaded && "invisible", className)}
-      allow="autoplay; fullscreen; picture-in-picture"
+      allow="autoplay *; fullscreen *; picture-in-picture *"
       allowFullScreen
       title="Video Player"
       onLoad={() => {
