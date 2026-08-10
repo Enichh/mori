@@ -69,7 +69,7 @@ export function Sidebar({
                     : "text-muted-foreground hover:text-foreground hover:bg-muted",
                 )}
               >
-                🎬 Movies
+                Movies
               </Link>
             </li>
             <li>
@@ -82,7 +82,7 @@ export function Sidebar({
                     : "text-muted-foreground hover:text-foreground hover:bg-muted",
                 )}
               >
-                📺 TV Shows
+                TV Shows
               </Link>
             </li>
             <li>

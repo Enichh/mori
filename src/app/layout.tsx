@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { AD_CONFIG } from "@/config/ads";
+import { SisterSitesModal } from "@/components/layout/sister-sites-modal";
 import { Inter_Tight, JetBrains_Mono, PT_Serif } from "next/font/google";
 import "./globals.css";
 
@@ -197,6 +198,7 @@ export default function RootLayout({
         {/* ── Popunder ── */}
         <script async data-cfasync="false" src={AD_CONFIG.popunder.scriptSrc} />
         {children}
+        <SisterSitesModal />
         {/* ── Social Bar ── */}
         <script async data-cfasync="false" src={AD_CONFIG.socialBar.scriptSrc} />
         {/* ── Mobile Banner (320×50) ── */}
