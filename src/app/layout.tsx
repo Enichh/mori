@@ -162,14 +162,6 @@ export default function RootLayout({
         />
         <link
           rel="preconnect"
-          href="https://vidsrc.to"
-          crossOrigin="anonymous"
-        />
-        <link
-          rel="preconnect"
-        />
-        <link
-          rel="preconnect"
           href="https://embedmaster.com"
           crossOrigin="anonymous"
         />
