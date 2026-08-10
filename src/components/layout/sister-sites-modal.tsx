@@ -44,16 +44,15 @@ export function SisterSitesModal() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const seen = localStorage.getItem(STORAGE_KEY);
+    const seen = sessionStorage.getItem(STORAGE_KEY);
     if (!seen) {
-      // Small delay so the page renders first, then modal appears
+      sessionStorage.setItem(STORAGE_KEY, "1");
       const t = setTimeout(() => setVisible(true), 800);
       return () => clearTimeout(t);
     }
   }, []);
 
   const dismiss = () => {
-    localStorage.setItem(STORAGE_KEY, "1");
     setVisible(false);
   };
 
