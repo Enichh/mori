@@ -82,7 +82,7 @@ async function fetchRecs(genreIds: number[]): Promise<any[]> {
     );
     if (!res.ok) return [];
     const data = await res.json();
-    return (data.results || []).slice(0, 12).map((r: any) => ({
+    return (data.results || []).slice(0, 8).map((r: any) => ({
       id: r.id,
       title: r.title,
       posterPath: r.poster_path,
@@ -133,7 +133,7 @@ export function Recommendations() {
 
   if (loading) {
     return (
-      <section className="py-4">
+      <section className="py-4 overflow-x-hidden">
         <div className="container-cine">
           <div className="flex items-center gap-3 mb-4">
             <Sparkles className="w-5 h-5 text-primary" />
@@ -150,7 +150,7 @@ export function Recommendations() {
   if (!recs || recs.length === 0) return null;
 
   return (
-    <section className="py-4">
+    <section className="py-4 overflow-x-hidden">
       <div className="container-cine">
         <div className="flex items-center gap-3 mb-4">
           <Sparkles className="w-5 h-5 text-primary" />
@@ -163,7 +163,7 @@ export function Recommendations() {
         </div>
 
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
-          {recs.map((m) => (
+          {recs.slice(0, 8).map((m) => (
             <Link
               key={m.id}
               href={`/movies/${m.id}`}

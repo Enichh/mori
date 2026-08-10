@@ -67,7 +67,7 @@ export function SisterSitesModal() {
         onClick={dismiss}
       />
 
-      <div className="relative w-full max-w-sm bg-card border border-border rounded-lg shadow-2xl">
+      <div className="relative w-full max-w-sm max-h-[85vh] overflow-y-auto bg-card border border-border rounded-lg shadow-2xl">
         {/* Header */}
         <div className="px-5 pt-5 pb-3">
           <h2 className="text-base font-heading font-bold text-foreground">
