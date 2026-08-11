@@ -84,7 +84,10 @@ export function VideoPlayer({
   className,
   episodeNav,
 }: VideoPlayerProps) {
-  const [server, setServer] = React.useState<PlayerServer>("vidsrc");
+  const [server, setServer] = React.useState<PlayerServer>(() => {
+    const saved = typeof window !== "undefined" ? sessionStorage.getItem("mori:last-server") : null;
+    return (saved as PlayerServer) || "vidsrc";
+  });
   const [activated, setActivated] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -209,6 +212,7 @@ export function VideoPlayer({
 
   const switchServer = (s: PlayerServer) => {
     setServer(s);
+    try { sessionStorage.setItem("mori:last-server", s); } catch {}
     setWarmed(false);
     setLoading(true);
     setError(null);
