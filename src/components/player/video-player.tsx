@@ -12,61 +12,69 @@ import {
 import { cn } from "@/lib/utils";
 import { VidkingPlayer } from "@/components/player/vidking-player";
 import { SuperEmbedPlayer } from "@/components/player/superembed-player";
-import { EmbedAPIPlayer } from "@/components/player/embedapi-player";
 import { VideasyPlayer } from "@/components/player/videasy-player";
 import { OneElevenMoviesPlayer } from "@/components/player/111movies-player";
 import { TwoEmbedPlayer } from "@/components/player/twoembed-player";
-import { StreamVaultPlayer } from "@/components/player/streamvault-player";
 import { VidSrcPlayer } from "@/components/player/vidsrc-player";
 import { VidLinkPlayer } from "@/components/player/vidlink-player";
-import { YapGridPlayer } from "@/components/player/yapgrid-player";
 import { RinPlayer } from "@/components/player/rin-player";
 import { ConsumetPlayer } from "@/components/player/consumet-player";
+import { VidLovePlayer } from "@/components/player/vidlove-player";
+import { OneEmbedPlayer } from "@/components/player/oneembed-player";
+import { IcefyPlayer } from "@/components/player/icefy-player";
+import { CineSrcPlayer } from "@/components/player/cinesrc-player";
+import { CinextreamPlayer } from "@/components/player/cinextream-player";
 import { EpisodeNavigator } from "@/components/player/episode-navigator";
 import type { VidkingPlayerConfig, EpisodeNavData } from "@/types";
 
 type PlayerServer =
   | "vidking"
   | "superembed"
-  | "embedapi"
   | "videasy"
   | "111movies"
   | "twoembed"
-  | "streamvault"
   | "vidsrc"
   | "vidlink"
-  | "yapgrid"
   | "rin"
-  | "consumet";
+  | "consumet"
+  | "vidlove"
+  | "oneembed"
+  | "icefy"
+  | "cinesrc"
+  | "cinextream";
 
 const SERVERS: { id: PlayerServer; label: string; tags?: string[] }[] = [
   { id: "vidsrc", label: "Nova" },
   { id: "vidlink", label: "Luna" },
-  { id: "embedapi", label: "Zara" },
   { id: "twoembed", label: "Maya" },
   { id: "111movies", label: "Cleo" },
   { id: "videasy", label: "Rosa" },
   { id: "vidking", label: "Faye" },
-  { id: "streamvault", label: "Iris" },
   { id: "superembed", label: "Eden" },
-  { id: "yapgrid", label: "Thea" },
   { id: "rin", label: "Rin" },
   { id: "consumet", label: "1Anime", tags: ["Anime"] },
+  { id: "vidlove", label: "Rias" },
+  { id: "oneembed", label: "Akeno" },
+  { id: "icefy", label: "Saber" },
+  { id: "cinesrc", label: "Kuroka" },
+  { id: "cinextream", label: "Sakura", tags: ["Slow"] },
 ];
 
 const AUTO_FAILOVER_ORDER: PlayerServer[] = [
   "vidsrc",
   "vidlink",
-  "yapgrid",
   "rin",
-  "embedapi",
   "twoembed",
   "111movies",
   "videasy",
   "vidking",
-  "streamvault",
   "superembed",
   "consumet",
+  "vidlove",
+  "oneembed",
+  "icefy",
+  "cinesrc",
+  "cinextream",
 ];
 
 interface VideoPlayerProps {
@@ -129,18 +137,20 @@ export function VideoPlayer({
     const origins = [
       "https://www.vidking.net",
       "https://multiembed.mov",
-      "https://player.embed-api.stream",
       "https://www.2embed.cc",
       "https://111movies.com",
       "https://111movies.net",
       "https://player.videasy.net",
-      "https://streamvaultsrc.click",
       "https://embedmaster.com",
       "https://vidlink.pro",
       "https://vidsrc.mov",
-      "https://yapgrid.com",
       "https://vidsrc.to",
       "https://cdn-eu.1ani.me",
+      "https://player.vidlove.cc",
+      "https://1embed.cc",
+      "https://embed.icefy.top",
+      "https://cinesrc.st",
+      "https://cinextream.cc",
     ];
     for (const origin of origins) {
       ReactDOM.preconnect(origin, { crossOrigin: "anonymous" });
@@ -331,13 +341,6 @@ export function VideoPlayer({
             onError={handleError}
           />
         )}
-        {activated && server === "embedapi" && (
-          <EmbedAPIPlayer
-            config={config}
-            onLoad={handleLoad}
-            onError={handleError}
-          />
-        )}
         {activated && server === "111movies" && (
           <OneElevenMoviesPlayer
             config={config}
@@ -359,13 +362,6 @@ export function VideoPlayer({
             onError={handleError}
           />
         )}
-        {activated && server === "streamvault" && (
-          <StreamVaultPlayer
-            config={config}
-            onLoad={handleLoad}
-            onError={handleError}
-          />
-        )}
         {activated && server === "vidsrc" && (
           <VidSrcPlayer
             config={config}
@@ -380,13 +376,6 @@ export function VideoPlayer({
             onError={handleError}
           />
         )}
-        {activated && server === "yapgrid" && (
-          <YapGridPlayer
-            config={config}
-            onLoad={handleLoad}
-            onError={handleError}
-          />
-        )}
         {activated && server === "rin" && (
           <RinPlayer
             config={config}
@@ -396,6 +385,41 @@ export function VideoPlayer({
         )}
         {activated && server === "consumet" && (
           <ConsumetPlayer
+            config={config}
+            onLoad={handleLoad}
+            onError={handleError}
+          />
+        )}
+        {activated && server === "vidlove" && (
+          <VidLovePlayer
+            config={config}
+            onLoad={handleLoad}
+            onError={handleError}
+          />
+        )}
+        {activated && server === "oneembed" && (
+          <OneEmbedPlayer
+            config={config}
+            onLoad={handleLoad}
+            onError={handleError}
+          />
+        )}
+        {activated && server === "icefy" && (
+          <IcefyPlayer
+            config={config}
+            onLoad={handleLoad}
+            onError={handleError}
+          />
+        )}
+        {activated && server === "cinesrc" && (
+          <CineSrcPlayer
+            config={config}
+            onLoad={handleLoad}
+            onError={handleError}
+          />
+        )}
+        {activated && server === "cinextream" && (
+          <CinextreamPlayer
             config={config}
             onLoad={handleLoad}
             onError={handleError}

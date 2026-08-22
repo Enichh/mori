@@ -122,11 +122,6 @@ export default function RootLayout({
         />
         <link
           rel="preconnect"
-          href="https://player.embed-api.stream"
-          crossOrigin="anonymous"
-        />
-        <link
-          rel="preconnect"
           href="https://www.2embed.cc"
           crossOrigin="anonymous"
         />
@@ -140,16 +135,7 @@ export default function RootLayout({
           href="https://player.videasy.net"
           crossOrigin="anonymous"
         />
-        <link
-          rel="preconnect"
-          href="https://streamvaultsrc.click"
-          crossOrigin="anonymous"
-        />
-        <link
-          rel="preconnect"
-          href="https://yapgrid.com"
-          crossOrigin="anonymous"
-        />
+
         <link
           rel="preconnect"
           href="https://vidsrc.mov"

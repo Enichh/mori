@@ -61,11 +61,13 @@ export type PlayerServer =
   | "vidking"
   | "vidlink"
   | "superembed"
-  | "embedapi"
   | "mostream"
   | "twoembed"
-  | "streamvault"
   | "embedmaster"
-  | "yapgrid"
   | "rin"
-  | "consumet";
+  | "consumet"
+  | "vidlove"
+  | "oneembed"
+  | "icefy"
+  | "cinesrc"
+  | "cinextream";

@@ -36,22 +36,10 @@ const PROVIDERS = [
     tvUrl: `https://vidlink.pro/tv/${TV_ID}/${TV_SEASON}/${TV_EPISODE}`,
   },
   {
-    id: "yapgrid",
-    label: "Thea",
-    movieUrl: `https://yapgrid.com/embed/movie/${MOVIE_ID}`,
-    tvUrl: `https://yapgrid.com/embed/tv/${TV_ID}/${TV_SEASON}/${TV_EPISODE}`,
-  },
-  {
     id: "rin",
     label: "Rin",
     movieUrl: `https://vidsrc.to/embed/movie/${MOVIE_ID}`,
     tvUrl: `https://vidsrc.to/embed/tv/${TV_ID}/${TV_SEASON}/${TV_EPISODE}`,
-  },
-  {
-    id: "embedapi",
-    label: "Zara",
-    movieUrl: `https://player.embed-api.stream/?id=${MOVIE_ID}`,
-    tvUrl: `https://player.embed-api.stream/?id=${TV_ID}&s=${TV_SEASON}&e=${TV_EPISODE}`,
   },
   {
     id: "twoembed",
@@ -78,16 +66,40 @@ const PROVIDERS = [
     tvUrl: `https://www.vidking.net/embed/tv/${TV_ID}/${TV_SEASON}/${TV_EPISODE}?color=C5FF4A`,
   },
   {
-    id: "streamvault",
-    label: "Iris",
-    movieUrl: `https://streamvaultsrc.click/embed/movie/${MOVIE_ID}`,
-    tvUrl: `https://streamvaultsrc.click/embed/tv/${TV_ID}/${TV_SEASON}/${TV_EPISODE}`,
-  },
-  {
     id: "superembed",
     label: "Eden",
     movieUrl: `https://multiembed.mov/?video_id=${MOVIE_ID}&tmdb=1`,
     tvUrl: `https://multiembed.mov/?video_id=${TV_ID}&tmdb=1&s=${TV_SEASON}&e=${TV_EPISODE}`,
+  },
+  {
+    id: "vidlove",
+    label: "Rias",
+    movieUrl: `https://player.vidlove.cc/embed/movie/${MOVIE_ID}`,
+    tvUrl: `https://player.vidlove.cc/embed/tv/${TV_ID}/${TV_SEASON}/${TV_EPISODE}`,
+  },
+  {
+    id: "oneembed",
+    label: "Akeno",
+    movieUrl: `https://1embed.cc/embed/movie/${MOVIE_ID}`,
+    tvUrl: `https://1embed.cc/embed/tv/${TV_ID}/${TV_SEASON}/${TV_EPISODE}`,
+  },
+  {
+    id: "icefy",
+    label: "Saber",
+    movieUrl: `https://embed.icefy.top/movie?id=${MOVIE_ID}`,
+    tvUrl: `https://embed.icefy.top/tv?id=${TV_ID}&season=${TV_SEASON}&episode=${TV_EPISODE}`,
+  },
+  {
+    id: "cinesrc",
+    label: "Kuroka",
+    movieUrl: `https://cinesrc.st/embed/movie/${MOVIE_ID}`,
+    tvUrl: `https://cinesrc.st/embed/tv/${TV_ID}?s=${TV_SEASON}&e=${TV_EPISODE}`,
+  },
+  {
+    id: "cinextream",
+    label: "Sakura",
+    movieUrl: `https://cinextream.cc/api/embed/movie/${MOVIE_ID}`,
+    tvUrl: `https://cinextream.cc/api/embed/tv/${TV_ID}/${TV_SEASON}/${TV_EPISODE}`,
   },
 ];
 

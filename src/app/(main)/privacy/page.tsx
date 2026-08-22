@@ -8,14 +8,16 @@ export const metadata: Metadata = {
 
 const PROVIDERS = [
   { name: "SuperEmbed", url: "https://multiembed.mov" },
-  { name: "EmbedAPI", url: "https://embed-api.stream" },
   { name: "Vidking", url: "https://www.vidking.net" },
   { name: "2Embed", url: "https://www.2embed.cc" },
   { name: "VidSrc", url: "https://vidsrc.mov" },
   { name: "VidLink", url: "https://vidlink.pro" },
-  { name: "StreamVault", url: "https://streamvaultsrc.click" },
-  { name: "YapGrid", url: "https://yapgrid.com" },
   { name: "VidSrc", url: "https://vidsrc.to" },
+  { name: "VidLove", url: "https://player.vidlove.cc" },
+  { name: "1Embed", url: "https://1embed.cc" },
+  { name: "Icefy", url: "https://embed.icefy.top" },
+  { name: "CineSrc", url: "https://cinesrc.st" },
+  { name: "Cinextream", url: "https://cinextream.cc" },
 ];
 
 export default function PrivacyPage() {

@@ -4,36 +4,31 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 import type { VidkingPlayerConfig } from "@/types";
 
-interface EmbedAPIPlayerProps {
+interface CinextreamPlayerProps {
   config: VidkingPlayerConfig;
   onLoad?: () => void;
   onError?: (message: string) => void;
   className?: string;
 }
 
-function buildEmbedApiUrl(config: VidkingPlayerConfig): string {
+function buildCinextreamUrl(config: VidkingPlayerConfig): string {
   const { tmdbId, mediaType, season, episode } = config;
 
-  const params = new URLSearchParams();
-  params.set("id", String(tmdbId));
-
   if (mediaType === "tv" && season !== undefined && episode !== undefined) {
-    params.set("s", String(season));
-    params.set("e", String(episode));
+    return `https://cinextream.cc/api/embed/tv/${tmdbId}/${season}/${episode}`;
   }
 
-  return `https://player.embed-api.stream/?${params.toString()}`;
+  return `https://cinextream.cc/api/embed/movie/${tmdbId}`;
 }
 
-export function EmbedAPIPlayer({
+export function CinextreamPlayer({
   config,
   onLoad,
   onError,
   className,
-}: EmbedAPIPlayerProps) {
+}: CinextreamPlayerProps) {
   const [loaded, setLoaded] = React.useState(false);
-
-  const embedUrl = buildEmbedApiUrl(config);
+  const embedUrl = buildCinextreamUrl(config);
 
   return (
     <iframe
@@ -41,14 +36,9 @@ export function EmbedAPIPlayer({
       className={cn("w-full h-full", !loaded && "invisible", className)}
       allow="autoplay *; fullscreen *; picture-in-picture *"
       allowFullScreen
-      title="Video Player (Embed-API)"
-      onLoad={() => {
-        setLoaded(true);
-        onLoad?.();
-      }}
-      onError={() => {
-        onError?.("Failed to load Embed-API player. Please try another server.");
-      }}
+      title="Video Player (Cinextream)"
+      onLoad={() => { setLoaded(true); onLoad?.(); }}
+      onError={() => onError?.("Failed to load Cinextream player. Please try another server.")}
     />
   );
 }
