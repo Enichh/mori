@@ -1,17 +1,24 @@
 "use client";
 
-import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  Home,
+  Film,
+  Tv,
+  Library,
+  type LucideIcon,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
+import { browseNavItems } from "@/config/navigation";
 
-const items = [
-  { label: "Home", href: "/" },
-  { label: "Movies", href: "/movies" },
-  { label: "TV", href: "/tv" },
-  { label: "Anime", href: "/anime" },
-  { label: "Pinoy Movies", href: "https://silip.pages.dev", external: true },
-] as const;
+/** Icon map keyed by the `icon` string in navigation config. */
+const ICONS: Record<string, LucideIcon> = {
+  Home,
+  Film,
+  Tv,
+  Library,
+};
 
 export function MobileNav() {
   const pathname = usePathname();
@@ -21,45 +28,37 @@ export function MobileNav() {
       className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-lg border-t border-border safe-area-bottom"
       aria-label="Mobile navigation"
     >
-      <div className="flex items-center justify-around h-13 pb-1">
-        {items.map((item) => {
+      <div className="flex items-stretch justify-around h-16">
+        {browseNavItems.map((item) => {
           const isActive =
             item.href === "/"
               ? pathname === "/"
               : pathname.startsWith(item.href);
-
-          const linkClass = cn(
-            "relative flex items-center justify-center min-w-0 flex-1 py-3",
-            "transition-colors duration-200",
-            isActive
-              ? "text-primary"
-              : "text-muted-foreground hover:text-foreground",
-          );
-
-          if ("external" in item && item.external) {
-            return (
-              <a
-                key={item.href}
-                href={item.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={linkClass}
-              >
-                <span className="text-xs font-body font-medium tracking-wider uppercase">
-                  {item.label}
-                </span>
-              </a>
-            );
-          }
+          const Icon = ICONS[item.icon ?? "Home"] ?? Home;
 
           return (
-            <Link key={item.href} href={item.href} className={linkClass}>
-              <span className="text-xs font-body font-medium tracking-wider uppercase">
-                {item.label}
-              </span>
-              {isActive && (
-                <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "relative flex flex-col items-center justify-center flex-1 gap-1 min-w-0",
+                "transition-colors duration-200",
+                isActive
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground",
               )}
+            >
+              <span
+                className={cn(
+                  "flex items-center justify-center h-6 px-3 rounded-full transition-colors",
+                  isActive && "bg-primary/15",
+                )}
+              >
+                <Icon className="h-4 w-4" />
+              </span>
+              <span className="text-[10px] font-body font-medium tracking-wider uppercase">
+                {item.label === "TV Shows" ? "TV" : item.label === "Collections" ? "Library" : item.label}
+              </span>
             </Link>
           );
         })}

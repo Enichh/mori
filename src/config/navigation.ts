@@ -1,5 +1,11 @@
 // ---------------------------------------------------------------------------
-// Mori ― Navigation definition
+// Mori ― Navigation definition (single source of truth)
+//
+// Split into three distinct roles so no single nav surface mixes destinations
+// with actions, and no link appears in more than one place:
+//   - browseNavItems   → where you GO (desktop top bar, mobile bottom tabs)
+//   - actionNavItems   → things you DO (desktop pills, mobile "Support" section)
+//   - sisterNavItems   → other network sites (mobile "Our Sites" + footer)
 // ---------------------------------------------------------------------------
 
 export interface NavItem {
@@ -17,16 +23,45 @@ export interface NavSection {
   items: NavItem[];
 }
 
-/** Primary top-level navigation (used by Header). */
-export const mainNavigation: NavItem[] = [
-  { title: "Home", label: "Home", href: "/", icon: "House" },
-  { title: "Movies", label: "Movies", href: "/movies", icon: "Film" },
-  { title: "TV Shows", label: "TV Shows", href: "/tv", icon: "Tv" },
-  { title: "Collections", label: "Collections", href: "/collections", icon: "Library" },
-  { title: "Anime", label: "Anime", href: "https://necros.pages.dev", icon: "Swords", external: true },
-  { title: "Drama", label: "Drama", href: "/drama", icon: "Drama" },
+/** Primary destinations — persistent nav (top bar / bottom tabs). */
+export const browseNavItems: NavItem[] = [
+  { label: "Home", href: "/", icon: "Home" },
+  { label: "Movies", href: "/movies", icon: "Film" },
+  { label: "TV Shows", href: "/tv", icon: "Tv" },
+  { label: "Collections", href: "/collections", icon: "Library" },
+];
+
+/** Actions / utility — desktop pills + mobile "Support" hamburger section. */
+export const actionNavItems: NavItem[] = [
   {
-    title: "Pinoy Movies",
+    label: "Support Us",
+    href: "https://ko-fi.com/enichhh",
+    icon: "Heart",
+    external: true,
+  },
+  {
+    label: "Feedback",
+    href: "https://the-network-cwy.pages.dev/feedback",
+    icon: "MessageSquare",
+    external: true,
+  },
+];
+
+/** Sister sites — mobile "Our Sites" hamburger section + footer. */
+export const sisterNavItems: NavItem[] = [
+  {
+    label: "Anime",
+    href: "https://necros.pages.dev",
+    icon: "Swords",
+    external: true,
+  },
+  {
+    label: "Manga",
+    href: "https://kageru.pages.dev",
+    icon: "BookOpen",
+    external: true,
+  },
+  {
     label: "Pinoy Movies",
     href: "https://silip.pages.dev",
     icon: "Globe",
@@ -34,39 +69,36 @@ export const mainNavigation: NavItem[] = [
   },
 ];
 
-/** @deprecated Use mainNavigation */
+// ---------------------------------------------------------------------------
+// Backward-compatible exports (used by Header / Footer / other importers)
+// ---------------------------------------------------------------------------
+
+/** Combined desktop list: browse + actions + sister sites. */
+export const mainNavigation: NavItem[] = [
+  ...browseNavItems,
+  ...actionNavItems,
+  ...sisterNavItems,
+];
+
+/** @deprecated Use browseNavItems / actionNavItems / sisterNavItems */
 export const mainNav = mainNavigation;
 
 export const mainNavItems = mainNavigation;
 
-/** Mobile bottom navigation. */
-export const mobileNavigation: NavItem[] = [
-  { title: "Home", label: "Home", href: "/", icon: "House" },
-  { title: "Movies", label: "Movies", href: "/movies", icon: "Film" },
-  { title: "TV", label: "TV", href: "/tv", icon: "Tv" },
-  { title: "Collections", label: "Collections", href: "/collections", icon: "Library" },
-  { title: "Anime", label: "Anime", href: "https://necros.pages.dev", icon: "Swords", external: true },
-  { title: "Drama", label: "Drama", href: "/drama", icon: "Drama" },
-  {
-    title: "Pinoy Movies",
-    label: "Pinoy Movies",
-    href: "https://silip.pages.dev",
-    icon: "Globe",
-    external: true,
-  },
-  { title: "Search", label: "Search", href: "/search", icon: "Search" },
-];
+/** @deprecated Use browseNavItems (bottom tab bar) */
+export const mobileNavigation: NavItem[] = [...browseNavItems];
 
 export const mobileNavItems = mobileNavigation;
 
-/** Footer link sections. */
+// ---------------------------------------------------------------------------
+// Footer link sections
+// ---------------------------------------------------------------------------
+
 export const footerLinks: NavItem[] = [
   { label: "Movies", href: "/movies" },
   { label: "TV Shows", href: "/tv" },
   { label: "Collections", href: "/collections" },
-  { label: "Anime", href: "https://necros.pages.dev", external: true },
-  { label: "Drama", href: "/drama" },
-  { label: "Pinoy Movies", href: "https://silip.pages.dev", external: true },
+  ...sisterNavItems,
 ];
 
 export const footerNav: NavSection[] = [
