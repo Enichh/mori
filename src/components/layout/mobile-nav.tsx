@@ -50,11 +50,11 @@ export function MobileNav() {
             >
               <span
                 className={cn(
-                  "flex items-center justify-center h-6 px-3 rounded-full transition-colors",
+                  "flex items-center justify-center h-[28px] px-3 rounded-full transition-colors",
                   isActive && "bg-primary/15",
                 )}
               >
-                <Icon className="h-4 w-4" />
+                <Icon className="h-[20px] w-[20px]" />
               </span>
               <span className="text-[10px] font-body font-medium tracking-wider uppercase">
                 {item.label === "TV Shows" ? "TV" : item.label === "Collections" ? "Library" : item.label}

@@ -47,6 +47,7 @@ yarn-error.log*
 # IDE
 .vscode
 .idea
+.serena/
 *.swp
 *.swo
 *~
@@ -87,32 +88,6 @@ private/
 # Windows reserved names
 nul
 
-# ---- AI / tooling generated files ----
-AI.MD
-repomix-output.xml
-
-# ---- Windsurf IDE ----
-.windsurf
-
-# ---- Internal documentation ----
-_docs
-
-# ---- Cached sports data ----
-afl.json
-american-football.json
-billiards.json
-cricket.json
-darts.json
-golf.json
-mlb.json
-motorsport.json
-nba.json
-nfl.json
-nhl.json
-rugby.json
-soccer.json
-tennis.json
-ufc.json
 
 # ---- Netlify config (may contain sensitive CSP/API details) ----
 # Uncomment if you don't want this in source control:
